@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/BuildingBlocks/">
+    <Project Path="BuildingBlocks/EventBus.Messages/EventBus.Messages.csproj" />
+  </Folder>
+  <Folder Name="/IdentityService/" />
+  <Folder Name="/IdentityService/src/">
+    <Project Path="IdentityService/src/Identity.API/Identity.API.csproj" />
+    <Project Path="IdentityService/src/Identity.Application/Identity.Application.csproj" />
+    <Project Path="IdentityService/src/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="IdentityService/src/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/ProjectManagementService/" />
+  <Folder Name="/ProjectManagementService/src/">
+    <Project Path="ProjectManagementService/src/PM.API/PM.API.csproj" />
+    <Project Path="ProjectManagementService/src/PM.Application/PM.Application.csproj" />
+    <Project Path="ProjectManagementService/src/PM.Domain/PM.Domain.csproj" />
+    <Project Path="ProjectManagementService/src/PM.Infrastructure/PM.Infrastructure.csproj" />
+  </Folder>
+  <Project Path="ApiGateway/ApiGateway.csproj" />
+</Solution>
