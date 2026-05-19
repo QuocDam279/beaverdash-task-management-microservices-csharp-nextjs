@@ -1,6 +1,10 @@
+using PM.Domain.Common;
+using System;
+using System.Collections.Generic;
+
 namespace PM.Domain.Entities;
 
-public class TaskItem
+public class TaskItem : BaseEntity
 {
     public Guid Id { get; set; }
     

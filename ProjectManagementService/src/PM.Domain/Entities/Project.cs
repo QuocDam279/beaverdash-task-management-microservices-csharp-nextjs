@@ -22,4 +22,6 @@ public class Project
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public ICollection<BoardColumn> BoardColumns { get; set; } = new List<BoardColumn>();
 }

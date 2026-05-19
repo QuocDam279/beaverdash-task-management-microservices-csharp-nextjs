@@ -23,4 +23,24 @@ public class ProjectsController : ControllerBase
         var projectId = await _mediator.Send(command);
         return StatusCode(201, new { Id = projectId });
     }
+
+    [HttpGet("{id}/board")]
+    public async Task<IActionResult> GetProjectBoard(Guid id)
+    {
+        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectBoard.GetProjectBoardQuery(id);
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+            return NotFound(new { Message = "Project not found." });
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/activities")]
+    public async Task<IActionResult> GetProjectActivities(Guid id)
+    {
+        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectActivities.GetProjectActivitiesQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }

@@ -44,7 +44,7 @@ public class BoardColumnConfiguration : IEntityTypeConfiguration<BoardColumn>
             .HasColumnType("timestamp with time zone");
 
         builder.HasOne(bc => bc.Project)
-            .WithMany()
+            .WithMany(p => p.BoardColumns)
             .HasForeignKey(bc => bc.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
     }

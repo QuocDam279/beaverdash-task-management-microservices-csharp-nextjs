@@ -20,12 +20,20 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     public string GenerateToken(User user)
     {
-        var secret = _configuration["JwtSettings:Secret"];
+        // 1. Sửa đổi: Lấy Secret từ Biến môi trường (.env) thay vì appsettings.json
+        var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
+
+        // 2. Thêm kiểm tra an toàn để ném lỗi rõ ràng nếu cấu hình thiếu
+        if (string.IsNullOrEmpty(secret))
+        {
+            throw new InvalidOperationException("Không tìm thấy JWT_SECRET trong biến môi trường.");
+        }
+
         var issuer = _configuration["JwtSettings:Issuer"];
         var audience = _configuration["JwtSettings:Audience"];
         var expiryMinutes = int.Parse(_configuration["JwtSettings:ExpiryMinutes"] ?? "60");
 
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]

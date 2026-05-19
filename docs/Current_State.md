@@ -5,7 +5,7 @@
 - **Framework**: .NET 10.0
 - **Kiến trúc**: Clean Architecture, CQRS (MediatR), Event-driven Microservices (RabbitMQ).
 - **Docker**: `docker-compose.yml` đang chạy PostgreSQL (5432) và RabbitMQ (5672/15672).
-- **Thư viện chính**: `MediatR`, `EF Core PostgreSQL`, `MassTransit` (đang **chốt ở ver 8.3.0** để tránh dính lỗi License của v9), `System.IdentityModel.Tokens.Jwt`, `YARP`.
+- **Thư viện chính**: `MediatR`, `EF Core PostgreSQL`, `MassTransit` (đang **chốt ở ver 8.3.0** để tránh dính lỗi License của v9), `System.IdentityModel.Tokens.Jwt`, `YARP`, `SignalR`.
 - **Database**: Đã chạy thành công EF Core Migrations (`InitialIdentityCreate`, `InitialPMCreate`) và tạo đủ bảng dưới Postgres.
 
 ## 2. API Gateway (`ApiGateway`)
@@ -13,7 +13,7 @@
 - Chạy bằng `YARP Reverse Proxy`.
 - Đã cấu hình `appsettings.Development.json` định tuyến các route:
   - `/api/auth/**`, `/api/users/**` -> `identity-cluster` (5001)
-  - `/api/projects/**`, `/api/teams/**`, `/api/tasks/**`, `/api/boardcolumns/**` -> `pm-cluster` (5002)
+  - `/api/projects/**`, `/api/teams/**`, `/api/tasks/**`, `/api/boardcolumns/**`, `/api/notifications/**`, `/hubs/**` -> `pm-cluster` (5002)
 
 ## 3. Building Blocks (`EventBus.Messages`)
 - Chứa các class giao tiếp liên Service.
@@ -33,17 +33,25 @@
 
 ## 5. Project Management Service (`ProjectManagementService`)
 - **Port**: `5002`
-- **Domain**: 10 Entities: `User` (replica), `Team`, `TeamMember`, `Project`, `BoardColumn`, `TaskItem`, `Comment`, `Attachment`, `ActivityLog`, `Notification`. (Thuộc tính `TaskItem` có `BoardColumnId` và `AssigneeUserId`. `BoardColumn` có `Position` và `WipLimit`).
+- **Domain**: 10 Entities (`User`, `Team`, `TeamMember`, `Project`, `BoardColumn`, `TaskItem`, `Comment`, `Attachment`, `ActivityLog`, `Notification`). Tất cả các Entity chính đã được kế thừa từ `BaseEntity` để hỗ trợ cơ chế **Domain Events**.
 - **Application & Infrastructure**:
-  - Tách Interface `IPMDbContext` để tránh Circular Dependency.
-  - Cấu hình toàn bộ EF Core Fluent API cho 10 Entities đảm bảo đúng Constraint và Relationships N-1, N-N.
-  - Cấu hình Consumer: `UserCreatedConsumer` (lắng nghe qua MassTransit, tự động sync User vào PM DB).
-- **API (Controllers)**:
-  - `ProjectsController`: Nhận `POST /api/projects` (`CreateProjectCommand`).
-  - `BoardColumnsController`: Nhận `POST /api/boardcolumns` (`CreateBoardColumnCommand`).
-  - `TasksController`: Nhận `POST /api/tasks` (`CreateTaskCommand`).
+  - `IPMDbContext`: Override `SaveChangesAsync` để tự động Publish Domain Events trước khi lưu.
+  - `SignalRNotificationService`: Được đóng gói theo chuẩn Clean Architecture thông qua interface `INotificationService` nằm ở tầng Application.
+  - Tích hợp thành công `MediatR.Contracts` vào tầng Domain. Cập nhật `Microsoft.AspNetCore.App` FrameworkReference cho Application layer.
+- **Nghiệp vụ đã hoàn thành (Controllers)**:
+  - **Teams Module**: `POST` (Tạo team tự nhận leader), `POST` (Thêm member), `PUT` (Đổi role member), `DELETE` (Xóa member, chặn xóa leader cuối), `GET` (Chi tiết team kèm User), `PUT` (Cập nhật thông tin team), `DELETE` (Xóa team, chặn xóa nếu có Project).
+  - **Projects Module**: `POST` tạo dự án, `GET` lấy Board Kanban, `GET` lịch sử hoạt động (Timeline).
+  - **Tasks Module**: 
+    - Kéo thả Task (`PUT /move`) - tự tính toán lại Sort Order & check WIP Limit. Tự động sinh Log.
+    - Cập nhật nâng cao (`PATCH`) - cập nhật các field tùy chọn. Tự động sinh Log và Bắn Thông báo nếu đổi người gán.
+  - **Collaboration Module**: `POST/GET/DELETE` Text Comments. `POST` Attachment file đính kèm (sử dụng IFormFile, lưu vật lý, gen tên unique).
+  - **Domain Events & Side Effects**: 
+    - Đã cài đặt `CommentAddedEvent`, `TaskAssignedEvent`, `TaskMovedEvent`.
+    - Sinh tự động `ActivityLog` (ghi lịch sử hành động) và lưu DB `Notifications` một cách ngầm định (background).
+    - Tích hợp thành công **SignalR Real-time Notification**: Server chủ động bắn JSON thông báo qua Websocket về cho người nhận theo đúng logic nghiệp vụ (ví dụ: chặn thông báo nếu người thao tác tự assign chính mình).
+  - **Notifications Module**: `GET` danh sách thông báo cá nhân, `PATCH` đánh dấu đã đọc (bảo mật kiểm tra quyền đọc của User).
 
 ## Ghi chú cho AI Session Tiếp Theo:
-1. Không cần thiết lập lại base structure, database config hay RabbitMQ nữa vì tất cả đang hoạt động trơn tru.
-2. Từ lúc này, hãy focus vào việc hoàn thiện logic nghiệp vụ (Queries / Endpoints GET, PUT, DELETE) hoặc bổ sung thêm Service mới (như `DocumentIntelligenceService`).
+1. Nền tảng hạ tầng PM (DB, RabbitMQ, Domain Events, SignalR) đã chạy rất ổn định và tuân thủ chặt chẽ kiến trúc Clean Architecture.
+2. Từ lúc này, hãy focus vào việc hoàn thiện logic nghiệp vụ (như Analytics, Document Intelligence) hoặc thiết kế Database/Service mới nếu cần thiết.
 3. LUÔN chú ý dùng `IPMDbContext` hoặc `IIdentityDbContext` trong tầng Application (CQRS Handlers) thay vì dùng trực tiếp class implementation `DbContext` để tránh lỗi Circular Dependency giữa App và Infra.

@@ -10,7 +10,7 @@ using MassTransit;
 var builder = WebApplication.CreateBuilder(args);
 
 // Load file .env từ thư mục gốc của repo
-var envPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../../.env");
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
 if (File.Exists(envPath)) DotNetEnv.Env.Load(envPath);
 else DotNetEnv.Env.Load(); // fallback: tìm .env ở cùng cấp
 

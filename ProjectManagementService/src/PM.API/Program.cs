@@ -10,7 +10,7 @@ using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
 
 // Load file .env từ thư mục gốc của repo
-var envPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../../.env");
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
 if (File.Exists(envPath)) DotNetEnv.Env.Load(envPath);
 else DotNetEnv.Env.Load(); // fallback: tìm .env ở cùng cấp
 
@@ -58,12 +58,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// 1. Đăng ký SignalR
+builder.Services.AddSignalR();
+
+// 2. Đăng ký Service đẩy thông báo Realtime
+builder.Services.AddScoped<PM.Application.Contracts.INotificationService, PM.API.Services.SignalRNotificationService>();
+
 builder.Services.AddScoped<PM.Application.Contracts.IPMDbContext>(provider => provider.GetRequiredService<PMDbContext>());
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// 3. Map endpoint cho Hub
+app.MapHub<PM.API.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();
 

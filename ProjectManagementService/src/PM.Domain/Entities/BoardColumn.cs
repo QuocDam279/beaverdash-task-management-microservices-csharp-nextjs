@@ -12,4 +12,6 @@ public class BoardColumn
     public int? WipLimit { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public ICollection<TaskItem> TaskItems { get; set; } = new List<TaskItem>();
 }

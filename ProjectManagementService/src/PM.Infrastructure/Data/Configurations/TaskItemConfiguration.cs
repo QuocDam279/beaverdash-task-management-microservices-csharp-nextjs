@@ -78,7 +78,7 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .HasColumnType("timestamp with time zone");
 
         builder.HasOne(t => t.BoardColumn)
-            .WithMany()
+            .WithMany(bc => bc.TaskItems)
             .HasForeignKey(t => t.BoardColumnId)
             .OnDelete(DeleteBehavior.Cascade);
 
