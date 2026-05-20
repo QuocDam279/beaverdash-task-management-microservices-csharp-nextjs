@@ -12,7 +12,7 @@ Hệ thống được thiết kế theo kiến trúc Microservices, bao gồm 3 
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **API Gateway** | C# .NET 10 (YARP) | `5000` | Local Host | Entry point, routing, load balancing, SSL termination. | (Không có) |
 | **Identity Service** | C# .NET 10 | `5001` | Local Host | Quản lý người dùng, xác thực, cấp phát token. | `beaverdash_identity_db` (Docker) |
-| **ProjectManagement Service** | C# .NET 10 | `5002` | Local Host | Quản lý dự án, team, board, task, comment và activity log. | `beaverdash_pm_db` (Docker) |
+| **ProjectManagement Service** | C# .NET 10 | `5002` | Local Host | Quản lý dự án, team, board, task, sub-task, comment và activity log. | `beaverdash_pm_db` (Docker) |
 | **DocumentIntelligence Service**| Python (FastAPI) | `5003` | Local Host | Quản lý tài liệu, vector embedding, chunking và AI Chat sessions. | `beaverdash_docintel_db` (Docker) |
 | **Message Broker** | RabbitMQ | `5672`, `15672`| Docker | Quản lý Event Bus, truyền tải thông tin bất đồng bộ. | (Không có) |
 | **Database Server** | PostgreSQL | `5432` | Docker | Lưu trữ dữ liệu tập trung cho cả 3 dịch vụ. | Gồm 3 DB nội bộ riêng biệt |
@@ -69,6 +69,7 @@ Beaverdash/
 │       │   │   ├── Project.cs
 │       │   │   ├── BoardColumn.cs
 │       │   │   ├── TaskItem.cs
+│       │   │   ├── SubTask.cs
 │       │   │   ├── Comment.cs
 │       │   │   ├── Attachment.cs
 │       │   │   ├── ActivityLog.cs
@@ -84,6 +85,7 @@ Beaverdash/
 │       │   │   │   └── TeamMember/
 │       │   │   ├── Tasks/
 │       │   │   │   ├── TaskItem/
+│       │   │   │   ├── SubTask/
 │       │   │   │   ├── Comment/
 │       │   │   │   └── Attachment/
 │       │   │   └── Notifications/
@@ -99,6 +101,7 @@ Beaverdash/
 │           │   ├── ProjectsController.cs
 │           │   ├── TeamsController.cs
 │           │   ├── TasksController.cs
+│           │   ├── SubTasksController.cs
 │           │   └── NotificationsController.cs
 │           └── Program.cs
 └── DocumentIntelligenceService/

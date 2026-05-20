@@ -9,15 +9,18 @@ namespace PM.Application.Features.Teams.Commands;
 
 public class DeleteTeamCommandHandler : IRequestHandler<DeleteTeamCommand, bool>
 {
+    private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
 
-    public DeleteTeamCommandHandler(IPMDbContext dbContext)
+    public DeleteTeamCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
+        _currentUserService = currentUserService;
         _dbContext = dbContext;
     }
 
     public async Task<bool> Handle(DeleteTeamCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId ?? throw new System.UnauthorizedAccessException();
         // 1. Kiểm tra Team tồn tại
         var team = await _dbContext.Teams
             .FirstOrDefaultAsync(t => t.Id == request.TeamId, cancellationToken);
@@ -28,7 +31,7 @@ public class DeleteTeamCommandHandler : IRequestHandler<DeleteTeamCommand, bool>
         // 2. Kiểm tra quyền xóa (phải là leader)
         var requestingMember = await _dbContext.TeamMembers
             .AsNoTracking()
-            .FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId && tm.UserId == request.RequestingUserId, cancellationToken);
+            .FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId && tm.UserId == currentUserId, cancellationToken);
 
         if (requestingMember == null || requestingMember.Role != "leader")
             throw new UnauthorizedAccessException("Chỉ có leader mới có quyền xóa Team.");

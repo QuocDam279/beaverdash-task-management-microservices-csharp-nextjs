@@ -7,5 +7,4 @@ public record CreateProjectCommand(
     Guid? TeamId,
     string Name,
     string? Description,
-    Guid CreatedByUserId,
     bool IsPublic = false) : IRequest<Guid>;

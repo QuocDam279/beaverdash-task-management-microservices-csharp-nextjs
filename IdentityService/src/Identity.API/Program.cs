@@ -54,7 +54,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddScoped<Identity.Application.Contracts.IIdentityDbContext>(provider => provider.GetRequiredService<IdentityDbContext>());
+
+builder.Services.AddExceptionHandler<Identity.API.Middlewares.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -165,9 +165,9 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("TaskId")
+                    b.Property<Guid>("SubTaskId")
                         .HasColumnType("uuid")
-                        .HasColumnName("task_id");
+                        .HasColumnName("sub_task_id");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -179,7 +179,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("SubTaskId");
 
                     b.HasIndex("UserId");
 
@@ -308,6 +308,65 @@ namespace PM.Infrastructure.Migrations
                     b.ToTable("projects", (string)null);
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AssigneeUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignee_user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_date");
+
+                    b.Property<bool>("IsCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_completed");
+
+                    b.Property<int?>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssigneeUserId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("sub_tasks", (string)null);
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -327,6 +386,10 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("board_column_id");
 
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -334,6 +397,10 @@ namespace PM.Infrastructure.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -343,25 +410,17 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("due_date");
 
-                    b.Property<Guid?>("ParentTaskId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("parent_task_id");
-
                     b.Property<string>("Priority")
                         .HasColumnType("varchar")
                         .HasColumnName("priority");
 
-                    b.Property<int?>("SortOrder")
-                        .HasColumnType("integer")
+                    b.Property<double?>("SortOrder")
+                        .HasColumnType("double precision")
                         .HasColumnName("sort_order");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
-
-                    b.Property<string>("TaskType")
-                        .HasColumnType("varchar")
-                        .HasColumnName("task_type");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -379,8 +438,6 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("BoardColumnId");
 
                     b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("ParentTaskId");
 
                     b.ToTable("tasks", (string)null);
                 });
@@ -510,7 +567,7 @@ namespace PM.Infrastructure.Migrations
             modelBuilder.Entity("PM.Domain.Entities.BoardColumn", b =>
                 {
                     b.HasOne("PM.Domain.Entities.Project", "Project")
-                        .WithMany()
+                        .WithMany("BoardColumns")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -520,9 +577,9 @@ namespace PM.Infrastructure.Migrations
 
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
                 {
-                    b.HasOne("PM.Domain.Entities.TaskItem", "Task")
+                    b.HasOne("PM.Domain.Entities.SubTask", "SubTask")
                         .WithMany("Comments")
-                        .HasForeignKey("TaskId")
+                        .HasForeignKey("SubTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -532,7 +589,7 @@ namespace PM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Task");
+                    b.Navigation("SubTask");
 
                     b.Navigation("User");
                 });
@@ -574,6 +631,24 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.User", "AssigneeUser")
+                        .WithMany()
+                        .HasForeignKey("AssigneeUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PM.Domain.Entities.TaskItem", "Task")
+                        .WithMany("SubTasks")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssigneeUser");
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
                 {
                     b.HasOne("PM.Domain.Entities.User", "AssigneeUser")
@@ -582,7 +657,7 @@ namespace PM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("PM.Domain.Entities.BoardColumn", "BoardColumn")
-                        .WithMany()
+                        .WithMany("TaskItems")
                         .HasForeignKey("BoardColumnId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -593,18 +668,11 @@ namespace PM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("PM.Domain.Entities.TaskItem", "ParentTask")
-                        .WithMany()
-                        .HasForeignKey("ParentTaskId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("AssigneeUser");
 
                     b.Navigation("BoardColumn");
 
                     b.Navigation("CreatedByUser");
-
-                    b.Navigation("ParentTask");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Team", b =>
@@ -637,14 +705,29 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.BoardColumn", b =>
+                {
+                    b.Navigation("TaskItems");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
                 {
                     b.Navigation("Attachments");
                 });
 
-            modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
+            modelBuilder.Entity("PM.Domain.Entities.Project", b =>
+                {
+                    b.Navigation("BoardColumns");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
                 {
                     b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
+                {
+                    b.Navigation("SubTasks");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Team", b =>

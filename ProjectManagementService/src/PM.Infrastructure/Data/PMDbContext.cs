@@ -52,6 +52,7 @@ public class PMDbContext : DbContext, PM.Application.Contracts.IPMDbContext
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<BoardColumn> BoardColumns => Set<BoardColumn>();
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
+    public DbSet<SubTask> SubTasks => Set<SubTask>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();

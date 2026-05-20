@@ -47,5 +47,7 @@ public class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
             .WithMany(c => c.Attachments)
             .HasForeignKey(a => a.CommentId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(a => a.Comment.SubTask.DeletedAt == null);
     }
 }

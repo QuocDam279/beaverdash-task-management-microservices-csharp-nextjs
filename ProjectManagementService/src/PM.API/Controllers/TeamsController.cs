@@ -30,8 +30,7 @@ public class TeamsController : ControllerBase
         var command = new AddTeamMemberCommand
         {
             TeamId = id,
-            UserId = request.UserId,
-            RequestingUserId = request.RequestingUserId
+            UserId = request.UserId
         };
 
         await _mediator.Send(command);
@@ -39,9 +38,9 @@ public class TeamsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetTeamById(System.Guid id, [FromQuery] System.Guid requestingUserId)
+    public async Task<IActionResult> GetTeamById(System.Guid id)
     {
-        var query = new PM.Application.Features.Teams.Queries.GetTeamById.GetTeamByIdQuery(id, requestingUserId);
+        var query = new PM.Application.Features.Teams.Queries.GetTeamById.GetTeamByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result == null)
@@ -57,8 +56,7 @@ public class TeamsController : ControllerBase
         {
             TeamId = id,
             TargetUserId = userId,
-            NewRole = request.NewRole,
-            RequestingUserId = request.RequestingUserId
+            NewRole = request.NewRole
         };
 
         await _mediator.Send(command);
@@ -71,8 +69,7 @@ public class TeamsController : ControllerBase
         var command = new PM.Application.Features.Teams.Commands.RemoveTeamMemberCommand
         {
             TeamId = id,
-            TargetUserId = userId,
-            RequestingUserId = request.RequestingUserId
+            TargetUserId = userId
         };
 
         await _mediator.Send(command);
@@ -86,8 +83,7 @@ public class TeamsController : ControllerBase
         {
             TeamId = id,
             Name = request.Name,
-            Description = request.Description,
-            RequestingUserId = request.RequestingUserId
+            Description = request.Description
         };
 
         await _mediator.Send(command);
@@ -99,8 +95,7 @@ public class TeamsController : ControllerBase
     {
         var command = new PM.Application.Features.Teams.Commands.DeleteTeamCommand
         {
-            TeamId = id,
-            RequestingUserId = request.RequestingUserId
+            TeamId = id
         };
 
         await _mediator.Send(command);

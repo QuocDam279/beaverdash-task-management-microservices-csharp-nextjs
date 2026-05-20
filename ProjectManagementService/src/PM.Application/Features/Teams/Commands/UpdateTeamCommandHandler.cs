@@ -9,15 +9,18 @@ namespace PM.Application.Features.Teams.Commands;
 
 public class UpdateTeamCommandHandler : IRequestHandler<UpdateTeamCommand, bool>
 {
+    private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
 
-    public UpdateTeamCommandHandler(IPMDbContext dbContext)
+    public UpdateTeamCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
+        _currentUserService = currentUserService;
         _dbContext = dbContext;
     }
 
     public async Task<bool> Handle(UpdateTeamCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId ?? throw new System.UnauthorizedAccessException();
         // 1. Tìm Team cần cập nhật
         var team = await _dbContext.Teams
             .FirstOrDefaultAsync(t => t.Id == request.TeamId, cancellationToken);
@@ -28,7 +31,7 @@ public class UpdateTeamCommandHandler : IRequestHandler<UpdateTeamCommand, bool>
         // 2. Kiểm tra quyền của người gọi API (Chỉ leader mới được cập nhật)
         var requestingMember = await _dbContext.TeamMembers
             .AsNoTracking()
-            .FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId && tm.UserId == request.RequestingUserId, cancellationToken);
+            .FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId && tm.UserId == currentUserId, cancellationToken);
 
         if (requestingMember == null || requestingMember.Role != "leader")
             throw new UnauthorizedAccessException("Chỉ có leader mới có quyền thay đổi thông tin của team.");

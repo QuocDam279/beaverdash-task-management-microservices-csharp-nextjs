@@ -16,24 +16,22 @@ public class TaskItem : BaseEntity
     
     public string Title { get; set; } = null!;
     
-    public Guid? ParentTaskId { get; set; }
-    public TaskItem? ParentTask { get; set; }
-    
-    public string? TaskType { get; set; }
     public string? Description { get; set; }
     public string? Priority { get; set; }
     
     public DateTime? DueDate { get; set; }
     public DateTime? StartDate { get; set; }
     
-    public int? SortOrder { get; set; }
+    public double? SortOrder { get; set; }
     
     public Guid CreatedByUserId { get; set; }
     public User? CreatedByUser { get; set; }
     
     public DateTime? AssignedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
 }

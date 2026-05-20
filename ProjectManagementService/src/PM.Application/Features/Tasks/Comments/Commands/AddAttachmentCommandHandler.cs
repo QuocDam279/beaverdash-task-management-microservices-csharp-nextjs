@@ -12,11 +12,13 @@ namespace PM.Application.Features.Tasks.Comments.Commands;
 
 public class AddAttachmentCommandHandler : IRequestHandler<AddAttachmentCommand, Guid>
 {
+    private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
     private readonly IWebHostEnvironment _env;
 
-    public AddAttachmentCommandHandler(IPMDbContext dbContext, IWebHostEnvironment env)
+    public AddAttachmentCommandHandler(IPMDbContext dbContext, IWebHostEnvironment env, ICurrentUserService currentUserService)
     {
+        _currentUserService = currentUserService;
         _dbContext = dbContext;
         _env = env;
     }
@@ -25,13 +27,13 @@ public class AddAttachmentCommandHandler : IRequestHandler<AddAttachmentCommand,
     {
         // 1. Kiểm tra Comment tồn tại
         var comment = await _dbContext.Comments
-            .FirstOrDefaultAsync(c => c.Id == request.CommentId && c.TaskId == request.TaskId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.CommentId && c.SubTaskId == request.SubTaskId, cancellationToken);
 
         if (comment == null)
-            throw new InvalidOperationException("Bình luận không tồn tại hoặc không thuộc về Task này.");
+            throw new InvalidOperationException("Bình luận không tồn tại hoặc không thuộc về SubTask này.");
 
         // 2. Validate Authorization: Chỉ chủ nhân bình luận mới được đính kèm
-        if (comment.UserId != request.RequestingUserId)
+        if (comment.UserId != (_currentUserService.UserId ?? throw new System.UnauthorizedAccessException()))
             throw new UnauthorizedAccessException("Bạn không có quyền đính kèm file vào bình luận của người khác.");
 
         if (request.File == null || request.File.Length == 0)

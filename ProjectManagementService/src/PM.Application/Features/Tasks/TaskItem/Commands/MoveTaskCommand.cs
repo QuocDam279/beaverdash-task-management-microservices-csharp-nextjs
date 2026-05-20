@@ -11,38 +11,48 @@ namespace PM.Application.Features.Tasks.TaskItem.Commands;
 public class MoveTaskDto
 {
     public Guid NewBoardColumnId { get; set; }
-    public int NewSortOrder { get; set; }
-    public Guid RequestingUserId { get; set; } // Thêm RequestingUserId
+    public double NewSortOrder { get; set; }
 }
 
 public class MoveTaskCommand : IRequest<bool>
 {
     public Guid TaskId { get; set; }
     public Guid NewBoardColumnId { get; set; }
-    public int NewSortOrder { get; set; }
-    public Guid RequestingUserId { get; set; } // Thêm RequestingUserId
+    public double NewSortOrder { get; set; }
 }
 
 public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public MoveTaskCommandHandler(IPMDbContext dbContext)
+    public MoveTaskCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<bool> Handle(MoveTaskCommand request, CancellationToken cancellationToken)
     {
         var task = await _dbContext.TaskItems
+            .Include(t => t.BoardColumn)
+                .ThenInclude(c => c.Project)
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
             throw new InvalidOperationException("Task not found.");
 
+        var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
+
+        if (task.BoardColumn.Project.TeamId.HasValue)
+        {
+            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (!isMember)
+                throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
+        }
+
         var oldColumnId = task.BoardColumnId;
         var newColumnId = request.NewBoardColumnId;
-        var newSortOrder = request.NewSortOrder;
 
         // Check WIP limit only if moving to a different column
         if (oldColumnId != newColumnId)
@@ -64,31 +74,15 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
             }
 
             // Sinh ra Domain Event
-            task.AddDomainEvent(new PM.Domain.Events.TaskMovedEvent(task.Id, request.RequestingUserId, oldColumnId, newColumnId));
+            task.AddDomainEvent(new PM.Domain.Events.TaskMovedEvent(task.Id, currentUserId, oldColumnId, newColumnId));
         }
 
-        // Fetch all other tasks in the target column to recalculate sort order
-        var tasksInNewColumn = await _dbContext.TaskItems
-            .Where(t => t.BoardColumnId == newColumnId && t.Id != task.Id)
-            .OrderBy(t => t.SortOrder)
-            .ToListAsync(cancellationToken);
-
-        // Update task to new column
+        // Update task to new column and direct double sort order
         task.BoardColumnId = newColumnId;
+        task.SortOrder = request.NewSortOrder;
         task.UpdatedAt = DateTime.UtcNow;
 
-        // Insert at the specified position (clamped to valid bounds)
-        int insertIndex = Math.Max(0, Math.Min(newSortOrder, tasksInNewColumn.Count));
-        tasksInNewColumn.Insert(insertIndex, task);
-
-        // Reassign consecutive sort orders to ensure no duplicates or gaps
-        for (int i = 0; i < tasksInNewColumn.Count; i++)
-        {
-            tasksInNewColumn[i].SortOrder = i;
-        }
-
-        // Explicitly update to ensure EF Core treats them as Modified, not Added
-        _dbContext.TaskItems.UpdateRange(tasksInNewColumn);
+        _dbContext.TaskItems.Update(task);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;

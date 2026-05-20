@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
 using PM.Domain.Entities;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,15 +12,23 @@ namespace PM.Application.Features.Teams.Commands;
 
 public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand, bool>
 {
+    private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
+    private readonly IDocumentIntelligenceServiceClient _docIntelClient;
 
-    public AddTeamMemberCommandHandler(IPMDbContext dbContext)
+    public AddTeamMemberCommandHandler(
+        IPMDbContext dbContext,
+        ICurrentUserService currentUserService,
+        IDocumentIntelligenceServiceClient docIntelClient)
     {
+        _currentUserService = currentUserService;
         _dbContext = dbContext;
+        _docIntelClient = docIntelClient;
     }
 
     public async Task<bool> Handle(AddTeamMemberCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId ?? throw new System.UnauthorizedAccessException();
         // 1. Kiểm tra Team có tồn tại không
         var team = await _dbContext.Teams
             .AsNoTracking()
@@ -30,7 +40,7 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
         // 2. Kiểm tra quyền: Người gọi API có phải là leader của team này không?
         var requestingMember = await _dbContext.TeamMembers
             .AsNoTracking()
-            .FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId && tm.UserId == request.RequestingUserId, cancellationToken);
+            .FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId && tm.UserId == currentUserId, cancellationToken);
 
         if (requestingMember == null || requestingMember.Role != "leader")
             throw new UnauthorizedAccessException("Chỉ có leader mới có quyền thêm thành viên vào team.");
@@ -54,6 +64,25 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
 
         _dbContext.TeamMembers.Add(newMember);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // 5. Đồng bộ thành viên dự án sang DocumentIntelligence Service
+        // Lấy tất cả dự án thuộc team này
+        var projectIds = await _dbContext.Set<PM.Domain.Entities.Project>()
+            .Where(p => p.TeamId == request.TeamId)
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
+
+        // Lấy danh sách thành viên mới nhất của team (bao gồm người vừa thêm)
+        var memberIds = await _dbContext.TeamMembers
+            .Where(tm => tm.TeamId == request.TeamId)
+            .Select(tm => tm.UserId)
+            .ToListAsync(cancellationToken);
+
+        // Đồng bộ cho từng dự án
+        foreach (var projectId in projectIds)
+        {
+            await _docIntelClient.SyncProjectMembersAsync(projectId, memberIds);
+        }
 
         return true;
     }

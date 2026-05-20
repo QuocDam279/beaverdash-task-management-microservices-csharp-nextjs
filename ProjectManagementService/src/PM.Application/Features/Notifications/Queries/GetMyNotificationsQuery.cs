@@ -24,23 +24,26 @@ public class NotificationDto
     public string? ActorAvatar { get; set; }
 }
 
-public record GetMyNotificationsQuery(Guid UserId) : IRequest<List<NotificationDto>>;
+public record GetMyNotificationsQuery() : IRequest<List<NotificationDto>>;
 
 public class GetMyNotificationsQueryHandler : IRequestHandler<GetMyNotificationsQuery, List<NotificationDto>>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetMyNotificationsQueryHandler(IPMDbContext dbContext)
+    public GetMyNotificationsQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<NotificationDto>> Handle(GetMyNotificationsQuery request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException();
         var notifications = await _dbContext.Notifications
             .AsNoTracking()
             .Include(n => n.ActorUser) // Join bảng User để lấy thông tin người gửi
-            .Where(n => n.UserId == request.UserId) // Lọc thông báo của mình
+            .Where(n => n.UserId == currentUserId) // Lọc thông báo của mình
             .OrderByDescending(n => n.CreatedAt) // Sắp xếp giảm dần (mới nhất lên trên)
             .Take(50) // Giới hạn lấy tối đa 50 cái
             .Select(n => new NotificationDto

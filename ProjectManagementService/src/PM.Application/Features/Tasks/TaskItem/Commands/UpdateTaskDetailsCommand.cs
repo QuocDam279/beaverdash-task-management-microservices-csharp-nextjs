@@ -11,7 +11,6 @@ public class UpdateTaskDetailsDto
     public string? Priority { get; set; }
     
     // Giả lập người thực hiện hành động
-    public Guid RequestingUserId { get; set; }
 }
 
 public class UpdateTaskDetailsCommand : IRequest<bool>
@@ -21,5 +20,4 @@ public class UpdateTaskDetailsCommand : IRequest<bool>
     public DateTime? DueDate { get; set; }
     public DateTime? StartDate { get; set; }
     public string? Priority { get; set; }
-    public Guid RequestingUserId { get; set; }
 }

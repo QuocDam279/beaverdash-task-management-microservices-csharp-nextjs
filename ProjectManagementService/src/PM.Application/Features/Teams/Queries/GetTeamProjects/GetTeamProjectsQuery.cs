@@ -29,14 +29,24 @@ public record GetTeamProjectsQuery(Guid TeamId) : IRequest<List<ProjectDto>>;
 public class GetTeamProjectsQueryHandler : IRequestHandler<GetTeamProjectsQuery, List<ProjectDto>>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetTeamProjectsQueryHandler(IPMDbContext dbContext)
+    public GetTeamProjectsQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<ProjectDto>> Handle(GetTeamProjectsQuery request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == request.TeamId && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+        {
+            throw new UnauthorizedAccessException("Bạn không phải là thành viên của Team này.");
+        }
+
         var projects = await _dbContext.Projects
             .AsNoTracking()
             .Include(p => p.CreatedByUser) // Join để lấy thông tin User

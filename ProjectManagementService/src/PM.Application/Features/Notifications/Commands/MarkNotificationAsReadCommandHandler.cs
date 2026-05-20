@@ -9,10 +9,12 @@ namespace PM.Application.Features.Notifications.Commands;
 
 public class MarkNotificationAsReadCommandHandler : IRequestHandler<MarkNotificationAsReadCommand, bool>
 {
+    private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
 
-    public MarkNotificationAsReadCommandHandler(IPMDbContext dbContext)
+    public MarkNotificationAsReadCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
+        _currentUserService = currentUserService;
         _dbContext = dbContext;
     }
 
@@ -26,7 +28,7 @@ public class MarkNotificationAsReadCommandHandler : IRequestHandler<MarkNotifica
             return false; // Trả về false để Controller mapping sang 404 Not Found
 
         // 2. Kiểm tra bảo mật: Không được phép đọc thông báo của người khác
-        if (notification.UserId != request.RequestingUserId)
+        if (notification.UserId != (_currentUserService.UserId ?? throw new System.UnauthorizedAccessException()))
             throw new UnauthorizedAccessException("Forbidden: Bạn không có quyền thao tác trên thông báo này.");
 
         // 3. Đánh dấu đã đọc

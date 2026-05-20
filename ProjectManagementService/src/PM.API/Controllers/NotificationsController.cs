@@ -19,10 +19,10 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMyNotifications([FromQuery] Guid requestingUserId)
+    public async Task<IActionResult> GetMyNotifications()
     {
         // Dùng [FromQuery] để nhận ID của người giả lập (thay cho JWT token)
-        var query = new GetMyNotificationsQuery(requestingUserId);
+        var query = new GetMyNotificationsQuery();
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -32,8 +32,7 @@ public class NotificationsController : ControllerBase
     {
         var command = new MarkNotificationAsReadCommand
         {
-            NotificationId = id,
-            RequestingUserId = request.RequestingUserId
+            NotificationId = id
         };
 
         var success = await _mediator.Send(command);

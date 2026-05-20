@@ -31,14 +31,36 @@ public record GetProjectActivitiesQuery(Guid ProjectId) : IRequest<List<Activity
 public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivitiesQuery, List<ActivityLogDto>>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetProjectActivitiesQueryHandler(IPMDbContext dbContext)
+    public GetProjectActivitiesQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<ActivityLogDto>> Handle(GetProjectActivitiesQuery request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
+
+        var project = await _dbContext.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
+
+        if (project == null)
+            return new List<ActivityLogDto>();
+
+        if (project.TeamId.HasValue && !project.IsPublic)
+        {
+            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (!isMember)
+                throw new UnauthorizedAccessException("Bạn không có quyền xem lịch sử hoạt động của Project này.");
+        }
+        else if (!project.TeamId.HasValue && !project.IsPublic && project.CreatedByUserId != currentUserId)
+        {
+            throw new UnauthorizedAccessException("Bạn không có quyền xem lịch sử hoạt động của Project này.");
+        }
+
         // Truy vấn ActivityLog theo ProjectId, kết hợp bảng User để lấy tên/avatar
         var activities = await _dbContext.ActivityLogs
             .AsNoTracking()

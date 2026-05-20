@@ -32,15 +32,17 @@ public class TeamDto
     public List<TeamMemberDto> Members { get; set; } = new();
 }
 
-public record GetTeamByIdQuery(Guid TeamId, Guid RequestingUserId) : IRequest<TeamDto?>;
+public record GetTeamByIdQuery(Guid TeamId) : IRequest<TeamDto?>;
 
 public class GetTeamByIdQueryHandler : IRequestHandler<GetTeamByIdQuery, TeamDto?>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetTeamByIdQueryHandler(IPMDbContext dbContext)
+    public GetTeamByIdQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<TeamDto?> Handle(GetTeamByIdQuery request, CancellationToken cancellationToken)
@@ -55,7 +57,8 @@ public class GetTeamByIdQueryHandler : IRequestHandler<GetTeamByIdQuery, TeamDto
             return null;
 
         // Bổ sung kiểm tra Data-level Authorization: User phải nằm trong danh sách thành viên
-        bool isMember = team.Members.Any(m => m.UserId == request.RequestingUserId);
+        var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException();
+        bool isMember = team.Members.Any(m => m.UserId == currentUserId);
         if (!isMember)
             throw new UnauthorizedAccessException("Forbidden: Bạn không phải là thành viên của nhóm này nên không thể xem thông tin.");
 

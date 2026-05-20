@@ -1,9 +1,6 @@
 using PM.Infrastructure.Data;
 using PM.Infrastructure.Messaging.Consumers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using MassTransit;
 using System.Reflection;
 
@@ -37,26 +34,10 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
-            ValidAudience = jwtSettings.GetValue<string>("Audience"),
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!))
-        };
-    });
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddHttpContextAccessor();
 
 // 1. Đăng ký SignalR
 builder.Services.AddSignalR();
@@ -64,14 +45,30 @@ builder.Services.AddSignalR();
 // 2. Đăng ký Service đẩy thông báo Realtime
 builder.Services.AddScoped<PM.Application.Contracts.INotificationService, PM.API.Services.SignalRNotificationService>();
 
+// 3. Đăng ký ICurrentUserService
+builder.Services.AddScoped<PM.Application.Contracts.ICurrentUserService, PM.API.Services.CurrentUserService>();
+
 builder.Services.AddScoped<PM.Application.Contracts.IPMDbContext>(provider => provider.GetRequiredService<PMDbContext>());
+
+builder.Services.AddExceptionHandler<PM.API.Middlewares.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
+// 5. Đăng ký HttpClient cho DocumentIntelligence Webhook Client
+builder.Services.AddHttpClient<PM.Application.Contracts.IDocumentIntelligenceServiceClient, PM.Infrastructure.Services.DocumentIntelligenceServiceClient>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5003");
+    // Nếu Python service không phản hồi trong 5 giây, bỏ qua
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+
 var app = builder.Build();
 
-app.UseAuthentication();
+app.UseExceptionHandler();
+
 app.UseAuthorization();
 app.MapControllers();
 
-// 3. Map endpoint cho Hub
+// 4. Map endpoint cho Hub
 app.MapHub<PM.API.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();

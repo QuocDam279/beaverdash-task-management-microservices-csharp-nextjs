@@ -13,6 +13,7 @@ public interface IPMDbContext
     DbSet<Project> Projects { get; }
     DbSet<BoardColumn> BoardColumns { get; }
     DbSet<TaskItem> TaskItems { get; }
+    DbSet<SubTask> SubTasks { get; }
     DbSet<Comment> Comments { get; }
     DbSet<Attachment> Attachments { get; }
     DbSet<ActivityLog> ActivityLogs { get; }
