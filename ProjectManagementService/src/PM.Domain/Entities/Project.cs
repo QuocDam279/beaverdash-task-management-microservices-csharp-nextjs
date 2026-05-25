@@ -1,3 +1,5 @@
+using PM.Domain.Enums;
+
 namespace PM.Domain.Entities;
 
 public class Project
@@ -9,7 +11,8 @@ public class Project
 
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
-    public string? Status { get; set; }
+    public ProjectStatus Status { get; set; }
+    public int Progress { get; set; }
     
     public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }

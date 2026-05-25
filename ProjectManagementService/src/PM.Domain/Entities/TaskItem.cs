@@ -1,4 +1,5 @@
 using PM.Domain.Common;
+using PM.Domain.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +18,7 @@ public class TaskItem : BaseEntity
     public string Title { get; set; } = null!;
     
     public string? Description { get; set; }
-    public string? Priority { get; set; }
+    public TaskPriority? Priority { get; set; }
     
     public DateTime? DueDate { get; set; }
     public DateTime? StartDate { get; set; }

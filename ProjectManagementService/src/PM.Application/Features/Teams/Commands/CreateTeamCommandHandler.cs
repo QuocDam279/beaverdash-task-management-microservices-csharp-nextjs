@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
 using PM.Domain.Entities;
 using System;
@@ -20,9 +21,15 @@ public class CreateTeamCommandHandler : IRequestHandler<CreateTeamCommand, Guid>
 
     public async Task<Guid> Handle(CreateTeamCommand request, CancellationToken cancellationToken)
     {
-        var teamId = Guid.NewGuid();
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
+        var isDuplicate = await _dbContext.Teams.AnyAsync(t => t.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+        if (isDuplicate)
+        {
+            throw new InvalidOperationException("Tên nhóm đã tồn tại. Vui lòng chọn tên khác.");
+        }
+
+        var teamId = Guid.NewGuid();
         // 1. Khởi tạo Team
         var team = new Team
         {

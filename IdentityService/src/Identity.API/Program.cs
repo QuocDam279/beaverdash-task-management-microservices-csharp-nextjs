@@ -31,6 +31,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<Identity.Application.Contracts.IGoogleTokenValidator, Identity.Infrastructure.Services.GoogleTokenValidator>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secret = Environment.GetEnvironmentVariable("JWT_SECRET");

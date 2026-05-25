@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
+using PM.Domain.Entities;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,6 +51,19 @@ public class DeleteTaskCommandHandler : IRequestHandler<DeleteTaskCommand, bool>
         {
             subTask.DeletedAt = now;
         }
+
+        var activityLog = new ActivityLog
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = task.BoardColumn.ProjectId,
+            UserId = currentUserId,
+            EntityType = "task",
+            EntityId = task.Id,
+            ActionType = "deleted",
+            NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title }),
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.ActivityLogs.Add(activityLog);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;

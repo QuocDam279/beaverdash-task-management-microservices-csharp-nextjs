@@ -27,7 +27,14 @@ public class TaskAssignedEventHandler : INotificationHandler<TaskAssignedEvent>
         if (task == null || task.BoardColumn == null)
             return;
 
-        var newValueObj = new { assignee_user_id = notification.AssigneeUserId };
+        var assigneeUser = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == notification.AssigneeUserId, cancellationToken);
+
+        var newValueObj = new 
+        { 
+            assignee_user_id = notification.AssigneeUserId,
+            assignee_name = assigneeUser?.DisplayName ?? "Chưa phân công",
+            task_title = task.Title
+        };
 
         var activityLog = new ActivityLog
         {

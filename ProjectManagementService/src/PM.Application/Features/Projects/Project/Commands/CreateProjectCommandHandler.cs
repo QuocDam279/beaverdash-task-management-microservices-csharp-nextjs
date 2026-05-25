@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PM.Domain.Enums;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,10 +31,24 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
 
         if (request.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == request.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
+            var member = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == request.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (member == null || member.Role != "leader")
             {
-                throw new UnauthorizedAccessException("Bạn không phải là thành viên của Team này.");
+                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền tạo dự án cho nhóm này.");
+            }
+
+            var isDuplicate = await _dbContext.Projects.AnyAsync(p => p.TeamId == request.TeamId.Value && p.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+            if (isDuplicate)
+            {
+                throw new InvalidOperationException("Tên dự án đã tồn tại trong nhóm này. Vui lòng chọn tên khác.");
+            }
+        }
+        else
+        {
+            var isDuplicate = await _dbContext.Projects.AnyAsync(p => p.TeamId == null && p.CreatedByUserId == currentUserId && p.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+            if (isDuplicate)
+            {
+                throw new InvalidOperationException("Tên dự án cá nhân đã tồn tại. Vui lòng chọn tên khác.");
             }
         }
 
@@ -43,7 +58,10 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
             TeamId = request.TeamId,
             Name = request.Name,
             Description = request.Description,
-            Status = "To Do",
+            Status = ProjectStatus.NotStarted,
+            Progress = 0,
+            StartDate = request.StartDate,
+            DueDate = request.DueDate,
             IsPublic = request.IsPublic,
             CreatedByUserId = currentUserId,
             CreatedAt = DateTime.UtcNow,
@@ -51,11 +69,21 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
         };
 
         _dbContext.Set<PM.Domain.Entities.Project>().Add(project);
+
+        // Seed 3 default columns for this project
+        var defaultColumns = new List<PM.Domain.Entities.BoardColumn>
+        {
+            new() { Id = Guid.NewGuid(), ProjectId = project.Id, Name = "Chưa thực hiện", Position = 1, IsDone = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+            new() { Id = Guid.NewGuid(), ProjectId = project.Id, Name = "Đang thực hiện", Position = 2, IsDone = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+            new() { Id = Guid.NewGuid(), ProjectId = project.Id, Name = "Đã hoàn thành", Position = 3, IsDone = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+        };
+        _dbContext.BoardColumns.AddRange(defaultColumns);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         // --- Đồng bộ sang DocumentIntelligence Service ---
         // 1. Đồng bộ thông tin dự án
-        await _docIntelClient.SyncProjectAsync(project.Id, project.Name, project.Description, project.Status);
+        await _docIntelClient.SyncProjectAsync(project.Id, project.Name, project.Description, project.Status.ToVietnameseString());
 
         // 2. Đồng bộ danh sách thành viên
         List<Guid> memberIds;

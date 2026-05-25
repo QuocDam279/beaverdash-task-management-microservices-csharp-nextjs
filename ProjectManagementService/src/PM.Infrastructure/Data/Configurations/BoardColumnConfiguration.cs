@@ -35,6 +35,11 @@ public class BoardColumnConfiguration : IEntityTypeConfiguration<BoardColumn>
             .HasColumnName("wip_limit")
             .HasColumnType("integer");
 
+        builder.Property(bc => bc.IsDone)
+            .HasColumnName("is_done")
+            .HasColumnType("boolean")
+            .HasDefaultValue(false);
+
         builder.Property(bc => bc.CreatedAt)
             .HasColumnName("created_at")
             .HasColumnType("timestamp with time zone");

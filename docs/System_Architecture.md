@@ -10,6 +10,7 @@ Hệ thống được thiết kế theo kiến trúc Microservices, bao gồm 3 
 
 | Thành phần | Công nghệ | Port | Môi trường | Vai trò | Cơ sở dữ liệu (PostgreSQL) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Frontend Web** | Next.js (Tailwind CSS) | `3000` | Local Host | Giao diện người dùng (Dashboard, Task Management, AI Chat). | (Không có) |
 | **API Gateway** | C# .NET 10 (YARP) | `5000` | Local Host | Entry point, routing, load balancing, SSL termination. | (Không có) |
 | **Identity Service** | C# .NET 10 | `5001` | Local Host | Quản lý người dùng, xác thực, cấp phát token. | `beaverdash_identity_db` (Docker) |
 | **ProjectManagement Service** | C# .NET 10 | `5002` | Local Host | Quản lý dự án, team, board, task, sub-task, comment và activity log. | `beaverdash_pm_db` (Docker) |
@@ -35,6 +36,7 @@ Beaverdash/
 ├── docker-compose.yml
 ├── .env                  # Biến môi trường thực (không commit lên Git)
 ├── .env.example          # Template env để chia sẻ với team
+├── web/                  # Frontend Web Application (Next.js + Tailwind CSS)
 ├── BuildingBlocks/
 │   └── EventBus.Messages/
 │       └── Events/

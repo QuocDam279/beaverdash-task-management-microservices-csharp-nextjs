@@ -22,41 +22,111 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
 
     public async Task Handle(CommentAddedEvent notification, CancellationToken cancellationToken)
     {
-        var task = await _dbContext.TaskItems
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == notification.TaskId, cancellationToken);
+        var subTask = await _dbContext.SubTasks
+            .Include(s => s.Task)
+                .ThenInclude(t => t!.BoardColumn)
+            .FirstOrDefaultAsync(s => s.Id == notification.TaskId, cancellationToken);
 
-        if (task == null)
+        if (subTask == null)
             return;
 
-        if (task.AssigneeUserId.HasValue && task.AssigneeUserId.Value != notification.UserId)
+        var actorUser = await _dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == notification.UserId, cancellationToken);
+
+        var actorDisplayName = actorUser?.DisplayName ?? "Unknown User";
+        var actorAvatar = actorUser?.Avatar;
+
+        string actionUrl = "/tasks";
+        if (subTask.Task?.BoardColumn != null)
         {
-            var newNotification = new Notification
+            actionUrl = $"/projects/{subTask.Task.BoardColumn.ProjectId}/board";
+        }
+
+        Notification? subTaskAssigneeNotif = null;
+        Notification? parentTaskAssigneeNotif = null;
+
+        // 1. Chuẩn bị thông báo cho Người thực hiện Subtask (Subtask Assignee)
+        if (subTask.AssigneeUserId.HasValue && subTask.AssigneeUserId.Value != notification.UserId)
+        {
+            subTaskAssigneeNotif = new Notification
             {
                 Id = Guid.NewGuid(),
-                UserId = task.AssigneeUserId.Value,
+                UserId = subTask.AssigneeUserId.Value,
                 ActorUserId = notification.UserId,
-                Type = "task_comment",
-                Content = "Một đồng nghiệp vừa để lại bình luận trong công việc của bạn.",
-                ActionUrl = $"/tasks/{notification.TaskId}",
+                Type = "subtask_comment",
+                Content = $"Một đồng nghiệp vừa bình luận trên subtask '{subTask.Title}' được giao cho bạn.",
+                ActionUrl = actionUrl,
                 IsRead = false,
                 IsSentViaEmail = false,
                 CreatedAt = DateTime.UtcNow
             };
+            _dbContext.Notifications.Add(subTaskAssigneeNotif);
+        }
 
-            _dbContext.Notifications.Add(newNotification);
+        // 2. Chuẩn bị thông báo cho Người thực hiện Task cha (Parent Task Assignee)
+        if (subTask.Task != null && subTask.Task.AssigneeUserId.HasValue)
+        {
+            var parentTaskAssigneeId = subTask.Task.AssigneeUserId.Value;
+            bool isSubTaskAssigneeNotified = subTaskAssigneeNotif != null && subTaskAssigneeNotif.UserId == parentTaskAssigneeId;
+
+            if (parentTaskAssigneeId != notification.UserId && !isSubTaskAssigneeNotified)
+            {
+                parentTaskAssigneeNotif = new Notification
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = parentTaskAssigneeId,
+                    ActorUserId = notification.UserId,
+                    Type = "parent_task_subtask_comment",
+                    Content = $"Một đồng nghiệp vừa bình luận trên subtask '{subTask.Title}' thuộc công việc '{subTask.Task.Title}' của bạn.",
+                    ActionUrl = actionUrl,
+                    IsRead = false,
+                    IsSentViaEmail = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _dbContext.Notifications.Add(parentTaskAssigneeNotif);
+            }
+        }
+
+        // Lưu tất cả vào database
+        if (subTaskAssigneeNotif != null || parentTaskAssigneeNotif != null)
+        {
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
 
-            // Gửi Real-time notification qua SignalR tới đúng người dùng (Assignee)
+        // Gửi Real-time qua SignalR
+        if (subTaskAssigneeNotif != null)
+        {
             await _notificationService.SendNotificationToUserAsync(
-                newNotification.UserId.ToString(), 
+                subTaskAssigneeNotif.UserId.ToString(),
                 new
                 {
-                    Id = newNotification.Id,
-                    Type = newNotification.Type,
-                    Content = newNotification.Content,
-                    ActionUrl = newNotification.ActionUrl,
-                    CreatedAt = newNotification.CreatedAt
+                    Id = subTaskAssigneeNotif.Id,
+                    Type = subTaskAssigneeNotif.Type,
+                    Content = subTaskAssigneeNotif.Content,
+                    ActionUrl = subTaskAssigneeNotif.ActionUrl,
+                    CreatedAt = subTaskAssigneeNotif.CreatedAt,
+                    ActorUserId = subTaskAssigneeNotif.ActorUserId,
+                    ActorDisplayName = actorDisplayName,
+                    ActorAvatar = actorAvatar
+                }
+            );
+        }
+
+        if (parentTaskAssigneeNotif != null)
+        {
+            await _notificationService.SendNotificationToUserAsync(
+                parentTaskAssigneeNotif.UserId.ToString(),
+                new
+                {
+                    Id = parentTaskAssigneeNotif.Id,
+                    Type = parentTaskAssigneeNotif.Type,
+                    Content = parentTaskAssigneeNotif.Content,
+                    ActionUrl = parentTaskAssigneeNotif.ActionUrl,
+                    CreatedAt = parentTaskAssigneeNotif.CreatedAt,
+                    ActorUserId = parentTaskAssigneeNotif.ActorUserId,
+                    ActorDisplayName = actorDisplayName,
+                    ActorAvatar = actorAvatar
                 }
             );
         }

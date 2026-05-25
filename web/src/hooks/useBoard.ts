@@ -1,0 +1,446 @@
+"use client";
+
+import * as React from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { TaskItem, BoardColumn } from "@/types/task";
+import { api } from "@/lib/api";
+
+export function useBoard(projectId: string) {
+  const { user: currentUser } = useAuth();
+
+  const [columns, setColumns] = React.useState<BoardColumn[]>([]);
+  const [tasks, setTasks] = React.useState<TaskItem[]>([]);
+  const [selectedTaskState, setSelectedTaskState] = React.useState<TaskItem | null>(null);
+  const [assignees, setAssignees] = React.useState<any[]>([]);
+  const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
+  const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Column creation states
+  const [isAddingColumn, setIsAddingColumn] = React.useState(false);
+  const [newColName, setNewColName] = React.useState("");
+  const [newColWip, setNewColWip] = React.useState<number | null>(null);
+
+  // Column management modal states
+  const [wipModalColumn, setWipModalColumn] = React.useState<BoardColumn | null>(null);
+  const [deleteModalColumn, setDeleteModalColumn] = React.useState<BoardColumn | null>(null);
+
+  const fetchBoardData = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const overview = await api.get(`/projects/${projectId}/overview`);
+      const board = await api.get(`/projects/${projectId}/board`);
+      
+      if (overview) {
+        setProjectStartDate(overview.startDate || null);
+        setProjectDueDate(overview.dueDate || null);
+      }
+      
+      if (board) {
+        const cols = board.boardColumns || [];
+        setColumns(cols);
+        
+        const allTasks: TaskItem[] = cols.flatMap((col: any) =>
+          (col.taskItems || []).map((t: any) => ({
+            ...t,
+            projectStartDate: overview?.startDate || board?.startDate || null,
+            projectDueDate: overview?.dueDate || board?.dueDate || null,
+            assigneeUser: t.assigneeUserId ? {
+              id: t.assigneeUserId,
+              displayName: t.assigneeName,
+              avatar: t.assigneeAvatar
+            } : null,
+            subTasks: (t.subTasks || []).map((st: any) => ({
+              ...st,
+              assigneeUser: st.assigneeUserId ? {
+                id: st.assigneeUserId,
+                displayName: st.assigneeName,
+                avatar: st.assigneeAvatar
+              } : null
+            }))
+          }))
+        );
+        setTasks(allTasks);
+      }
+      
+      if (overview?.teamId) {
+        const team = await api.get(`/teams/${overview.teamId}`);
+        if (team?.members) {
+          setAssignees(team.members.map((m: any) => ({
+            id: m.userId,
+            displayName: m.displayName,
+            avatar: m.avatar,
+            email: m.email,
+            role: m.role,
+          })));
+        }
+      } else if (currentUser) {
+        setAssignees([currentUser]);
+      }
+    } catch (err: any) {
+      console.error("Failed to load project board:", err);
+      setError(err.message || "Đã xảy ra lỗi khi tải dữ liệu bảng.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, currentUser]);
+
+  React.useEffect(() => {
+    fetchBoardData();
+  }, [fetchBoardData]);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const taskIdParam = searchParams ? searchParams.get("taskId") : null;
+
+  const selectedTask = selectedTaskState;
+  const justClosedRef = React.useRef<string | null>(null);
+  const fetchingTaskIdRef = React.useRef<string | null>(null);
+
+  const selectedPriority = searchParams ? searchParams.get("priority") : null;
+  const selectedDueDateFilter = searchParams ? searchParams.get("dueDate") : null;
+  const selectedAssignee = searchParams ? searchParams.get("assigneeId") : null;
+
+  const handleSetPriority = React.useCallback((val: string | null) => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (val) params.set("priority", val);
+      else params.delete("priority");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [pathname, router]);
+
+  const handleSetDueDateFilter = React.useCallback((val: string | null) => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (val) params.set("dueDate", val);
+      else params.delete("dueDate");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [pathname, router]);
+
+  const handleSetAssignee = React.useCallback((val: string | null) => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (val) params.set("assigneeId", val);
+      else params.delete("assigneeId");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [pathname, router]);
+
+  const handleResetFilters = React.useCallback(() => {
+    setSearchQuery("");
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("assigneeId");
+      params.delete("priority");
+      params.delete("dueDate");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [pathname, router]);
+
+  const setSelectedTask = React.useCallback((task: TaskItem | null) => {
+    console.log("setSelectedTask called with:", task?.id, task);
+    if (task === null) {
+      if (selectedTaskState) {
+        justClosedRef.current = selectedTaskState.id;
+      }
+      // Update URL to remove taskId
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("taskId")) {
+          params.delete("taskId");
+          const query = params.toString();
+          router.replace(query ? `${pathname}?${query}` : pathname);
+        }
+      }
+      setSelectedTaskState(null);
+    } else {
+      justClosedRef.current = null;
+      setSelectedTaskState(task);
+    }
+  }, [selectedTaskState, pathname, router]);
+
+  // Sync state from URL to selectedTask
+  React.useEffect(() => {
+    console.log("useBoard sync effect:", { taskIdParam, tasksLength: tasks.length, selectedTaskStateId: selectedTaskState?.id });
+    if (taskIdParam && tasks.length > 0) {
+      if (justClosedRef.current === taskIdParam) {
+        console.log("sync effect skipped: justClosedRef matches");
+        return;
+      }
+      const task = tasks.find((t) => t.id === taskIdParam);
+      if (task && (!selectedTaskState || (selectedTaskState.id || (selectedTaskState as any).Id) !== taskIdParam)) {
+        if (fetchingTaskIdRef.current === taskIdParam) {
+          console.log("sync effect skipped: already fetching this task ID");
+          return;
+        }
+        console.log("sync effect triggering fetch for task:", task.id);
+        fetchingTaskIdRef.current = taskIdParam;
+        
+        // Fetch details asynchronously within the effect
+        (async () => {
+          try {
+            const fullTask = await api.get(`/tasks/${task.id}`);
+            if (fullTask) {
+              const taskId = fullTask.id || fullTask.Id || task.id;
+              setSelectedTaskState({
+                ...fullTask,
+                id: taskId,
+                assigneeUser: fullTask.assigneeUserId ? {
+                  id: fullTask.assigneeUserId,
+                  displayName: fullTask.assigneeName,
+                  avatar: fullTask.assigneeAvatar
+                } : null
+              });
+            }
+          } catch (err) {
+            console.error("Failed to load task details in sync effect:", err);
+          }
+        })();
+      }
+    } else {
+      justClosedRef.current = null;
+      fetchingTaskIdRef.current = null;
+      if (selectedTaskState) {
+        console.log("sync effect clearing selectedTaskState");
+        setSelectedTaskState(null);
+      }
+    }
+  }, [taskIdParam, tasks, selectedTaskState]);
+
+  const handleTaskClick = React.useCallback((task: TaskItem) => {
+    console.log("handleTaskClick called (updating URL only):", task.id);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("taskId") !== task.id) {
+        params.set("taskId", task.id);
+        router.replace(`${pathname}?${params.toString()}`);
+      }
+    }
+  }, [pathname, router]);
+
+  const handleCreateColumn = async () => {
+    if (!newColName.trim()) return;
+    try {
+      await api.post("/boardcolumns", {
+        projectId,
+        name: newColName.trim(),
+        position: columns.length + 1,
+        wipLimit: newColWip,
+        isDone: false,
+      });
+      setIsAddingColumn(false);
+      setNewColName("");
+      setNewColWip(null);
+      fetchBoardData();
+    } catch (err) {
+      console.error("Failed to create board column:", err);
+    }
+  };
+
+  const handleMoveColumn = async (columnId: string, direction: "left" | "right") => {
+    const index = columns.findIndex((c) => c.id === columnId);
+    if (index === -1) return;
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= columns.length) return;
+
+    const colA = columns[index];
+    const colB = columns[targetIndex];
+
+    try {
+      // Swap positions
+      await Promise.all([
+        api.patch(`/boardcolumns/${colA.id}`, {
+          name: colA.name,
+          position: colB.position,
+          wipLimit: colA.wipLimit,
+          isDone: colA.isDone
+        }),
+        api.patch(`/boardcolumns/${colB.id}`, {
+          name: colB.name,
+          position: colA.position,
+          wipLimit: colB.wipLimit,
+          isDone: colB.isDone
+        })
+      ]);
+      fetchBoardData();
+    } catch (err) {
+      console.error("Failed to move column:", err);
+    }
+  };
+
+  const handleOpenWipLimitModal = (column: BoardColumn) => {
+    setWipModalColumn(column);
+  };
+
+  const handleSaveWipLimit = async (limit: number | null) => {
+    if (!wipModalColumn) return;
+    try {
+      await api.patch(`/boardcolumns/${wipModalColumn.id}`, {
+        name: wipModalColumn.name,
+        position: wipModalColumn.position,
+        wipLimit: limit,
+        isDone: wipModalColumn.isDone
+      });
+      setWipModalColumn(null);
+      fetchBoardData();
+    } catch (err) {
+      console.error("Failed to update WIP limit:", err);
+    }
+  };
+
+  const handleSetColumnDone = async (columnId: string) => {
+    const col = columns.find((c) => c.id === columnId);
+    if (!col) return;
+    try {
+      await api.patch(`/boardcolumns/${col.id}`, {
+        name: col.name,
+        position: col.position,
+        wipLimit: col.wipLimit,
+        isDone: true
+      });
+      fetchBoardData();
+    } catch (err) {
+      console.error("Failed to set column as done:", err);
+    }
+  };
+
+  const handleOpenDeleteModal = (column: BoardColumn) => {
+    setDeleteModalColumn(column);
+  };
+
+  const handleConfirmDelete = async (targetColumnId?: string) => {
+    if (!deleteModalColumn) return;
+    try {
+      if (!targetColumnId) {
+        await api.delete(`/boardcolumns/${deleteModalColumn.id}`);
+      } else {
+        await api.delete(`/boardcolumns/${deleteModalColumn.id}?moveTasksToColumnId=${targetColumnId}`);
+      }
+      setDeleteModalColumn(null);
+      fetchBoardData();
+    } catch (err) {
+      console.error("Failed to delete column:", err);
+    }
+  };
+
+  const handleMoveTask = async (taskId: string, targetColumnId: string) => {
+    const targetTasks = tasks.filter((t) => t.boardColumnId === targetColumnId);
+    let newSortOrder = 1.0;
+    if (targetTasks.length > 0) {
+      const maxSort = Math.max(...targetTasks.map((t) => t.sortOrder || 0));
+      newSortOrder = maxSort + 1.0;
+    }
+    try {
+      await api.put(`/tasks/${taskId}/move`, {
+        newBoardColumnId: targetColumnId,
+        newSortOrder: newSortOrder,
+      });
+      fetchBoardData();
+    } catch (err: any) {
+      console.error("Failed to move task:", err);
+      alert(err.message || "Không thể di chuyển công việc. Có thể cột đích đã đạt giới hạn WIP.");
+    }
+  };
+
+  const filteredTasks = React.useMemo(() => {
+    const now = new Date();
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(now.getDate() + 7);
+
+    const doneColumnIds = columns.filter(c => c.isDone).map(c => c.id);
+
+    return tasks.filter((task) => {
+      // 1. Search Query
+      const matchesSearch =
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.description &&
+          task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      // 2. Assignee (Including subtasks)
+      const matchesAssignee = selectedAssignee
+        ? task.assigneeUserId === selectedAssignee ||
+          (task.subTasks && task.subTasks.some((st) => st.assigneeUserId === selectedAssignee))
+        : true;
+
+      // 3. Priority
+      const matchesPriority = selectedPriority
+        ? task.priority === selectedPriority
+        : true;
+
+      // 4. Due Date
+      let matchesDueDate = true;
+      if (selectedDueDateFilter === "overdue") {
+        matchesDueDate =
+          !!task.dueDate &&
+          !doneColumnIds.includes(task.boardColumnId) &&
+          new Date(task.dueDate) < now;
+      } else if (selectedDueDateFilter === "upcoming7") {
+        matchesDueDate =
+          !!task.dueDate &&
+          !doneColumnIds.includes(task.boardColumnId) &&
+          new Date(task.dueDate) >= now &&
+          new Date(task.dueDate) <= sevenDaysFromNow;
+      }
+
+      return matchesSearch && matchesAssignee && matchesPriority && matchesDueDate;
+    });
+  }, [tasks, searchQuery, selectedAssignee, selectedPriority, selectedDueDateFilter, columns]);
+
+  return {
+    columns,
+    tasks,
+    selectedTask,
+    setSelectedTask,
+    projectStartDate,
+    projectDueDate,
+    assignees,
+    searchQuery,
+    setSearchQuery,
+    selectedAssignee,
+    setSelectedAssignee: handleSetAssignee,
+    selectedPriority,
+    setSelectedPriority: handleSetPriority,
+    selectedDueDateFilter,
+    setSelectedDueDateFilter: handleSetDueDateFilter,
+    handleResetFilters,
+    isCreateTaskModalOpen,
+    setIsCreateTaskModalOpen,
+    isLoading,
+    error,
+    isAddingColumn,
+    setIsAddingColumn,
+    newColName,
+    setNewColName,
+    newColWip,
+    setNewColWip,
+    wipModalColumn,
+    setWipModalColumn,
+    deleteModalColumn,
+    setDeleteModalColumn,
+    fetchBoardData,
+    handleTaskClick,
+    handleCreateColumn,
+    handleMoveColumn,
+    handleOpenWipLimitModal,
+    handleSaveWipLimit,
+    handleOpenDeleteModal,
+    handleConfirmDelete,
+    handleMoveTask,
+    handleSetColumnDone,
+    filteredTasks,
+  };
+}

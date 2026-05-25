@@ -121,6 +121,12 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<bool>("IsDone")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_done");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("varchar")
@@ -276,6 +282,12 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("varchar")
                         .HasColumnName("name");
 
+                    b.Property<int>("Progress")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("progress");
+
                     b.Property<string>("ShareToken")
                         .HasColumnType("varchar")
                         .HasColumnName("share_token");
@@ -285,7 +297,10 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnName("start_date");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("varchar")
+                        .HasDefaultValue("NotStarted")
                         .HasColumnName("status");
 
                     b.Property<Guid?>("TeamId")
@@ -340,10 +355,6 @@ namespace PM.Infrastructure.Migrations
                     b.Property<int?>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sort_order");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start_date");
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid")

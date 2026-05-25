@@ -43,6 +43,7 @@ public class CreateBoardColumnCommandHandler : IRequestHandler<CreateBoardColumn
             Name = request.Name,
             Position = request.Position,
             WipLimit = request.WipLimit,
+            IsDone = request.IsDone,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

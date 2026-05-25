@@ -7,4 +7,6 @@ public record CreateProjectCommand(
     Guid? TeamId,
     string Name,
     string? Description,
-    bool IsPublic = false) : IRequest<Guid>;
+    bool IsPublic = false,
+    DateTime? StartDate = null,
+    DateTime? DueDate = null) : IRequest<Guid>;

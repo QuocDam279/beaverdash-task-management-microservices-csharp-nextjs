@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --font-primary: "Atlassian Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
+  --text-primary: #292a2e;
+  --text-secondary: #505258;
+  --text-tertiary: #1868db;
+  --text-inverse: #6b6e76;
+  --surface-base: #000000;
+  --surface-muted: #ffffff;
+}
+
+@theme inline {
+  --font-sans: var(--font-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-inverse: var(--text-inverse);
+  --color-surface-base: var(--surface-base);
+  --color-surface-muted: var(--surface-muted);
+}
+
+body {
+  background-color: var(--surface-muted);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Fade mask overlay utility */
+.fade-bottom-mask {
+  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+

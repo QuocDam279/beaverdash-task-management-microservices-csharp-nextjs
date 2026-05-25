@@ -19,6 +19,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(PM.Ap
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<UserCreatedConsumer>();
+    x.AddConsumer<UserUpdatedConsumer>();
     
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -31,6 +32,11 @@ builder.Services.AddMassTransit(x =>
         {
             e.ConfigureConsumer<UserCreatedConsumer>(context);
         });
+
+        cfg.ReceiveEndpoint("user-updated-queue", e =>
+        {
+            e.ConfigureConsumer<UserUpdatedConsumer>(context);
+        });
     });
 });
 
@@ -41,6 +47,7 @@ builder.Services.AddHttpContextAccessor();
 
 // 1. Đăng ký SignalR
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, PM.API.Services.CustomUserIdProvider>();
 
 // 2. Đăng ký Service đẩy thông báo Realtime
 builder.Services.AddScoped<PM.Application.Contracts.INotificationService, PM.API.Services.SignalRNotificationService>();

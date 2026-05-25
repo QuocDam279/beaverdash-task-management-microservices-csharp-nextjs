@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Identity.Application.Features.Auth.Queries;
+using Identity.Application.Features.Auth.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,5 +28,18 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { Token = token });
+    }
+
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand command)
+    {
+        var response = await _sender.Send(command);
+
+        if (response == null)
+        {
+            return BadRequest(new { Error = "Invalid Google ID token." });
+        }
+
+        return Ok(response);
     }
 }

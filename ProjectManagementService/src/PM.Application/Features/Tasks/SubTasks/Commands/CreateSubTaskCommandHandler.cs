@@ -13,11 +13,13 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
 {
     private readonly IPMDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
-    public CreateSubTaskCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateSubTaskCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService, INotificationService notificationService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
     public async Task<Guid> Handle(CreateSubTaskCommand request, CancellationToken cancellationToken)
@@ -34,9 +36,17 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
 
         if (task.BoardColumn.Project.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
+            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền thêm SubTask vào Task này.");
+
+            bool isLeader = requestingMember.Role == "leader";
+            bool isParentAssignee = task.AssigneeUserId == currentUserId;
+
+            if (!isLeader && !isParentAssignee)
+            {
+                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người được giao thực hiện công việc cha mới có quyền tạo công việc con.");
+            }
         }
         else if (task.BoardColumn.Project.CreatedByUserId != currentUserId)
         {
@@ -44,10 +54,13 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
         }
 
         // Validate deadline
-        if (request.DueDate.HasValue && task.DueDate.HasValue)
+        if (request.DueDate.HasValue)
         {
-            if (request.DueDate.Value > task.DueDate.Value)
+            if (task.DueDate.HasValue && request.DueDate.Value > task.DueDate.Value)
                 throw new InvalidOperationException("Hạn hoàn thành của SubTask không được vượt quá hạn hoàn thành của Task cha.");
+
+            if (task.StartDate.HasValue && request.DueDate.Value < task.StartDate.Value)
+                throw new InvalidOperationException("Hạn hoàn thành của SubTask không được nhỏ hơn ngày bắt đầu của Task cha.");
         }
 
         int sortOrder = request.SortOrder ?? 0;
@@ -66,7 +79,6 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
             TaskId = request.TaskId,
             Title = request.Title,
             AssigneeUserId = request.AssigneeUserId,
-            StartDate = request.StartDate,
             DueDate = request.DueDate,
             SortOrder = sortOrder,
             IsCompleted = false,
@@ -75,7 +87,68 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
         };
 
         _dbContext.SubTasks.Add(subTask);
+
+        var activityLog = new ActivityLog
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = task.BoardColumn.ProjectId,
+            UserId = currentUserId,
+            EntityType = "subtask",
+            EntityId = subTask.Id,
+            ActionType = "created",
+            NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = subTask.Title, parent_task_title = task.Title, task_id = task.Id }),
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.ActivityLogs.Add(activityLog);
+
+        Notification? assignNotif = null;
+        if (subTask.AssigneeUserId.HasValue && subTask.AssigneeUserId.Value != currentUserId)
+        {
+            assignNotif = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = subTask.AssigneeUserId.Value,
+                ActorUserId = currentUserId,
+                Type = "subtask_assigned",
+                Content = $"Bạn vừa được giao subtask '{subTask.Title}' thuộc công việc '{task.Title}'.",
+                ActionUrl = task.BoardColumn != null ? $"/projects/{task.BoardColumn.ProjectId}/board" : "/tasks",
+                IsRead = false,
+                IsSentViaEmail = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Notifications.Add(assignNotif);
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        if (assignNotif != null)
+        {
+            try
+            {
+                var actorUser = await _dbContext.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
+
+                await _notificationService.SendNotificationToUserAsync(
+                    assignNotif.UserId.ToString(),
+                    new
+                    {
+                        Id = assignNotif.Id,
+                        Type = assignNotif.Type,
+                        Content = assignNotif.Content,
+                        ActionUrl = assignNotif.ActionUrl,
+                        CreatedAt = assignNotif.CreatedAt,
+                        ActorUserId = assignNotif.ActorUserId,
+                        ActorDisplayName = actorUser?.DisplayName ?? "Unknown User",
+                        ActorAvatar = actorUser?.Avatar
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending SignalR notification for subtask assignment: {ex.Message}");
+            }
+        }
 
         return subTask.Id;
     }

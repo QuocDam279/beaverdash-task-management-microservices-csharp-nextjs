@@ -38,7 +38,7 @@
    - `team_id (uuid, fk, nullable)`
    - `name (varchar, not null)`
    - `description (text, nullable)`
-   - `status (varchar)`
+   - `status (varchar)` -- Chưa bắt đầu, Đang thực hiện, Tạm dừng, Đã hoàn thành --
    - `start_date (timestamp, nullable)`
    - `due_date (timestamp, nullable)`
    - `is_public (boolean, default false)`
@@ -50,7 +50,7 @@
 6. `board_columns`
    - `id (uuid, pk)`
    - `project_id (uuid, fk)`
-   - `name (varchar, not null)`
+   - `name (varchar, not null)` -- Mặc định: Chưa thực hiện, Đang thực hiện, Đã hoàn thành
    - `position (integer, not null)`
    - `wip_limit (integer, nullable)`
    - `created_at (timestamp)`
@@ -62,7 +62,7 @@
    - `assignee_user_id (uuid, fk, nullable)`
    - `title (varchar, not null)`
    - `description (text, nullable)`
-   - `priority (varchar)`
+   - `priority (varchar)` -- Thấp, Trung bình, Cao, Khẩn cấp
    - `due_date (timestamp, nullable)`
    - `start_date (timestamp, nullable)`
    - `sort_order (double precision)`

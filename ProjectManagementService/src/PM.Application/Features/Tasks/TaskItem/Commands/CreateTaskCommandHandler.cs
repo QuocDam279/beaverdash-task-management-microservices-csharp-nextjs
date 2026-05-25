@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Domain.Entities;
+using PM.Domain.Enums;
 using System;
 using System.Linq;
 using System.Threading;
@@ -33,9 +34,18 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
 
         if (column.Project.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == column.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
+            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == column.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền thêm Task vào Project này.");
+
+            if (request.AssigneeUserId.HasValue)
+            {
+                bool isLeader = requestingMember.Role == "leader";
+                if (!isLeader && request.AssigneeUserId.Value != currentUserId)
+                {
+                    throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới được quyền giao việc cho thành viên khác.");
+                }
+            }
         }
 
         var isDuplicateName = await _dbContext.TaskItems
@@ -44,14 +54,40 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
         if (isDuplicateName)
             throw new InvalidOperationException($"A task with the name '{request.Title}' already exists in this project.");
 
-        if (column.WipLimit.HasValue)
+        // Validate dates
+        if (request.StartDate.HasValue && request.DueDate.HasValue && request.StartDate.Value > request.DueDate.Value)
         {
-            var taskCount = await _dbContext.TaskItems
-                .CountAsync(t => t.BoardColumnId == request.BoardColumnId, cancellationToken);
-
-            if (taskCount >= column.WipLimit.Value)
-                throw new InvalidOperationException($"WIP limit ({column.WipLimit.Value}) for this column has been reached.");
+            throw new InvalidOperationException("Ngày bắt đầu không được lớn hơn ngày hạn hoàn thành của Task.");
         }
+
+        if (column.Project != null)
+        {
+            if (column.Project.StartDate.HasValue)
+            {
+                if (request.StartDate.HasValue && request.StartDate.Value < column.Project.StartDate.Value)
+                {
+                    throw new InvalidOperationException($"Ngày bắt đầu của Task không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
+                }
+                if (request.DueDate.HasValue && request.DueDate.Value < column.Project.StartDate.Value)
+                {
+                    throw new InvalidOperationException($"Hạn hoàn thành của Task không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
+                }
+            }
+
+            if (column.Project.DueDate.HasValue)
+            {
+                if (request.StartDate.HasValue && request.StartDate.Value > column.Project.DueDate.Value)
+                {
+                    throw new InvalidOperationException($"Ngày bắt đầu của Task không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
+                }
+                if (request.DueDate.HasValue && request.DueDate.Value > column.Project.DueDate.Value)
+                {
+                    throw new InvalidOperationException($"Hạn hoàn thành của Task không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
+                }
+            }
+        }
+
+
 
         double sortOrder = request.SortOrder ?? 0;
         if (!request.SortOrder.HasValue)
@@ -69,13 +105,16 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             BoardColumnId = request.BoardColumnId,
             Title = request.Title,
             Description = request.Description,
-            Priority = request.Priority,
+            Priority = string.IsNullOrEmpty(request.Priority)
+                ? null
+                : Enum.TryParse<TaskPriority>(request.Priority, true, out var p) ? p : null,
             AssigneeUserId = request.AssigneeUserId,
             DueDate = request.DueDate,
             StartDate = request.StartDate,
             SortOrder = sortOrder,
             CreatedByUserId = currentUserId,
             AssignedAt = request.AssigneeUserId.HasValue ? DateTime.UtcNow : null,
+            CompletedAt = column.IsDone ? DateTime.UtcNow : null,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

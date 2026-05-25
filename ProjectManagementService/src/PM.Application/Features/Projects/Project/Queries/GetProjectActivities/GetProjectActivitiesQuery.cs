@@ -26,7 +26,7 @@ public class ActivityLogDto
     public string? Avatar { get; set; }
 }
 
-public record GetProjectActivitiesQuery(Guid ProjectId) : IRequest<List<ActivityLogDto>>;
+public record GetProjectActivitiesQuery(Guid ProjectId, int Page = 1, int PageSize = 50) : IRequest<List<ActivityLogDto>>;
 
 public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivitiesQuery, List<ActivityLogDto>>
 {
@@ -61,13 +61,17 @@ public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivi
             throw new UnauthorizedAccessException("Bạn không có quyền xem lịch sử hoạt động của Project này.");
         }
 
+        int page = request.Page > 0 ? request.Page : 1;
+        int pageSize = request.PageSize > 0 ? request.PageSize : 50;
+
         // Truy vấn ActivityLog theo ProjectId, kết hợp bảng User để lấy tên/avatar
         var activities = await _dbContext.ActivityLogs
             .AsNoTracking()
             .Include(a => a.User)
             .Where(a => a.ProjectId == request.ProjectId)
             .OrderByDescending(a => a.CreatedAt) // Mới nhất xếp lên đầu
-            .Take(50) // Giới hạn lấy tối đa 50 log gần nhất
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => new ActivityLogDto
             {
                 Id = a.Id,

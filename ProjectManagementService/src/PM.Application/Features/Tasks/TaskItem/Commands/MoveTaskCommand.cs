@@ -46,9 +46,15 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
 
         if (task.BoardColumn.Project.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
+            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
+
+            bool isLeader = requestingMember.Role == "leader";
+            bool isAssignee = task.AssigneeUserId == currentUserId;
+
+            if (!isLeader && !isAssignee)
+                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền thay đổi trạng thái (di chuyển) công việc này.");
         }
 
         var oldColumnId = task.BoardColumnId;
@@ -64,14 +70,8 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
             if (newColumn == null)
                 throw new InvalidOperationException("Target column not found.");
 
-            if (newColumn.WipLimit.HasValue)
-            {
-                var taskCount = await _dbContext.TaskItems
-                    .CountAsync(t => t.BoardColumnId == newColumnId, cancellationToken);
-
-                if (taskCount >= newColumn.WipLimit.Value)
-                    throw new InvalidOperationException($"Target column WIP limit ({newColumn.WipLimit.Value}) reached.");
-            }
+            // Cập nhật trường CompletedAt
+            task.CompletedAt = newColumn.IsDone ? DateTime.UtcNow : null;
 
             // Sinh ra Domain Event
             task.AddDomainEvent(new PM.Domain.Events.TaskMovedEvent(task.Id, currentUserId, oldColumnId, newColumnId));

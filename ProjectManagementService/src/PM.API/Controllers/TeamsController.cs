@@ -16,6 +16,14 @@ public class TeamsController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetMyTeams()
+    {
+        var query = new PM.Application.Features.Teams.Queries.GetMyTeams.GetMyTeamsQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateTeam([FromBody] CreateTeamCommand command)
     {
@@ -64,7 +72,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpDelete("{id}/members/{userId}")]
-    public async Task<IActionResult> RemoveTeamMember(System.Guid id, System.Guid userId, [FromBody] PM.Application.Features.Teams.Commands.RemoveTeamMemberDto request)
+    public async Task<IActionResult> RemoveTeamMember(System.Guid id, System.Guid userId)
     {
         var command = new PM.Application.Features.Teams.Commands.RemoveTeamMemberCommand
         {
@@ -91,7 +99,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTeam(System.Guid id, [FromBody] PM.Application.Features.Teams.Commands.DeleteTeamDto request)
+    public async Task<IActionResult> DeleteTeam(System.Guid id)
     {
         var command = new PM.Application.Features.Teams.Commands.DeleteTeamCommand
         {

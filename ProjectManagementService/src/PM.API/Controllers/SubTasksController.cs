@@ -34,7 +34,6 @@ public class SubTasksController : ControllerBase
             SubTaskId = id,
             Title = request.Title,
             AssigneeUserId = request.AssigneeUserId,
-            StartDate = request.StartDate,
             DueDate = request.DueDate,
             IsCompleted = request.IsCompleted
         };

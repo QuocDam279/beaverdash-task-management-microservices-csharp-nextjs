@@ -15,15 +15,18 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
     private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
     private readonly IDocumentIntelligenceServiceClient _docIntelClient;
+    private readonly INotificationService _notificationService;
 
     public AddTeamMemberCommandHandler(
         IPMDbContext dbContext,
         ICurrentUserService currentUserService,
-        IDocumentIntelligenceServiceClient docIntelClient)
+        IDocumentIntelligenceServiceClient docIntelClient,
+        INotificationService notificationService)
     {
         _currentUserService = currentUserService;
         _dbContext = dbContext;
         _docIntelClient = docIntelClient;
+        _notificationService = notificationService;
     }
 
     public async Task<bool> Handle(AddTeamMemberCommand request, CancellationToken cancellationToken)
@@ -64,6 +67,49 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
 
         _dbContext.TeamMembers.Add(newMember);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // Tạo thông báo cá nhân cho thành viên được mời
+        try
+        {
+            var notification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = request.UserId,
+                ActorUserId = currentUserId,
+                Type = "team_invited",
+                Content = $"Bạn đã được thêm vào nhóm '{team.Name}'.",
+                ActionUrl = $"/teams/{team.Id}",
+                IsRead = false,
+                IsSentViaEmail = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Notifications.Add(notification);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            var actorUser = await _dbContext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
+
+            // Phát thông báo qua SignalR
+            await _notificationService.SendNotificationToUserAsync(
+                notification.UserId.ToString(),
+                new
+                {
+                    Id = notification.Id,
+                    Type = notification.Type,
+                    Content = notification.Content,
+                    ActionUrl = notification.ActionUrl,
+                    CreatedAt = notification.CreatedAt,
+                    ActorUserId = notification.ActorUserId,
+                    ActorDisplayName = actorUser?.DisplayName ?? "Unknown User",
+                    ActorAvatar = actorUser?.Avatar
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating/sending team invitation notification: {ex.Message}");
+        }
 
         // 5. Đồng bộ thành viên dự án sang DocumentIntelligence Service
         // Lấy tất cả dự án thuộc team này

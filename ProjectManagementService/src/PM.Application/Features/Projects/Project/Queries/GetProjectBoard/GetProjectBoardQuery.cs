@@ -30,6 +30,10 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
             .Include(p => p.BoardColumns.OrderBy(c => c.Position))
                 .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
                     .ThenInclude(t => t.AssigneeUser)
+            .Include(p => p.BoardColumns.OrderBy(c => c.Position))
+                .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
+                    .ThenInclude(t => t.SubTasks)
+                        .ThenInclude(st => st.AssigneeUser)
             .FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
 
         if (project == null)
@@ -58,17 +62,33 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                 Name = c.Name,
                 Position = c.Position,
                 WipLimit = c.WipLimit,
+                IsDone = c.IsDone,
                 TaskItems = c.TaskItems.Select(t => new TaskItemDto
                 {
                     Id = t.Id,
                     BoardColumnId = t.BoardColumnId,
                     Title = t.Title,
-                    Priority = t.Priority,
+                    Priority = t.Priority?.ToString(),
                     SortOrder = t.SortOrder,
                     AssigneeUserId = t.AssigneeUserId,
                     AssigneeAvatar = t.AssigneeUser?.Avatar,
                     AssigneeName = t.AssigneeUser?.DisplayName,
-                    DueDate = t.DueDate
+                    Description = t.Description,
+                    StartDate = t.StartDate,
+                    DueDate = t.DueDate,
+                    SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
+                    CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null),
+                    CommentsCount = t.SubTasks.Where(st => st.DeletedAt == null).SelectMany(st => st.Comments).Count(),
+                    SubTasks = t.SubTasks.Where(st => st.DeletedAt == null).Select(st => new SubTaskBoardDto
+                    {
+                        Id = st.Id,
+                        TaskId = st.TaskId,
+                        Title = st.Title,
+                        IsCompleted = st.IsCompleted,
+                        AssigneeUserId = st.AssigneeUserId,
+                        AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
+                        AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null
+                    }).ToList()
                 }).ToList()
             }).ToList()
         };

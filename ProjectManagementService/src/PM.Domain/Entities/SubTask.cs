@@ -18,7 +18,6 @@ public class SubTask : BaseEntity
     
     public bool IsCompleted { get; set; } = false;
     
-    public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
     
     public int? SortOrder { get; set; }

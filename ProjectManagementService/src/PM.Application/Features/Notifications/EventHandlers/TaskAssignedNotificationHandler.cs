@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
 using PM.Domain.Entities;
 using PM.Domain.Events;
@@ -41,6 +42,10 @@ public class TaskAssignedNotificationHandler : INotificationHandler<TaskAssigned
         _dbContext.Notifications.Add(newNotification);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        var actorUser = await _dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == notification.ActorUserId, cancellationToken);
+
         // Gửi Real-time qua SignalR
         await _notificationService.SendNotificationToUserAsync(
             newNotification.UserId.ToString(),
@@ -50,7 +55,10 @@ public class TaskAssignedNotificationHandler : INotificationHandler<TaskAssigned
                 Type = newNotification.Type,
                 Content = newNotification.Content,
                 ActionUrl = newNotification.ActionUrl,
-                CreatedAt = newNotification.CreatedAt
+                CreatedAt = newNotification.CreatedAt,
+                ActorUserId = newNotification.ActorUserId,
+                ActorDisplayName = actorUser?.DisplayName ?? "Unknown User",
+                ActorAvatar = actorUser?.Avatar
             }
         );
     }

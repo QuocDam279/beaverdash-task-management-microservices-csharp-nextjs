@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PM.Domain.Entities;
+using PM.Domain.Enums;
 
 namespace PM.Infrastructure.Data.Configurations;
 
@@ -16,7 +17,11 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(t => t.AssigneeUserId).HasColumnName("assignee_user_id").HasColumnType("uuid").IsRequired(false);
         builder.Property(t => t.Title).HasColumnName("title").HasColumnType("varchar").IsRequired();
         builder.Property(t => t.Description).HasColumnName("description").HasColumnType("text");
-        builder.Property(t => t.Priority).HasColumnName("priority").HasColumnType("varchar");
+        builder.Property(t => t.Priority)
+            .HasColumnName("priority")
+            .HasColumnType("varchar")
+            .HasConversion<string>()
+            .IsRequired(false);
         builder.Property(t => t.DueDate).HasColumnName("due_date").HasColumnType("timestamp with time zone");
         builder.Property(t => t.StartDate).HasColumnName("start_date").HasColumnType("timestamp with time zone");
         builder.Property(t => t.SortOrder).HasColumnName("sort_order").HasColumnType("double precision");

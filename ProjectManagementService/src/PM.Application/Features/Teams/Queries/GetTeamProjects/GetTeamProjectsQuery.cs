@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
+using PM.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ public class ProjectDto
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public string? Status { get; set; }
+    public int Progress { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -49,23 +51,38 @@ public class GetTeamProjectsQueryHandler : IRequestHandler<GetTeamProjectsQuery,
 
         var projects = await _dbContext.Projects
             .AsNoTracking()
-            .Include(p => p.CreatedByUser) // Join để lấy thông tin User
             .Where(p => p.TeamId == request.TeamId)
             .OrderByDescending(p => p.CreatedAt) // Mới nhất lên trên
-            .Select(p => new ProjectDto
+            .Select(p => new
             {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Status = p.Status,
-                StartDate = p.StartDate,
-                DueDate = p.DueDate,
-                CreatedAt = p.CreatedAt,
+                p.Id,
+                p.Name,
+                p.Description,
+                Status = p.Status.ToVietnameseString(),
+                p.StartDate,
+                p.DueDate,
+                p.CreatedAt,
                 CreatedByDisplayName = p.CreatedByUser != null ? p.CreatedByUser.DisplayName : string.Empty,
-                CreatedByAvatar = p.CreatedByUser != null ? p.CreatedByUser.Avatar : null
+                CreatedByAvatar = p.CreatedByUser != null ? p.CreatedByUser.Avatar : null,
+                TotalTasksCount = _dbContext.TaskItems.Count(t => t.BoardColumn.ProjectId == p.Id && t.DeletedAt == null),
+                DoneTasksCount = _dbContext.TaskItems.Count(t => t.BoardColumn.ProjectId == p.Id && t.DeletedAt == null && t.BoardColumn.IsDone)
             })
             .ToListAsync(cancellationToken);
 
-        return projects;
+        var projectDtos = projects.Select(p => new ProjectDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            Status = p.Status,
+            Progress = p.TotalTasksCount > 0 ? (int)Math.Round((double)p.DoneTasksCount / p.TotalTasksCount * 100) : 0,
+            StartDate = p.StartDate,
+            DueDate = p.DueDate,
+            CreatedAt = p.CreatedAt,
+            CreatedByDisplayName = p.CreatedByDisplayName,
+            CreatedByAvatar = p.CreatedByAvatar
+        }).ToList();
+
+        return projectDtos;
     }
 }

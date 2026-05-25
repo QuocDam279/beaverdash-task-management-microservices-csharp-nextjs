@@ -28,11 +28,18 @@ public class TaskMovedEventHandler : INotificationHandler<TaskMovedEvent>
         if (task == null || task.BoardColumn == null)
             return;
 
+        // Fetch old and new column names
+        var oldColumn = await _dbContext.BoardColumns.AsNoTracking().FirstOrDefaultAsync(c => c.Id == notification.OldColumnId, cancellationToken);
+        var newColumn = await _dbContext.BoardColumns.AsNoTracking().FirstOrDefaultAsync(c => c.Id == notification.NewColumnId, cancellationToken);
+
         // Định dạng cột cũ và cột mới thành JSON để lưu vào NewValue
         var newValueObj = new 
         {
+            task_title = task.Title,
             old_column_id = notification.OldColumnId,
-            new_column_id = notification.NewColumnId
+            old_column_name = oldColumn?.Name ?? "Không rõ",
+            new_column_id = notification.NewColumnId,
+            new_column_name = newColumn?.Name ?? "Không rõ"
         };
 
         var activityLog = new ActivityLog

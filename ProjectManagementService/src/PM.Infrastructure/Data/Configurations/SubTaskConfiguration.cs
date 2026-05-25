@@ -16,7 +16,6 @@ public class SubTaskConfiguration : IEntityTypeConfiguration<SubTask>
         builder.Property(s => s.AssigneeUserId).HasColumnName("assignee_user_id").HasColumnType("uuid").IsRequired(false);
         builder.Property(s => s.Title).HasColumnName("title").HasColumnType("varchar").IsRequired();
         builder.Property(s => s.IsCompleted).HasColumnName("is_completed").HasColumnType("boolean").HasDefaultValue(false);
-        builder.Property(s => s.StartDate).HasColumnName("start_date").HasColumnType("timestamp with time zone");
         builder.Property(s => s.DueDate).HasColumnName("due_date").HasColumnType("timestamp with time zone");
         builder.Property(s => s.SortOrder).HasColumnName("sort_order").HasColumnType("integer");
         builder.Property(s => s.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");

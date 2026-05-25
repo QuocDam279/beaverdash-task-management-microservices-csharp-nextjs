@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PM.Application.Features.Tasks.TaskItem.Commands;
+using PM.Application.Features.Tasks.TaskItem.Queries;
 using System;
 using System.Threading.Tasks;
 
@@ -15,6 +16,14 @@ public class TasksController : ControllerBase
     public TasksController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMyTasks()
+    {
+        var query = new GetMyTasksQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpPost]
@@ -45,6 +54,8 @@ public class TasksController : ControllerBase
         var command = new UpdateTaskDetailsCommand
         {
             TaskId = id,
+            Title = request.Title,
+            Description = request.Description,
             AssigneeUserId = request.AssigneeUserId,
             DueDate = request.DueDate,
             StartDate = request.StartDate,
@@ -67,6 +78,50 @@ public class TasksController : ControllerBase
 
         if (!success)
             return NotFound(new { Message = "Task không tồn tại." });
+
+        return NoContent();
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTaskDetails(Guid id)
+    {
+        var query = new GetTaskDetailsQuery(id);
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+            return NotFound(new { Message = "Công việc không tồn tại." });
+
+        return Ok(result);
+    }
+
+    [HttpGet("trash")]
+    public async Task<IActionResult> GetTrashTasks()
+    {
+        var query = new GetTrashTasksQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/restore")]
+    public async Task<IActionResult> RestoreTask(Guid id)
+    {
+        var command = new RestoreTaskCommand { TaskId = id };
+        var success = await _mediator.Send(command);
+
+        if (!success)
+            return NotFound(new { Message = "Task không tồn tại trong thùng rác." });
+
+        return Ok(new { Message = "Đã khôi phục công việc thành công." });
+    }
+
+    [HttpDelete("{id}/permanent")]
+    public async Task<IActionResult> PermanentDeleteTask(Guid id)
+    {
+        var command = new PermanentDeleteTaskCommand { TaskId = id };
+        var success = await _mediator.Send(command);
+
+        if (!success)
+            return NotFound(new { Message = "Task không tồn tại trong thùng rác." });
 
         return NoContent();
     }

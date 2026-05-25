@@ -20,20 +20,27 @@ public class CommentAddedEventHandler : INotificationHandler<CommentAddedEvent>
 
     public async Task Handle(CommentAddedEvent notification, CancellationToken cancellationToken)
     {
-        // Để insert ActivityLog, chúng ta cần ProjectId. Ta sẽ truy ngược từ TaskId -> BoardColumn -> ProjectId
-        var task = await _dbContext.TaskItems
-            .Include(t => t.BoardColumn)
-            .FirstOrDefaultAsync(t => t.Id == notification.TaskId, cancellationToken);
+        // Để insert ActivityLog, chúng ta cần ProjectId. Ta sẽ truy ngược từ SubTaskId -> Task -> BoardColumn -> ProjectId
+        var subtask = await _dbContext.SubTasks
+            .Include(s => s.Task)
+                .ThenInclude(t => t!.BoardColumn)
+            .FirstOrDefaultAsync(s => s.Id == notification.TaskId, cancellationToken);
 
-        if (task == null || task.BoardColumn == null)
+        if (subtask == null || subtask.Task == null || subtask.Task.BoardColumn == null)
             return;
 
-        var newValueObj = new { content = notification.Content };
+        var newValueObj = new 
+        { 
+            content = notification.Content,
+            subtask_title = subtask.Title,
+            task_title = subtask.Task.Title,
+            task_id = subtask.Task.Id
+        };
 
         var activityLog = new ActivityLog
         {
             Id = Guid.NewGuid(),
-            ProjectId = task.BoardColumn.ProjectId,
+            ProjectId = subtask.Task.BoardColumn.ProjectId,
             UserId = notification.UserId,
             EntityType = "comment",
             EntityId = notification.CommentId,

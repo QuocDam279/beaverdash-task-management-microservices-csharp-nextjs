@@ -37,6 +37,15 @@ public class UpdateTeamCommandHandler : IRequestHandler<UpdateTeamCommand, bool>
             throw new UnauthorizedAccessException("Chỉ có leader mới có quyền thay đổi thông tin của team.");
 
         // 3. Thực thi cập nhật
+        if (request.Name.ToLower() != team.Name.ToLower())
+        {
+            var isDuplicate = await _dbContext.Teams.AnyAsync(t => t.Id != team.Id && t.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+            if (isDuplicate)
+            {
+                throw new InvalidOperationException("Tên nhóm đã tồn tại. Vui lòng chọn tên khác.");
+            }
+        }
+
         team.Name = request.Name;
         team.Description = request.Description;
         team.UpdatedAt = DateTime.UtcNow;
