@@ -43,40 +43,7 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
             isLeader = requestingMember.Role == "leader";
         }
 
-        bool isAssignee = task.AssigneeUserId == currentUserId;
-        bool canModifyProperties = isLeader || isAssignee;
 
-        if (task.BoardColumn.Project.TeamId.HasValue && !canModifyProperties)
-        {
-            if (request.DueDate.HasValue && request.DueDate.Value != task.DueDate)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền thay đổi hạn hoàn thành.");
-            }
-            if (request.StartDate.HasValue && request.StartDate.Value != task.StartDate)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền thay đổi ngày bắt đầu.");
-            }
-            if (!string.IsNullOrEmpty(request.Priority))
-            {
-                var newPriority = Enum.TryParse<TaskPriority>(request.Priority, true, out var p) ? p : (TaskPriority?)null;
-                if (newPriority != task.Priority)
-                {
-                    throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền thay đổi độ ưu tiên.");
-                }
-            }
-            if (request.Title != null && request.Title != task.Title)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền chỉnh sửa tên công việc.");
-            }
-            if (request.Description != null)
-            {
-                var newDesc = string.IsNullOrEmpty(request.Description) ? null : request.Description;
-                if (newDesc != task.Description)
-                {
-                    throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền chỉnh sửa mô tả công việc.");
-                }
-            }
-        }
 
         // Capture old values for activity logging
         string oldTitle = task.Title;
@@ -246,51 +213,7 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
             }
         }
 
-        // Xử lý riêng logic Giao việc (Assignee)
-        if (request.AssigneeUserId.HasValue)
-        {
-            Guid? newAssigneeId = request.AssigneeUserId.Value == Guid.Empty ? null : request.AssigneeUserId.Value;
 
-            // Nếu thực sự có thay đổi người được giao (người mới khác người cũ)
-            if (task.AssigneeUserId != newAssigneeId)
-            {
-                if (task.BoardColumn.Project.TeamId.HasValue && !isLeader)
-                {
-                    // Case 1: Task is currently unassigned
-                    if (task.AssigneeUserId == null)
-                    {
-                        // Normal members can only assign to themselves (self-apply)
-                        if (newAssigneeId != currentUserId)
-                        {
-                            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới được quyền giao việc cho thành viên khác.");
-                        }
-                    }
-                    // Case 2: Task is currently assigned to someone else
-                    else if (task.AssigneeUserId != currentUserId)
-                    {
-                        throw new UnauthorizedAccessException("Công việc đã có người thực hiện. Bạn không có quyền thay đổi.");
-                    }
-                    // Case 3: Task is currently assigned to the current user
-                    else // task.AssigneeUserId == currentUserId
-                    {
-                        // They can only unassign themselves (newAssigneeId == null)
-                        if (newAssigneeId != null)
-                        {
-                            throw new UnauthorizedAccessException("Bạn chỉ có thể tự hủy giao việc, không được quyền giao cho thành viên khác.");
-                        }
-                    }
-                }
-
-                task.AssigneeUserId = newAssigneeId;
-                task.AssignedAt = newAssigneeId.HasValue ? DateTime.UtcNow : null;
-
-                if (newAssigneeId.HasValue)
-                {
-                    // Kích hoạt Domain Event cho việc gán Task
-                    task.AddDomainEvent(new TaskAssignedEvent(task.Id, currentUserId, newAssigneeId.Value));
-                }
-            }
-        }
 
         task.UpdatedAt = DateTime.UtcNow;
         

@@ -4,9 +4,11 @@ import * as React from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 export function useMyTasks() {
   const { user: currentUser } = useAuth();
+  const { alert } = useAlertConfirm();
   const [tasks, setTasks] = React.useState<any[]>([]);
   const [projects, setProjects] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -66,11 +68,11 @@ export function useMyTasks() {
       // Map to TaskItem type
       setSelectedTask({
         ...fullTask,
-        assigneeUser: fullTask.assigneeUserId ? {
-          id: fullTask.assigneeUserId,
-          displayName: fullTask.assigneeName,
-          avatar: fullTask.assigneeAvatar
+        createdByUser: fullTask.createdByName ? {
+          displayName: fullTask.createdByName,
+          avatar: fullTask.createdByAvatar
         } : null,
+
         subTasks: (fullTask.subTasks || []).map((st: any) => ({
           ...st,
           assigneeUser: st.assigneeUserId ? {
@@ -123,7 +125,7 @@ export function useMyTasks() {
       }
     } catch (err: any) {
       console.error("Failed to toggle task completion:", err);
-      alert(err.message || "Không thể thay đổi trạng thái công việc.");
+      alert(err.message || "Không thể thay đổi trạng thái công việc.", "Thất bại", "danger");
     }
   };
 

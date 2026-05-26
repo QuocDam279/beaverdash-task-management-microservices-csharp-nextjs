@@ -49,12 +49,6 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
             var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
             if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
-
-            bool isLeader = requestingMember.Role == "leader";
-            bool isAssignee = task.AssigneeUserId == currentUserId;
-
-            if (!isLeader && !isAssignee)
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người thực hiện mới được quyền thay đổi trạng thái (di chuyển) công việc này.");
         }
 
         var oldColumnId = task.BoardColumnId;

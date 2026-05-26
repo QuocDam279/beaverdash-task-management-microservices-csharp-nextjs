@@ -117,13 +117,7 @@ export function CalendarGrid({
                       {showProjectPrefix && (task as any).projectName ? `[${(task as any).projectName}] ` : ""}
                       {task.title}
                     </span>
-                    {task.assigneeUser && (
-                      <Avatar
-                        src={task.assigneeUser.avatar}
-                        alt={task.assigneeUser.displayName}
-                        className="h-4 w-4 rounded-full border border-white shrink-0 shadow-xs"
-                      />
-                    )}
+
                   </div>
                 ))}
               </div>

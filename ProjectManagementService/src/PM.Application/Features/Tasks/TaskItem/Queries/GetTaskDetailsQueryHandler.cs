@@ -39,10 +39,8 @@ public class GetTaskDetailsQueryHandler : IRequestHandler<GetTaskDetailsQuery, T
                 DueDate = t.DueDate,
                 StartDate = t.StartDate,
                 SortOrder = t.SortOrder,
-                AssigneeUserId = t.AssigneeUserId,
-                AssigneeName = t.AssigneeUser != null ? t.AssigneeUser.DisplayName : null,
-                AssigneeAvatar = t.AssigneeUser != null ? t.AssigneeUser.Avatar : null,
                 CreatedByName = t.CreatedByUser != null ? t.CreatedByUser.DisplayName : null,
+                CreatedByAvatar = t.CreatedByUser != null ? t.CreatedByUser.Avatar : null,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
                 SubTasks = t.SubTasks

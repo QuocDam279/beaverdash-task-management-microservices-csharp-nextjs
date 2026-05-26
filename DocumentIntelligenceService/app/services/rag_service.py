@@ -37,18 +37,20 @@ async def retrieve_context(
     # 2. Truy vấn cosine similarity bằng pgvector operator <=>
     sql = text("""
         SELECT
-            dc.id AS chunk_id,
-            dc.content,
-            dc.document_id,
+            child.id AS chunk_id,
+            COALESCE(parent.content, child.content) AS content,
+            child.document_id,
             d.file_name,
-            dc.chunk_index,
-            dc.token_count,
-            dc.metadata AS chunk_metadata,
-            1 - (dc.embedding <=> CAST(:query_embedding AS vector)) AS similarity_score
-        FROM document_chunks dc
-        JOIN documents d ON dc.document_id = d.id
-        WHERE dc.project_id = :project_id
-        ORDER BY dc.embedding <=> CAST(:query_embedding AS vector) ASC
+            child.chunk_index,
+            child.token_count,
+            child.metadata AS chunk_metadata,
+            1 - (child.embedding <=> CAST(:query_embedding AS vector)) AS similarity_score
+        FROM document_chunks child
+        JOIN documents d ON child.document_id = d.id
+        LEFT JOIN document_chunks parent ON child.parent_id = parent.id
+        WHERE child.project_id = :project_id
+          AND child.embedding IS NOT NULL
+        ORDER BY child.embedding <=> CAST(:query_embedding AS vector) ASC
         LIMIT :top_k
     """)
 

@@ -18,5 +18,7 @@ export { DeleteColumnModal } from "./DeleteColumnModal";
 export { EditProjectModal } from "./EditProjectModal";
 export { BoardToolbar } from "./BoardToolbar";
 export { BoardTaskCard } from "./BoardTaskCard";
+export { ProjectListView } from "./ProjectListView";
+export { ProjectListTable } from "./ProjectListTable";
 
 

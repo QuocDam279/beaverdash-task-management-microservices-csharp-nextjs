@@ -9,6 +9,7 @@ import { TaskDetailTitle } from "./TaskDetailTitle";
 import { TaskDetailDescription } from "./TaskDetailDescription";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -28,14 +29,14 @@ export function TaskDetailModal({
   assignees,
 }: TaskDetailModalProps) {
   const { user: currentUser } = useAuth();
+  const { alert, confirm } = useAlertConfirm();
+
   if (!isOpen) return null;
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
-  const isParentAssignee = task.assigneeUserId === currentUser?.id;
-  const canManageSubtasks = isLeader || isParentAssignee;
+  const canManageSubtasks = true;
 
-  const taskCode = `QLDK-${task.id.substring(0, 4).toUpperCase()}`;
   const subtasks = task.subTasks || [];
 
   const reloadTask = async () => {
@@ -65,10 +66,9 @@ export function TaskDetailModal({
         onUpdateTask({
           ...data,
           id: data.id || data.Id || task.id,
-          assigneeUser: data.assigneeUserId ? {
-            id: data.assigneeUserId,
-            displayName: data.assigneeName,
-            avatar: data.assigneeAvatar
+          createdByUser: data.createdByName ? {
+            displayName: data.createdByName,
+            avatar: data.createdByAvatar
           } : null,
           subTasks: mappedSubTasks
         });
@@ -89,7 +89,7 @@ export function TaskDetailModal({
       await reloadTask();
     } catch (err: any) {
       console.error("Failed to update task details:", err);
-      alert(err.message || "Không thể cập nhật thông tin công việc.");
+      alert(err.message || "Không thể cập nhật thông tin công việc.", "Thất bại", "danger");
     }
   };
 
@@ -102,7 +102,7 @@ export function TaskDetailModal({
       await reloadTask();
     } catch (err: any) {
       console.error("Failed to move task:", err);
-      alert(err.message || "Không thể di chuyển công việc.");
+      alert(err.message || "Không thể di chuyển công việc.", "Thất bại", "danger");
     }
   };
 
@@ -194,8 +194,13 @@ export function TaskDetailModal({
   };
 
   const handleDeleteTask = async () => {
-    const confirmDelete = window.confirm(
-      "Bạn có chắc chắn muốn xóa công việc này? Công việc sẽ được đưa vào thùng rác."
+    const confirmDelete = await confirm(
+      "Bạn có chắc chắn muốn xóa công việc này? Công việc sẽ được đưa vào thùng rác.",
+      {
+        title: "Xóa công việc",
+        confirmLabel: "Xóa công việc",
+        variant: "danger",
+      }
     );
     if (!confirmDelete) return;
 
@@ -204,25 +209,25 @@ export function TaskDetailModal({
       onClose();
     } catch (err: any) {
       console.error("Failed to delete task:", err);
-      alert(err.message || "Không thể xóa công việc này.");
+      alert(err.message || "Không thể xóa công việc này.", "Thất bại", "danger");
     }
   };
 
   return (
     <div className="fixed inset-0 bg-[#091e42]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
       <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-        <TaskDetailHeader taskCode={taskCode} onClose={onClose} onDelete={handleDeleteTask} />
+        <TaskDetailHeader onClose={onClose} onDelete={handleDeleteTask} />
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             <TaskDetailTitle
               title={task.title}
               onUpdateTitle={(title) => handleUpdateDetails({ title })}
-              readOnly={!isLeader && !isParentAssignee}
+              readOnly={false}
             />
             <TaskDetailDescription
               description={task.description}
               onUpdateDescription={(description) => handleUpdateDetails({ description: description || "" })}
-              readOnly={!isLeader && !isParentAssignee}
+              readOnly={false}
             />
              <TaskSubtasks
               subtasks={subtasks}

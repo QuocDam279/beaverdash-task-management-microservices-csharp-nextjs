@@ -44,7 +44,6 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
         }
 
         Notification? subTaskAssigneeNotif = null;
-        Notification? parentTaskAssigneeNotif = null;
 
         // 1. Chuẩn bị thông báo cho Người thực hiện Subtask (Subtask Assignee)
         if (subTask.AssigneeUserId.HasValue && subTask.AssigneeUserId.Value != notification.UserId)
@@ -64,32 +63,10 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
             _dbContext.Notifications.Add(subTaskAssigneeNotif);
         }
 
-        // 2. Chuẩn bị thông báo cho Người thực hiện Task cha (Parent Task Assignee)
-        if (subTask.Task != null && subTask.Task.AssigneeUserId.HasValue)
-        {
-            var parentTaskAssigneeId = subTask.Task.AssigneeUserId.Value;
-            bool isSubTaskAssigneeNotified = subTaskAssigneeNotif != null && subTaskAssigneeNotif.UserId == parentTaskAssigneeId;
 
-            if (parentTaskAssigneeId != notification.UserId && !isSubTaskAssigneeNotified)
-            {
-                parentTaskAssigneeNotif = new Notification
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = parentTaskAssigneeId,
-                    ActorUserId = notification.UserId,
-                    Type = "parent_task_subtask_comment",
-                    Content = $"Một đồng nghiệp vừa bình luận trên subtask '{subTask.Title}' thuộc công việc '{subTask.Task.Title}' của bạn.",
-                    ActionUrl = actionUrl,
-                    IsRead = false,
-                    IsSentViaEmail = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _dbContext.Notifications.Add(parentTaskAssigneeNotif);
-            }
-        }
 
         // Lưu tất cả vào database
-        if (subTaskAssigneeNotif != null || parentTaskAssigneeNotif != null)
+        if (subTaskAssigneeNotif != null)
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
@@ -113,22 +90,6 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
             );
         }
 
-        if (parentTaskAssigneeNotif != null)
-        {
-            await _notificationService.SendNotificationToUserAsync(
-                parentTaskAssigneeNotif.UserId.ToString(),
-                new
-                {
-                    Id = parentTaskAssigneeNotif.Id,
-                    Type = parentTaskAssigneeNotif.Type,
-                    Content = parentTaskAssigneeNotif.Content,
-                    ActionUrl = parentTaskAssigneeNotif.ActionUrl,
-                    CreatedAt = parentTaskAssigneeNotif.CreatedAt,
-                    ActorUserId = parentTaskAssigneeNotif.ActorUserId,
-                    ActorDisplayName = actorDisplayName,
-                    ActorAvatar = actorAvatar
-                }
-            );
-        }
+
     }
 }

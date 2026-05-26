@@ -19,26 +19,26 @@ const renderPriority = (priority: string | null) => {
     case "Critical":
       return (
         <span className="flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 border border-red-200">
-          Crit
+          Khẩn cấp
         </span>
       );
     case "High":
       return (
         <span className="flex items-center gap-0.5 rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-orange-700 border border-orange-200">
-          High
+          Cao
         </span>
       );
     case "Medium":
       return (
         <span className="flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-blue-700 border border-blue-200">
-          Medium
+          Trung bình
         </span>
       );
     case "Low":
     default:
       return (
         <span className="flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600 border border-slate-200">
-          Low
+          Thấp
         </span>
       );
   }
@@ -96,15 +96,13 @@ export function BoardTaskCard({
   currentUser,
   assignees,
 }: BoardTaskCardProps) {
-  const taskCode = `QLDK-${task.id.substring(0, 4).toUpperCase()}`;
   const subtaskCount = (task as any).subTasksCount || 0;
   const completedSubtaskCount = (task as any).completedSubTasksCount || 0;
   const commentCount = (task as any).commentsCount || 0;
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
-  const isAssignee = task.assigneeUserId === currentUser?.id;
-  const canDrag = isLeader || isAssignee;
+  const canDrag = true;
 
   // Lọc ra các thành viên phụ trách subtask duy nhất và không trùng với người phụ trách chính
   const subtaskAssignees = React.useMemo(() => {
@@ -113,7 +111,7 @@ export function BoardTaskCard({
     const userIds = new Set<string>();
     
     task.subTasks.forEach((st) => {
-      if (st.assigneeUserId && st.assigneeUserId !== task.assigneeUserId && !userIds.has(st.assigneeUserId)) {
+      if (st.assigneeUserId && !userIds.has(st.assigneeUserId)) {
         userIds.add(st.assigneeUserId);
         const user = st.assigneeUser || assignees.find((a) => a.id === st.assigneeUserId);
         if (user) {
@@ -145,11 +143,6 @@ export function BoardTaskCard({
           <h4 className="text-sm font-semibold text-[#292a2e] leading-tight line-clamp-2">
             {task.title}
           </h4>
-          {task.description && (
-            <p className="text-xs text-slate-500 line-clamp-1 leading-normal">
-              {task.description}
-            </p>
-          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
@@ -178,10 +171,7 @@ export function BoardTaskCard({
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
-          <span className="text-[10px] font-bold text-slate-400">
-            {taskCode}
-          </span>
+        <div className="flex items-center justify-end pt-1.5 border-t border-slate-100">
           <div className="flex items-center gap-1.5">
             {/* Stack avatar công việc phụ (subtasks) */}
             {subtaskAssignees.length > 0 && (
@@ -196,25 +186,6 @@ export function BoardTaskCard({
                   />
                 ))}
               </div>
-            )}
-
-            {/* Người phụ trách chính */}
-            {task.assigneeUser ? (
-              <div className="flex items-center gap-1.5 border-l border-slate-100 pl-1.5">
-                <span className="text-[10px] font-semibold text-slate-500 max-w-[80px] truncate">
-                  {task.assigneeUser.displayName}
-                </span>
-                <Avatar
-                  src={task.assigneeUser.avatar}
-                  alt={task.assigneeUser.displayName}
-                  title={`Người phụ trách chính: ${task.assigneeUser.displayName}`}
-                  className="h-6 w-6 rounded-full border border-slate-200"
-                />
-              </div>
-            ) : (
-              <span className="text-[10px] font-medium italic text-slate-400 pl-1.5">
-                Chưa giao việc
-              </span>
             )}
           </div>
         </div>

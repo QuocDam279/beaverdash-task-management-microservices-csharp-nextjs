@@ -5,9 +5,11 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 export function useBoard(projectId: string) {
   const { user: currentUser } = useAuth();
+  const { alert } = useAlertConfirm();
 
   const [columns, setColumns] = React.useState<BoardColumn[]>([]);
   const [tasks, setTasks] = React.useState<TaskItem[]>([]);
@@ -52,11 +54,6 @@ export function useBoard(projectId: string) {
             ...t,
             projectStartDate: overview?.startDate || board?.startDate || null,
             projectDueDate: overview?.dueDate || board?.dueDate || null,
-            assigneeUser: t.assigneeUserId ? {
-              id: t.assigneeUserId,
-              displayName: t.assigneeName,
-              avatar: t.assigneeAvatar
-            } : null,
             subTasks: (t.subTasks || []).map((st: any) => ({
               ...st,
               assigneeUser: st.assigneeUserId ? {
@@ -199,10 +196,9 @@ export function useBoard(projectId: string) {
               setSelectedTaskState({
                 ...fullTask,
                 id: taskId,
-                assigneeUser: fullTask.assigneeUserId ? {
-                  id: fullTask.assigneeUserId,
-                  displayName: fullTask.assigneeName,
-                  avatar: fullTask.assigneeAvatar
+                createdByUser: fullTask.createdByName ? {
+                  displayName: fullTask.createdByName,
+                  avatar: fullTask.createdByAvatar
                 } : null
               });
             }
@@ -352,7 +348,7 @@ export function useBoard(projectId: string) {
       fetchBoardData();
     } catch (err: any) {
       console.error("Failed to move task:", err);
-      alert(err.message || "Không thể di chuyển công việc. Có thể cột đích đã đạt giới hạn WIP.");
+      alert(err.message || "Không thể di chuyển công việc. Có thể cột đích đã đạt giới hạn WIP.", "Thất bại", "danger");
     }
   };
 
@@ -372,8 +368,7 @@ export function useBoard(projectId: string) {
 
       // 2. Assignee (Including subtasks)
       const matchesAssignee = selectedAssignee
-        ? task.assigneeUserId === selectedAssignee ||
-          (task.subTasks && task.subTasks.some((st) => st.assigneeUserId === selectedAssignee))
+        ? (task.subTasks && task.subTasks.some((st) => st.assigneeUserId === selectedAssignee))
         : true;
 
       // 3. Priority

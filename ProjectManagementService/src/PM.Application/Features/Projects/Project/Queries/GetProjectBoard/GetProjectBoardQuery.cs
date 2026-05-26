@@ -29,7 +29,6 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
             .AsNoTracking()
             .Include(p => p.BoardColumns.OrderBy(c => c.Position))
                 .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
-                    .ThenInclude(t => t.AssigneeUser)
             .Include(p => p.BoardColumns.OrderBy(c => c.Position))
                 .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
                     .ThenInclude(t => t.SubTasks)
@@ -70,9 +69,6 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                     Title = t.Title,
                     Priority = t.Priority?.ToString(),
                     SortOrder = t.SortOrder,
-                    AssigneeUserId = t.AssigneeUserId,
-                    AssigneeAvatar = t.AssigneeUser?.Avatar,
-                    AssigneeName = t.AssigneeUser?.DisplayName,
                     Description = t.Description,
                     StartDate = t.StartDate,
                     DueDate = t.DueDate,

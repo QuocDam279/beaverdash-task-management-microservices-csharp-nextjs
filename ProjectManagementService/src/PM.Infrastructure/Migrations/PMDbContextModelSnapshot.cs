@@ -385,14 +385,6 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime?>("AssignedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("assigned_at");
-
-                    b.Property<Guid?>("AssigneeUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("assignee_user_id");
-
                     b.Property<Guid>("BoardColumnId")
                         .HasColumnType("uuid")
                         .HasColumnName("board_column_id");
@@ -443,8 +435,6 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssigneeUserId");
 
                     b.HasIndex("BoardColumnId");
 
@@ -662,11 +652,6 @@ namespace PM.Infrastructure.Migrations
 
             modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
                 {
-                    b.HasOne("PM.Domain.Entities.User", "AssigneeUser")
-                        .WithMany()
-                        .HasForeignKey("AssigneeUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("PM.Domain.Entities.BoardColumn", "BoardColumn")
                         .WithMany("TaskItems")
                         .HasForeignKey("BoardColumnId")
@@ -678,8 +663,6 @@ namespace PM.Infrastructure.Migrations
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("AssigneeUser");
 
                     b.Navigation("BoardColumn");
 

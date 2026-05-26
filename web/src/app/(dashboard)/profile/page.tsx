@@ -4,9 +4,11 @@ import * as React from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
+  const { alert } = useAlertConfirm();
 
   const [displayName, setDisplayName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -90,7 +92,7 @@ export default function ProfilePage() {
       }, 4000);
     } catch (err: any) {
       console.error("Failed to update profile:", err);
-      alert(err.message || "Đã xảy ra lỗi khi cập nhật thông tin tài khoản.");
+      alert(err.message || "Đã xảy ra lỗi khi cập nhật thông tin tài khoản.", "Thất bại", "danger");
     }
   };
 
@@ -135,27 +137,53 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Profile Banner Card Header */}
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-xs">
+        {/* Banner with gradient */}
+        <div className="h-32 bg-gradient-to-r from-[#1868db] to-[#0747a6] relative" />
+        
+        {/* User Info Row */}
+        <div className="px-6 pb-6 relative flex flex-col sm:flex-row sm:items-end gap-4 -mt-14 sm:-mt-10">
+          <div className="relative shrink-0">
+            <Avatar
+              src={currentUser.avatar}
+              alt={displayName || "User"}
+              className="h-24 w-24 rounded-full border-4 border-white bg-slate-50 object-cover shadow-sm"
+            />
+          </div>
+          <div className="flex-1 min-w-0 sm:pb-1">
+            <h2 className="text-base font-bold text-[#292a2e] leading-tight truncate">
+              {displayName || "Người dùng"}
+            </h2>
+            <p className="text-xs text-slate-500 font-semibold truncate mt-1">
+              {email}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Details & Form Grid */}
       <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Avatar Display */}
-        <div className="md:col-span-1 border border-slate-200 rounded-lg p-5 bg-white flex flex-col items-center justify-center min-h-[250px]">
-          <h2 className="text-sm font-bold text-[#292a2e] mb-6 self-start">Ảnh đại diện</h2>
+        {/* Left Column: Summary Card */}
+        <div className="md:col-span-1 border border-slate-200 rounded-lg p-5 bg-white space-y-4 flex flex-col justify-start">
+          <h3 className="text-xs font-bold text-[#292a2e] uppercase tracking-wider">Tóm tắt tài khoản</h3>
           
-          <Avatar
-            src={currentUser.avatar}
-            alt={displayName || "User"}
-            className="h-32 w-32 rounded-full border-2 border-slate-200 bg-slate-50 object-cover shadow-sm mb-4"
-          />
-          
-          <p className="text-[10px] text-slate-400 font-semibold text-center uppercase tracking-wider">
-            Được cung cấp từ Google
-          </p>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <span className="text-lg">📅</span>
+              <div>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Ngày tham gia</p>
+                <p className="text-xs font-bold text-slate-700 mt-0.5">{formattedJoinDate}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Profile Form Details */}
         <div className="md:col-span-2 border border-slate-200 rounded-lg p-5 bg-white space-y-4">
-          <h2 className="text-sm font-bold text-[#292a2e] border-b border-slate-100 pb-2">
+          <h3 className="text-sm font-bold text-[#292a2e] border-b border-slate-100 pb-2">
             Thông tin tài khoản
-          </h2>
+          </h3>
 
           <div className="space-y-3.5">
             <div>
@@ -178,23 +206,11 @@ export default function ProfilePage() {
               </label>
               <input
                 type="email"
-                required
+                disabled
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all placeholder:text-slate-400"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-[4px] bg-slate-50 text-slate-400 cursor-not-allowed focus-visible:outline-none placeholder:text-slate-400"
                 placeholder="Nhập địa chỉ email..."
               />
-            </div>
-
-            <div className="pt-2">
-              <div>
-                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1">
-                  Ngày tham gia
-                </span>
-                <span className="text-xs text-slate-700 font-semibold p-1.5 block">
-                  {formattedJoinDate}
-                </span>
-              </div>
             </div>
           </div>
 

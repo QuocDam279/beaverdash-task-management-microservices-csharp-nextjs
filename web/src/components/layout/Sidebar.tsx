@@ -80,28 +80,29 @@ export function Sidebar() {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Accordion states for project groups
+  // Accordion states for project groups (mặc định mở rộng hết khi đăng nhập)
   const [openCategories, setOpenCategories] = React.useState({
-    personal: false,
-    managed: false,
-    joined: false,
+    personal: true,
+    managed: true,
+    joined: true,
   });
 
   // Modal state
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = React.useState(false);
 
-  // Auto-expand the matching group when current active project changes
+  // Auto-expand the matching group when current active project changes (giữ các group khác mở)
   React.useEffect(() => {
     if (activeProjectId && projects.length > 0) {
       const isPersonal = personalProjects.some((p) => p.id === activeProjectId);
       const isManaged = managedProjects.some((p) => p.id === activeProjectId);
       const isJoined = joinedProjects.some((p) => p.id === activeProjectId);
 
-      setOpenCategories({
-        personal: isPersonal,
-        managed: isManaged,
-        joined: isJoined,
-      });
+      setOpenCategories((prev) => ({
+        ...prev,
+        personal: isPersonal || prev.personal,
+        managed: isManaged || prev.managed,
+        joined: isJoined || prev.joined,
+      }));
     }
   }, [activeProjectId, projects]);
 

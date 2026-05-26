@@ -19,6 +19,12 @@ class ChatSessionCreate(BaseModel):
     title: Optional[str] = None
 
 
+class ChatSessionUpdate(BaseModel):
+    """Request cập nhật phiên chat."""
+
+    title: str
+
+
 class ChatSessionResponse(BaseModel):
     """Response thông tin phiên chat."""
 

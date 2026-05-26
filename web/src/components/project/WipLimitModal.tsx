@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { BoardColumn } from "@/types/task";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface WipLimitModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export function WipLimitModal({
   onClose,
   onSave,
 }: WipLimitModalProps) {
+  const { alert } = useAlertConfirm();
   const [wipLimitInput, setWipLimitInput] = React.useState<string>("");
 
   React.useEffect(() => {
@@ -29,7 +31,7 @@ export function WipLimitModal({
   const handleSave = () => {
     const limit = wipLimitInput.trim() === "" ? null : parseInt(wipLimitInput, 10);
     if (limit !== null && (isNaN(limit) || limit < 0)) {
-      alert("Giới hạn WIP phải là số lớn hơn hoặc bằng 0.");
+      alert("Giới hạn WIP phải là số lớn hơn hoặc bằng 0.", "Cảnh báo", "warning");
       return;
     }
     onSave(limit === 0 ? null : limit);

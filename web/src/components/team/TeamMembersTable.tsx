@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 /** Props for TeamMembersTable */
 interface TeamMembersTableProps {
@@ -26,13 +27,19 @@ export default function TeamMembersTable({
   onMemberRemoved,
   onAddMemberClick,
 }: TeamMembersTableProps) {
+  const { alert, confirm } = useAlertConfirm();
+
   const handleRemoveMember = async (userId: string) => {
     if (userId === currentUserId) {
-      alert("Bạn không thể tự xóa chính mình khỏi nhóm!");
+      alert("Bạn không thể tự xóa chính mình khỏi nhóm!", "Cảnh báo", "warning");
       return;
     }
 
-    const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi nhóm?");
+    const confirmDelete = await confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi nhóm?", {
+      title: "Xóa thành viên khỏi nhóm",
+      confirmLabel: "Xóa thành viên",
+      variant: "danger",
+    });
     if (!confirmDelete) return;
 
     try {
@@ -40,7 +47,7 @@ export default function TeamMembersTable({
       onMemberRemoved();
     } catch (err: any) {
       console.error("Failed to remove member:", err);
-      alert(err.message || "Xóa thành viên thất bại.");
+      alert(err.message || "Xóa thành viên thất bại.", "Thất bại", "danger");
     }
   };
 

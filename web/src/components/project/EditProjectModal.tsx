@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Project } from "@/types/project";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface EditProjectModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ const formatDateForInput = (dateStr: string | null) => {
 };
 
 export function EditProjectModal({ isOpen, onClose, project, onProjectUpdated }: EditProjectModalProps) {
+  const { alert } = useAlertConfirm();
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [startDate, setStartDate] = React.useState("");
@@ -53,9 +55,9 @@ export function EditProjectModal({ isOpen, onClose, project, onProjectUpdated }:
 
       onProjectUpdated();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update project:", err);
-      alert("Đã xảy ra lỗi khi cập nhật thông tin dự án.");
+      alert(err.message || "Đã xảy ra lỗi khi cập nhật thông tin dự án.", "Thất bại", "danger");
     } finally {
       setIsSubmitting(false);
     }

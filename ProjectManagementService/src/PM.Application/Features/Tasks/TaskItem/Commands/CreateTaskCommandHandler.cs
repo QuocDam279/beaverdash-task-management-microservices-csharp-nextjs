@@ -38,14 +38,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền thêm Task vào Project này.");
 
-            if (request.AssigneeUserId.HasValue)
-            {
-                bool isLeader = requestingMember.Role == "leader";
-                if (!isLeader && request.AssigneeUserId.Value != currentUserId)
-                {
-                    throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới được quyền giao việc cho thành viên khác.");
-                }
-            }
+
         }
 
         var isDuplicateName = await _dbContext.TaskItems
@@ -108,12 +101,10 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             Priority = string.IsNullOrEmpty(request.Priority)
                 ? null
                 : Enum.TryParse<TaskPriority>(request.Priority, true, out var p) ? p : null,
-            AssigneeUserId = request.AssigneeUserId,
             DueDate = request.DueDate,
             StartDate = request.StartDate,
             SortOrder = sortOrder,
             CreatedByUserId = currentUserId,
-            AssignedAt = request.AssigneeUserId.HasValue ? DateTime.UtcNow : null,
             CompletedAt = column.IsDone ? DateTime.UtcNow : null,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

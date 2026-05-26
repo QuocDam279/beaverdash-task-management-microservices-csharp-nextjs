@@ -6,9 +6,11 @@ import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { api } from "@/lib/api";
 import { Team } from "@/types/team";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 export default function TeamsPage() {
   const router = useRouter();
+  const { alert } = useAlertConfirm();
 
   const [teams, setTeams] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -84,7 +86,7 @@ export default function TeamsPage() {
       setIsModalOpen(false);
     } catch (err: any) {
       console.error("Failed to create team:", err);
-      alert(err.message || "Tạo nhóm thất bại.");
+      alert(err.message || "Tạo nhóm thất bại.", "Thất bại", "danger");
     } finally {
       setIsCreating(false);
     }

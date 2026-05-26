@@ -16,6 +16,7 @@ public class TrashTaskDto
     public DateTime? DeletedAt { get; set; }
     public string ProjectName { get; set; } = null!;
     public string ColumnName { get; set; } = null!;
+    public bool CanPermanentDelete { get; set; }
 }
 
 public record GetTrashTasksQuery : IRequest<List<TrashTaskDto>>;
@@ -42,6 +43,13 @@ public class GetTrashTasksQueryHandler : IRequestHandler<GetTrashTasksQuery, Lis
             .Select(tm => tm.TeamId)
             .ToListAsync(cancellationToken);
 
+        // Find team IDs where user is leader or owner
+        var leaderTeamIds = await _dbContext.TeamMembers
+            .AsNoTracking()
+            .Where(tm => tm.UserId == currentUserId && (tm.Role == "leader" || tm.Role == "Owner"))
+            .Select(tm => tm.TeamId)
+            .ToListAsync(cancellationToken);
+
         // Find projects user has access to
         var myProjectIds = await _dbContext.Projects
             .AsNoTracking()
@@ -49,10 +57,12 @@ public class GetTrashTasksQueryHandler : IRequestHandler<GetTrashTasksQuery, Lis
             .Select(p => p.Id)
             .ToListAsync(cancellationToken);
 
-        // Query trash tasks
-        var trashTasks = await _dbContext.TaskItems
+        // Query trash tasks with their project details included
+        var taskItems = await _dbContext.TaskItems
             .IgnoreQueryFilters()
             .AsNoTracking()
+            .Include(t => t.BoardColumn)
+                .ThenInclude(bc => bc.Project)
             .Where(t => t.DeletedAt != null && 
                        (t.CreatedByUserId == currentUserId || 
                         _dbContext.BoardColumns
@@ -60,15 +70,34 @@ public class GetTrashTasksQueryHandler : IRequestHandler<GetTrashTasksQuery, Lis
                             .Select(bc => bc.Id)
                             .Contains(t.BoardColumnId)))
             .OrderByDescending(t => t.DeletedAt)
-            .Select(t => new TrashTaskDto
+            .ToListAsync(cancellationToken);
+
+        var trashTasks = taskItems.Select(t =>
+        {
+            bool canPermanentDelete = false;
+            var project = t.BoardColumn?.Project;
+            if (project != null)
+            {
+                if (project.TeamId.HasValue)
+                {
+                    canPermanentDelete = leaderTeamIds.Contains(project.TeamId.Value);
+                }
+                else
+                {
+                    canPermanentDelete = project.CreatedByUserId == currentUserId;
+                }
+            }
+
+            return new TrashTaskDto
             {
                 Id = t.Id,
                 Title = t.Title,
                 DeletedAt = t.DeletedAt,
-                ProjectName = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.Name : "Không rõ",
-                ColumnName = t.BoardColumn != null ? t.BoardColumn.Name : "Không rõ"
-            })
-            .ToListAsync(cancellationToken);
+                ProjectName = project?.Name ?? "Không rõ",
+                ColumnName = t.BoardColumn?.Name ?? "Không rõ",
+                CanPermanentDelete = canPermanentDelete
+            };
+        }).ToList();
 
         return trashTasks;
     }

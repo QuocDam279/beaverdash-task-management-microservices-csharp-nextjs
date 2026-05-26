@@ -113,6 +113,7 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
         // Fetch all tasks in these columns (excluding deleted)
         var tasks = await _dbContext.TaskItems
             .AsNoTracking()
+            .Include(t => t.SubTasks)
             .Where(t => columnIds.Contains(t.BoardColumnId) && t.DeletedAt == null)
             .ToListAsync(cancellationToken);
 
@@ -180,6 +181,8 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
         // Compute member workloads
         var memberWorkloads = new List<MemberWorkloadDto>();
+        int totalSubTasks = tasks.SelectMany(t => t.SubTasks).Count(st => st.DeletedAt == null);
+
         if (project.TeamId.HasValue)
         {
             var teamMembers = await _dbContext.TeamMembers
@@ -190,8 +193,8 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
             foreach (var tm in teamMembers)
             {
-                int assignedCount = tasks.Count(t => t.AssigneeUserId == tm.UserId);
-                int workloadPct = totalTasks > 0 ? (int)Math.Round((double)assignedCount / totalTasks * 100) : 0;
+                int assignedCount = tasks.SelectMany(t => t.SubTasks).Count(st => st.AssigneeUserId == tm.UserId && st.DeletedAt == null);
+                int workloadPct = totalSubTasks > 0 ? (int)Math.Round((double)assignedCount / totalSubTasks * 100) : 0;
 
                 memberWorkloads.Add(new MemberWorkloadDto
                 {
@@ -212,8 +215,8 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
             if (owner != null)
             {
-                int assignedCount = tasks.Count(t => t.AssigneeUserId == owner.Id);
-                int workloadPct = totalTasks > 0 ? (int)Math.Round((double)assignedCount / totalTasks * 100) : 0;
+                int assignedCount = tasks.SelectMany(t => t.SubTasks).Count(st => st.AssigneeUserId == owner.Id && st.DeletedAt == null);
+                int workloadPct = totalSubTasks > 0 ? (int)Math.Round((double)assignedCount / totalSubTasks * 100) : 0;
 
                 memberWorkloads.Add(new MemberWorkloadDto
                 {

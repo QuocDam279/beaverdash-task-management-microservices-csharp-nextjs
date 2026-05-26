@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface TrashTask {
   id: string;
@@ -9,12 +10,14 @@ interface TrashTask {
   projectName: string;
   columnName: string;
   deletedAt: string;
+  canPermanentDelete?: boolean;
 }
 
 export default function TrashPage() {
   const [trashTasks, setTrashTasks] = React.useState<TrashTask[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const { alert, confirm } = useAlertConfirm();
 
   const fetchTrashTasks = async () => {
     try {
@@ -35,17 +38,32 @@ export default function TrashPage() {
   }, []);
 
   const handleRestore = async (id: string) => {
+    const confirmRestore = await confirm(
+      "Bạn có chắc chắn muốn khôi phục công việc này? Công việc sẽ được quay trở lại bảng quản lý dự án.",
+      {
+        title: "Khôi phục công việc",
+        confirmLabel: "Khôi phục",
+        variant: "info",
+      }
+    );
+    if (!confirmRestore) return;
+
     try {
       await api.post(`/tasks/${id}/restore`, {});
       fetchTrashTasks();
     } catch (err: any) {
-      alert(err.message || "Không thể khôi phục công việc.");
+      alert(err.message || "Không thể khôi phục công việc.", "Thất bại", "danger");
     }
   };
 
   const handlePermanentDelete = async (id: string) => {
-    const confirmDelete = window.confirm(
-      "Bạn có chắc chắn muốn xóa vĩnh viễn công việc này? Hành động này sẽ xóa hoàn toàn công việc khỏi cơ sở dữ liệu và không thể hoàn tác."
+    const confirmDelete = await confirm(
+      "Bạn có chắc chắn muốn xóa vĩnh viễn công việc này? Hành động này sẽ xóa hoàn toàn công việc khỏi cơ sở dữ liệu và không thể hoàn tác.",
+      {
+        title: "Xóa vĩnh viễn công việc",
+        confirmLabel: "Xóa vĩnh viễn",
+        variant: "danger",
+      }
     );
     if (!confirmDelete) return;
 
@@ -53,7 +71,7 @@ export default function TrashPage() {
       await api.delete(`/tasks/${id}/permanent`);
       fetchTrashTasks();
     } catch (err: any) {
-      alert(err.message || "Không thể xóa vĩnh viễn công việc.");
+      alert(err.message || "Không thể xóa vĩnh viễn công việc.", "Thất bại", "danger");
     }
   };
 
@@ -156,16 +174,18 @@ export default function TrashPage() {
                           </svg>
                           Khôi phục
                         </button>
-                        <button
-                          onClick={() => handlePermanentDelete(task.id)}
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2.5 py-1.5 rounded transition-colors cursor-pointer text-xs font-bold uppercase tracking-wider flex items-center gap-1"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                          Xóa vĩnh viễn
-                        </button>
+                        {task.canPermanentDelete && (
+                          <button
+                            onClick={() => handlePermanentDelete(task.id)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2.5 py-1.5 rounded transition-colors cursor-pointer text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Xóa vĩnh viễn
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

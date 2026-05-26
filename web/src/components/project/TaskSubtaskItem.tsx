@@ -71,11 +71,12 @@ export function TaskSubtaskItem({
             className={`h-4 w-4 rounded accent-[#10b981] shrink-0 ${canToggle ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
           />
           <span
-            className={`text-xs text-[#292a2e] truncate pr-2 leading-none ${
+            className={`text-xs text-[#292a2e] pr-2 leading-normal break-words whitespace-normal ${
               subtask.isCompleted
                 ? "line-through text-slate-400 font-medium"
                 : "font-semibold"
             }`}
+            title={subtask.title}
           >
             {subtask.title}
           </span>

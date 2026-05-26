@@ -12,9 +12,7 @@ public class TaskItem : BaseEntity
     public Guid BoardColumnId { get; set; }
     public BoardColumn? BoardColumn { get; set; }
     
-    public Guid? AssigneeUserId { get; set; }
-    public User? AssigneeUser { get; set; }
-    
+
     public string Title { get; set; } = null!;
     
     public string? Description { get; set; }
@@ -28,8 +26,7 @@ public class TaskItem : BaseEntity
     public Guid CreatedByUserId { get; set; }
     public User? CreatedByUser { get; set; }
     
-    public DateTime? AssignedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+public DateTime? CompletedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

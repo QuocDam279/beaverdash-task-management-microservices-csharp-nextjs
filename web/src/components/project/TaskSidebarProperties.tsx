@@ -35,10 +35,7 @@ export function TaskSidebarProperties({
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
-  const isAssignee = task.assigneeUserId === currentUser?.id;
-  const isUnassigned = !task.assigneeUserId;
-  const isAssigneeDropdownDisabled = !isLeader && !isUnassigned && !isAssignee;
-  const canModifyProperties = isLeader || isAssignee;
+  const canModifyProperties = true;
 
   const formatDateForInput = (dateStr: string | null) => {
     if (!dateStr) return "";
@@ -68,59 +65,7 @@ export function TaskSidebarProperties({
         </select>
       </div>
 
-      {/* Assignee Field */}
-      <div className="space-y-1">
-        <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
-          Người thực hiện
-        </label>
-        <div className="relative">
-          <select
-            value={task.assigneeUserId || ""}
-            onChange={(e) => onAssigneeChange(e.target.value)}
-            disabled={isAssigneeDropdownDisabled}
-            className={`w-full pl-8 pr-2.5 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all appearance-none ${isAssigneeDropdownDisabled ? "cursor-not-allowed opacity-75" : "cursor-pointer"}`}
-          >
-            <option value="">Chưa phân công</option>
-            {assignees.map((user) => {
-              const isSelf = user.id === currentUser?.id;
-              if (!isLeader && !isSelf) {
-                return null;
-              }
-              return (
-                <option key={user.id} value={user.id}>
-                  {user.displayName}
-                </option>
-              );
-            })}
-          </select>
-          {/* Custom Avatar Indicator on dropdown */}
-          <div className="absolute left-2 top-2 h-4.5 w-4.5 rounded-full overflow-hidden pointer-events-none flex items-center justify-center">
-            {task.assigneeUser ? (
-              <Avatar
-                src={task.assigneeUser.avatar}
-                alt={task.assigneeUser.displayName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-slate-200 rounded-full flex items-center justify-center text-[8px] font-bold text-slate-500">
-                ?
-              </div>
-            )}
-          </div>
-          <div className="pointer-events-none absolute right-2.5 top-2.5 flex items-center text-slate-400">
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </div>
-        </div>
-      </div>
+
 
       {/* Priority Field */}
       <div className="space-y-1">
@@ -135,10 +80,10 @@ export function TaskSidebarProperties({
             !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
           }`}
         >
-          <option value="Low">Thấp (Low)</option>
-          <option value="Medium">Trung bình (Medium)</option>
-          <option value="High">Cao (High)</option>
-          <option value="Critical">Khẩn cấp (Critical)</option>
+          <option value="Low">Thấp</option>
+          <option value="Medium">Trung bình</option>
+          <option value="High">Cao</option>
+          <option value="Critical">Khẩn cấp</option>
         </select>
       </div>
 
@@ -180,12 +125,23 @@ export function TaskSidebarProperties({
       </div>
 
       {/* Creation Audit Metadata */}
-      <div className="pt-4 border-t border-slate-100 text-[10px] font-medium text-slate-400 space-y-1 leading-snug">
-        <div>
-          Tạo bởi:{" "}
-          <span className="font-semibold text-slate-500">
-            {task.createdByUser?.displayName || "Hệ thống"}
-          </span>
+      <div className="pt-4 border-t border-slate-100 text-[10px] font-medium text-slate-400 space-y-2 leading-snug">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span>Tạo bởi:</span>
+          {task.createdByUser?.displayName ? (
+            <div className="flex items-center gap-1">
+              <Avatar
+                src={task.createdByUser.avatar}
+                alt={task.createdByUser.displayName}
+                className="h-4.5 w-4.5 rounded-full border border-slate-200"
+              />
+              <span className="font-semibold text-slate-600">
+                {task.createdByUser.displayName}
+              </span>
+            </div>
+          ) : (
+            <span className="font-semibold text-slate-500">Hệ thống</span>
+          )}
         </div>
         <div>
           Ngày tạo:{" "}

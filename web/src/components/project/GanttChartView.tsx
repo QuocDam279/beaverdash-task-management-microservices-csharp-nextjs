@@ -23,6 +23,44 @@ export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttCha
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date(2026, 4, 22));
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
 
+  const leftScrollRef = React.useRef<HTMLDivElement>(null);
+  const rightScrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const leftEl = leftScrollRef.current;
+    const rightEl = rightScrollRef.current;
+    if (!leftEl || !rightEl) return;
+
+    let isSyncingLeftScroll = false;
+    let isSyncingRightScroll = false;
+
+    const handleLeftScroll = () => {
+      if (isSyncingLeftScroll) {
+        isSyncingLeftScroll = false;
+        return;
+      }
+      isSyncingRightScroll = true;
+      rightEl.scrollTop = leftEl.scrollTop;
+    };
+
+    const handleRightScroll = () => {
+      if (isSyncingRightScroll) {
+        isSyncingRightScroll = false;
+        return;
+      }
+      isSyncingLeftScroll = true;
+      leftEl.scrollTop = rightEl.scrollTop;
+    };
+
+    leftEl.addEventListener("scroll", handleLeftScroll, { passive: true });
+    rightEl.addEventListener("scroll", handleRightScroll, { passive: true });
+
+    return () => {
+      leftEl.removeEventListener("scroll", handleLeftScroll);
+      rightEl.removeEventListener("scroll", handleRightScroll);
+    };
+  }, [tasks]);
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -93,21 +131,20 @@ export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttCha
       <div className="flex-1 overflow-hidden border border-slate-200 rounded-lg flex mt-4 shadow-xs">
         {/* LEFT TASK LIST */}
         <div className="w-[280px] border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0">
-          <div className="h-10 border-b border-slate-200 bg-slate-50 flex items-center px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <div className="h-10 border-b border-slate-200 bg-slate-50 flex items-center px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
             Công việc
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-150 scrollbar-none select-none">
+          <div 
+            ref={leftScrollRef}
+            className="flex-1 overflow-y-auto divide-y divide-slate-150 scrollbar-none select-none"
+          >
             {tasks.map((task) => {
-              const taskCode = task.id.startsWith("task-")
-                ? `QLDK-${100 + parseInt(task.id.split("-")[1])}`
-                : `QLDK-${task.id.substring(0, 4).toUpperCase()}`;
               return (
                 <div
                   key={task.id}
                   onClick={() => setSelectedTask(task)}
                   className="h-14 px-4 flex flex-col justify-center hover:bg-slate-100 cursor-pointer transition-colors"
                 >
-                  <span className="text-[10px] font-bold text-slate-400 mb-0.5">{taskCode}</span>
                   <span className="text-xs font-semibold text-[#292a2e] truncate" title={task.title}>{task.title}</span>
                 </div>
               );
@@ -116,10 +153,13 @@ export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttCha
         </div>
 
         {/* RIGHT TIMELINE GRID */}
-        <div className="flex-1 overflow-auto flex flex-col scrollbar-thin">
+        <div 
+          ref={rightScrollRef}
+          className="flex-1 overflow-auto flex flex-col scrollbar-thin"
+        >
           {/* Header */}
           <div
-            className="h-10 border-b border-slate-200 bg-slate-50/50 grid shrink-0"
+            className="h-10 border-b border-slate-200 bg-slate-50 sticky top-0 z-20 grid shrink-0"
             style={{ gridTemplateColumns: `repeat(${daysInMonth}, 36px)`, width: `${daysInMonth * 36}px` }}
           >
             {dayNumbers.map((day) => {

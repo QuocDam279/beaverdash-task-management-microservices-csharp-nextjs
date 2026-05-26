@@ -28,8 +28,10 @@ from app.services import embedding_service
 logger = logging.getLogger(__name__)
 
 # --- Cấu hình Chunking ---
-CHUNK_SIZE = 512  # tokens
-CHUNK_OVERLAP = 64  # tokens
+PARENT_CHUNK_SIZE = 1024  # tokens
+PARENT_CHUNK_OVERLAP = 128  # tokens
+CHILD_CHUNK_SIZE = 256  # tokens
+CHILD_CHUNK_OVERLAP = 32  # tokens
 ENCODING = tiktoken.get_encoding("cl100k_base")
 
 # Thư mục lưu file upload
@@ -55,7 +57,7 @@ def compute_checksum(file_bytes: bytes) -> str:
 # Chiến lược Chunking theo định dạng
 # =============================================================================
 
-def _recursive_split(text: str, separators: list[str], max_tokens: int = CHUNK_SIZE) -> list[str]:
+def _recursive_split(text: str, separators: list[str], max_tokens: int = PARENT_CHUNK_SIZE) -> list[str]:
     """
     Phân mảnh đệ quy (Recursive Character Splitting).
     Thử tách theo separator đầu tiên, nếu chunk vẫn > max_tokens thì thử separator tiếp theo.
@@ -109,7 +111,7 @@ def _recursive_split(text: str, separators: list[str], max_tokens: int = CHUNK_S
     return [c for c in chunks if c.strip()]
 
 
-def _add_overlap(chunks: list[str], overlap_tokens: int = CHUNK_OVERLAP) -> list[str]:
+def _add_overlap(chunks: list[str], overlap_tokens: int = CHILD_CHUNK_OVERLAP) -> list[str]:
     """Thêm overlap giữa các chunks liên tiếp."""
     if len(chunks) <= 1:
         return chunks
@@ -122,19 +124,49 @@ def _add_overlap(chunks: list[str], overlap_tokens: int = CHUNK_OVERLAP) -> list
     return result
 
 
-def chunk_plain_text(text: str) -> list[dict]:
-    """Chunk văn bản Plain Text (.txt) theo Recursive Character Splitting."""
-    separators = ["\n\n", "\n", ". ", "? ", "! ", " ", ""]
-    raw_chunks = _recursive_split(text, separators)
-    chunks_with_overlap = _add_overlap(raw_chunks)
-    return [{"content": c, "metadata": {"source_type": "txt"}} for c in chunks_with_overlap]
-
-
-def chunk_markdown(text: str) -> list[dict]:
+def split_parent_child(
+    text: str,
+    separators: list[str] = ["\n\n", "\n", ". ", "? ", "! ", " ", ""],
+    parent_size: int = PARENT_CHUNK_SIZE,
+    parent_overlap: int = PARENT_CHUNK_OVERLAP,
+    child_size: int = CHILD_CHUNK_SIZE,
+    child_overlap: int = CHILD_CHUNK_OVERLAP,
+) -> list[dict]:
     """
-    Chunk Markdown (.md) theo phân mảnh lồng nhau 2 lớp:
-    - Lớp 1: Tách theo Heading (#, ##, ###, ...)
-    - Lớp 2: Nếu heading section > 512 tokens → Recursive split, kế thừa heading cha.
+    Phân tách văn bản thành cấu trúc Parent-Child:
+    Trả về danh sách các dict, mỗi dict chứa parent_content, metadata và danh sách các children.
+    """
+    # 1. Tách văn bản thành các Parent chunks
+    raw_parents = _recursive_split(text, separators, max_tokens=parent_size)
+    parent_chunks = _add_overlap(raw_parents, overlap_tokens=parent_overlap)
+    
+    result = []
+    for parent_text in parent_chunks:
+        # 2. Tách mỗi Parent chunk thành các Child chunks
+        raw_children = _recursive_split(parent_text, separators, max_tokens=child_size)
+        child_chunks = _add_overlap(raw_children, overlap_tokens=child_overlap)
+        
+        result.append({
+            "parent_content": parent_text,
+            "children": child_chunks
+        })
+    return result
+
+
+def chunk_plain_text_parent_child(text: str) -> list[dict]:
+    """Phân mảnh Plain Text (.txt) theo cấu trúc Parent-Child."""
+    separators = ["\n\n", "\n", ". ", "? ", "! ", " ", ""]
+    parent_child_data = split_parent_child(text, separators)
+    for item in parent_child_data:
+        item["metadata"] = {"source_type": "txt"}
+    return parent_child_data
+
+
+def chunk_markdown_parent_child(text: str) -> list[dict]:
+    """
+    Phân mảnh Markdown (.md) theo cấu trúc Parent-Child:
+    - Cấp 1 (Parent): Tách theo Heading. Nếu heading section > PARENT_CHUNK_SIZE -> Chia nhỏ đệ quy.
+    - Cấp 2 (Child): Mỗi Parent sẽ được chia nhỏ thành các Child chunks (CHILD_CHUNK_SIZE).
     """
     # Lớp 1: Tách theo headings
     heading_pattern = re.compile(r'^(#{1,6})\s+(.+)$', re.MULTILINE)
@@ -155,33 +187,38 @@ def chunk_markdown(text: str) -> list[dict]:
     if remaining:
         sections.append({"heading": current_heading, "content": remaining})
 
-    # Lớp 2: Chia nhỏ sections > chunk_size
-    chunks = []
+    parent_child_data = []
     for section in sections:
         content = section["content"]
         heading = section["heading"]
 
-        if count_tokens(content) <= CHUNK_SIZE:
-            chunks.append({
-                "content": content,
-                "metadata": {"source_type": "markdown", "heading": heading}
-            })
+        # Chia thành parent chunks
+        if count_tokens(content) <= PARENT_CHUNK_SIZE:
+            parent_chunks = [content]
         else:
-            # Recursive split + kế thừa heading cha
-            sub_chunks = _recursive_split(content, ["\n\n", "\n", ". ", " "])
-            sub_chunks = _add_overlap(sub_chunks)
-            for sc in sub_chunks:
-                chunks.append({
-                    "content": sc,
-                    "metadata": {"source_type": "markdown", "heading": heading}
-                })
+            raw_parents = _recursive_split(content, ["\n\n", "\n", ". ", " "], max_tokens=PARENT_CHUNK_SIZE)
+            parent_chunks = _add_overlap(raw_parents, overlap_tokens=PARENT_CHUNK_OVERLAP)
 
-    return chunks
+        for parent_text in parent_chunks:
+            # Chia từng parent thành child chunks
+            if count_tokens(parent_text) <= CHILD_CHUNK_SIZE:
+                child_chunks = [parent_text]
+            else:
+                raw_children = _recursive_split(parent_text, ["\n\n", "\n", ". ", " "], max_tokens=CHILD_CHUNK_SIZE)
+                child_chunks = _add_overlap(raw_children, overlap_tokens=CHILD_CHUNK_OVERLAP)
+
+            parent_child_data.append({
+                "parent_content": parent_text,
+                "metadata": {"source_type": "markdown", "heading": heading},
+                "children": child_chunks
+            })
+
+    return parent_child_data
 
 
-def chunk_docx(file_bytes: bytes) -> list[dict]:
+def chunk_docx_parent_child(file_bytes: bytes) -> list[dict]:
     """
-    Chunk Word (.docx): Chuyển đổi sang Markdown trung gian, rồi áp dụng chunk_markdown.
+    Chunk Word (.docx): Chuyển đổi sang Markdown trung gian, rồi áp dụng chunk_markdown_parent_child.
     """
     doc = DocxDocument(BytesIO(file_bytes))
     md_lines = []
@@ -215,13 +252,13 @@ def chunk_docx(file_bytes: bytes) -> list[dict]:
         md_lines.append("")
 
     markdown_text = "\n".join(md_lines)
-    return chunk_markdown(markdown_text)
+    return chunk_markdown_parent_child(markdown_text)
 
 
-def chunk_pdf(file_bytes: bytes) -> tuple[list[dict], int]:
+def chunk_pdf_parent_child(file_bytes: bytes) -> tuple[list[dict], int]:
     """
-    Chunk PDF (.pdf): Trích xuất text bằng pypdf, áp dụng recursive splitting.
-    Trả về (chunks, page_count).
+    Chunk PDF (.pdf): Trích xuất text bằng pypdf, áp dụng split_parent_child.
+    Trả về (parent_child_data, page_count).
     """
     reader = PdfReader(BytesIO(file_bytes))
     page_count = len(reader.pages)
@@ -232,22 +269,23 @@ def chunk_pdf(file_bytes: bytes) -> tuple[list[dict], int]:
             full_text += page_text + "\n\n"
 
     separators = ["\n\n", "\n", ". ", "? ", "! ", " ", ""]
-    raw_chunks = _recursive_split(full_text, separators)
-    chunks_with_overlap = _add_overlap(raw_chunks)
-    return [{"content": c, "metadata": {"source_type": "pdf"}} for c in chunks_with_overlap], page_count
+    parent_child_data = split_parent_child(full_text, separators)
+    for item in parent_child_data:
+        item["metadata"] = {"source_type": "pdf"}
+    return parent_child_data, page_count
 
 
-def chunk_excel_csv(file_bytes: bytes, file_name: str) -> list[dict]:
+def chunk_excel_csv_parent_child(file_bytes: bytes, file_name: str) -> list[dict]:
     """
-    Chunk Excel/CSV: Pandas duyệt từng dòng, ghép [Tiêu đề cột]: [Giá trị ô] thành câu.
-    Mỗi dòng = 1 chunk.
+    Chunk Excel/CSV: Mỗi dòng = 1 Parent chunk.
+    Do dòng ngắn nên Child chunk trùng luôn với Parent chunk.
     """
     if file_name.endswith(".csv"):
         df = pd.read_csv(BytesIO(file_bytes))
     else:
         df = pd.read_excel(BytesIO(file_bytes), engine="openpyxl")
 
-    chunks = []
+    parent_child_data = []
     columns = list(df.columns)
 
     for idx, row in df.iterrows():
@@ -258,12 +296,14 @@ def chunk_excel_csv(file_bytes: bytes, file_name: str) -> list[dict]:
                 parts.append(f"{col}: {val}")
         sentence = ", ".join(parts)
         if sentence.strip():
-            chunks.append({
-                "content": sentence,
-                "metadata": {"source_type": "spreadsheet", "row_index": int(idx)}
+            parent_child_data.append({
+                "parent_content": sentence,
+                "metadata": {"source_type": "spreadsheet", "row_index": int(idx)},
+                "children": [sentence]
             })
 
-    return chunks
+    return parent_child_data
+
 
 
 # =============================================================================
@@ -327,51 +367,84 @@ async def process_document(
         ext = file_name.lower().rsplit(".", 1)[-1] if "." in file_name else ""
 
         if ext == "txt":
-            chunk_data = chunk_plain_text(file_bytes.decode("utf-8", errors="replace"))
+            parent_child_data = chunk_plain_text_parent_child(file_bytes.decode("utf-8", errors="replace"))
         elif ext == "md":
-            chunk_data = chunk_markdown(file_bytes.decode("utf-8", errors="replace"))
+            parent_child_data = chunk_markdown_parent_child(file_bytes.decode("utf-8", errors="replace"))
         elif ext == "docx":
-            chunk_data = chunk_docx(file_bytes)
+            parent_child_data = chunk_docx_parent_child(file_bytes)
         elif ext == "pdf":
-            chunk_data, page_count = chunk_pdf(file_bytes)
+            parent_child_data, page_count = chunk_pdf_parent_child(file_bytes)
         elif ext in ("xlsx", "csv"):
-            chunk_data = chunk_excel_csv(file_bytes, file_name)
+            parent_child_data = chunk_excel_csv_parent_child(file_bytes, file_name)
         else:
             # Fallback: xử lý như plain text
-            chunk_data = chunk_plain_text(file_bytes.decode("utf-8", errors="replace"))
+            parent_child_data = chunk_plain_text_parent_child(file_bytes.decode("utf-8", errors="replace"))
 
         if page_count:
             doc.page_count = page_count
 
-        if not chunk_data:
+        if not parent_child_data:
             doc.status = DocumentStatus.failed
             doc.error_message = "Không trích xuất được nội dung từ tài liệu."
             db.commit()
             return doc
 
-        # Sinh embedding batch
-        texts = [c["content"] for c in chunk_data]
-        embeddings = await embedding_service.get_embeddings_batch(texts)
+        # Thu thập tất cả child texts để sinh embedding
+        all_child_texts = []
+        for item in parent_child_data:
+            all_child_texts.extend(item["children"])
 
-        # Lưu chunks vào DB
-        for i, (chunk, emb) in enumerate(zip(chunk_data, embeddings)):
-            db_chunk = DocumentChunk(
-                id=uuid.uuid4(),
+        embeddings = []
+        if all_child_texts:
+            embeddings = await embedding_service.get_embeddings_batch(all_child_texts)
+
+        # Lưu Parent & Child chunks vào DB
+        child_emb_idx = 0
+        chunk_counter = 0
+
+        for item in parent_child_data:
+            # 1. Lưu Parent Chunk (không có embedding, parent_id = None)
+            parent_id = uuid.uuid4()
+            db_parent = DocumentChunk(
+                id=parent_id,
                 project_id=project_id,
                 document_id=doc.id,
-                chunk_index=i,
-                content=chunk["content"],
-                token_count=count_tokens(chunk["content"]),
-                embedding=emb,
-                metadata_=chunk.get("metadata"),
+                chunk_index=chunk_counter,
+                content=item["parent_content"],
+                token_count=count_tokens(item["parent_content"]),
+                embedding=None,
+                metadata_=item.get("metadata"),
+                parent_id=None,
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc)
             )
-            db.add(db_chunk)
+            db.add(db_parent)
+            chunk_counter += 1
+
+            # 2. Lưu Child Chunks (có embedding, liên kết tới parent)
+            for child_text in item["children"]:
+                emb = embeddings[child_emb_idx] if child_emb_idx < len(embeddings) else None
+                child_emb_idx += 1
+
+                db_child = DocumentChunk(
+                    id=uuid.uuid4(),
+                    project_id=project_id,
+                    document_id=doc.id,
+                    chunk_index=chunk_counter,
+                    content=child_text,
+                    token_count=count_tokens(child_text),
+                    embedding=emb,
+                    metadata_=item.get("metadata"),
+                    parent_id=parent_id,
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc)
+                )
+                db.add(db_child)
+                chunk_counter += 1
 
         doc.status = DocumentStatus.completed
         db.commit()
-        logger.info(f"Xử lý thành công tài liệu '{file_name}': {len(chunk_data)} chunks.")
+        logger.info(f"Xử lý thành công tài liệu '{file_name}': {len(parent_child_data)} parent chunks và {len(all_child_texts)} child chunks.")
 
     except Exception as e:
         doc.status = DocumentStatus.failed

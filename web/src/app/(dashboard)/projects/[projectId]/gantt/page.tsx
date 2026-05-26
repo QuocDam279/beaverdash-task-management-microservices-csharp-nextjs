@@ -34,11 +34,7 @@ export default function ProjectGanttPage({ params }: PageProps) {
         const allTasks: TaskItem[] = cols.flatMap((col: any) =>
           (col.taskItems || []).map((t: any) => ({
             ...t,
-            assigneeUser: t.assigneeUserId ? {
-              id: t.assigneeUserId,
-              displayName: t.assigneeName,
-              avatar: t.assigneeAvatar
-            } : null
+
           }))
         );
         setTasks(allTasks);

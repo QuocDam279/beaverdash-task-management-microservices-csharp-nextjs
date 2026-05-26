@@ -18,10 +18,8 @@ public class TaskDetailsDto
     public DateTime? ProjectStartDate { get; set; }
     public DateTime? ProjectDueDate { get; set; }
     public double? SortOrder { get; set; }
-    public Guid? AssigneeUserId { get; set; }
-    public string? AssigneeName { get; set; }
-    public string? AssigneeAvatar { get; set; }
     public string? CreatedByName { get; set; }
+    public string? CreatedByAvatar { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<SubTaskDto> SubTasks { get; set; } = new();

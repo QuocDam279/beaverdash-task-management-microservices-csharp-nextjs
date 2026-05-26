@@ -43,3 +43,94 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
 }
 
+/* Custom chat scrollbar (thin, hidden by default, visible on hover/scroll) */
+.custom-chat-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-chat-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+.custom-chat-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+.custom-chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+/* Firefox support */
+.custom-chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease-in-out;
+}
+.custom-chat-scrollbar:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+/* Premium Breathing Glow and Periodic Jumps for AI Assistant Logo */
+@keyframes logo-glow-and-bounce {
+  /* Breathing scale & glow (0% to 70% of the 5s cycle) */
+  0%, 70%, 100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
+    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
+  }
+  35% {
+    transform: translateY(0) scale(1.05);
+    filter: drop-shadow(0 0 10px rgba(24, 104, 219, 0.75));
+    box-shadow: 0 0 22px rgba(24, 104, 219, 0.6);
+  }
+  /* Jump 1 */
+  74% {
+    transform: translateY(-10px) scale(1.06);
+    filter: drop-shadow(0 0 12px rgba(24, 104, 219, 0.85));
+    box-shadow: 0 6px 26px rgba(24, 104, 219, 0.5);
+  }
+  78% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
+    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
+  }
+  /* Jump 2 */
+  82% {
+    transform: translateY(-6px) scale(1.04);
+    filter: drop-shadow(0 0 10px rgba(24, 104, 219, 0.8));
+    box-shadow: 0 4px 22px rgba(24, 104, 219, 0.45);
+  }
+  86% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
+    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
+  }
+  /* Jump 3 */
+  90% {
+    transform: translateY(-3px) scale(1.02);
+    filter: drop-shadow(0 0 8px rgba(24, 104, 219, 0.7));
+    box-shadow: 0 2px 18px rgba(24, 104, 219, 0.4);
+  }
+  94% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
+    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
+  }
+}
+
+.logo-glow-button {
+  animation: logo-glow-and-bounce 5s infinite ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-glow-button:hover {
+  animation: none;
+  box-shadow: 0 0 28px rgba(24, 104, 219, 0.8);
+  filter: drop-shadow(0 0 12px rgba(24, 104, 219, 0.9));
+  transform: scale(1.12);
+}
+
+
+

@@ -39,13 +39,7 @@ public class DeleteSubTaskCommandHandler : IRequestHandler<DeleteSubTaskCommand,
             if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền xóa SubTask này.");
 
-            bool isLeader = requestingMember.Role == "leader";
-            bool isParentAssignee = subTask.Task.AssigneeUserId == currentUserId;
 
-            if (!isLeader && !isParentAssignee)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người được giao thực hiện công việc cha mới có quyền xóa công việc con này.");
-            }
         }
         else if (project.CreatedByUserId != currentUserId)
         {

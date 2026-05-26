@@ -54,6 +54,21 @@ public class ProjectsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id}/activities")]
+    public async Task<IActionResult> CreateActivity(Guid id, [FromBody] CreateActivityDto request)
+    {
+        var command = new PM.Application.Features.Projects.Project.Commands.CreateActivityCommand(
+            id,
+            request.EntityType,
+            request.EntityId,
+            request.ActionType,
+            request.OldValue,
+            request.NewValue
+        );
+        await _mediator.Send(command);
+        return StatusCode(201);
+    }
+
     [HttpGet("{id}/overview")]
     public async Task<IActionResult> GetProjectOverview(Guid id)
     {
@@ -113,3 +128,10 @@ public class ProjectsController : ControllerBase
         return NoContent();
     }
 }
+
+public record CreateActivityDto(
+    string? EntityType,
+    Guid? EntityId,
+    string? ActionType,
+    string? OldValue,
+    string? NewValue);

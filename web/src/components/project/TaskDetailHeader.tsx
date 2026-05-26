@@ -8,12 +8,11 @@
 import * as React from "react";
 
 interface TaskDetailHeaderProps {
-  taskCode: string;
   onClose: () => void;
   onDelete?: () => void;
 }
 
-export function TaskDetailHeader({ taskCode, onClose, onDelete }: TaskDetailHeaderProps) {
+export function TaskDetailHeader({ onClose, onDelete }: TaskDetailHeaderProps) {
   return (
     <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-[#fafbfc]">
       <div className="flex items-center gap-2 text-xs font-semibold text-[#505258]">
@@ -31,9 +30,7 @@ export function TaskDetailHeader({ taskCode, onClose, onDelete }: TaskDetailHead
         </svg>
         <span>DỰ ÁN</span>
         <span>/</span>
-        <span>CÔNG VIỆC</span>
-        <span>/</span>
-        <span className="text-slate-400 font-bold">{taskCode}</span>
+        <span className="text-[#1868db]">CÔNG VIỆC</span>
       </div>
       
       <div className="flex items-center gap-3">

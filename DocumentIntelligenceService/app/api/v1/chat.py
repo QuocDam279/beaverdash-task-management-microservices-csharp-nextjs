@@ -13,6 +13,7 @@ from app.schemas.chat_schema import (
     ChatMessageRequest,
     ChatMessageResponse,
     ChatSessionCreate,
+    ChatSessionUpdate,
     ChatSessionResponse,
 )
 from app.services import chat_service
@@ -161,3 +162,44 @@ async def send_chat_message(
         tool_results=assistant_msg.tool_results,
         created_at=assistant_msg.created_at
     )
+
+
+@router.patch("/sessions/{session_id}", response_model=ChatSessionResponse)
+def update_chat_session(
+    session_id: uuid.UUID,
+    body: ChatSessionUpdate,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """Cập nhật tiêu đề phiên chat AI."""
+    session = db.query(AiChatSession).filter(
+        AiChatSession.id == session_id,
+        AiChatSession.user_id == user_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Phiên chat không tồn tại.")
+
+    from datetime import datetime, timezone
+    session.title = body.title
+    session.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+@router.delete("/sessions/{session_id}", status_code=204)
+def delete_chat_session(
+    session_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """Xóa phiên chat AI (cascade delete tin nhắn)."""
+    session = db.query(AiChatSession).filter(
+        AiChatSession.id == session_id,
+        AiChatSession.user_id == user_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Phiên chat không tồn tại.")
+
+    db.delete(session)
+    db.commit()

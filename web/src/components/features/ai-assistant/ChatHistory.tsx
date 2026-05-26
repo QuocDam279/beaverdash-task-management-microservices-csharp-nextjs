@@ -14,6 +14,7 @@ interface ChatHistoryProps {
   onSelectSession: (id: string) => void;
   onCreateSession: () => void;
   onDeleteSession: (id: string) => void;
+  onUpdateSessionTitle: (id: string, title: string) => void;
 }
 
 export function ChatHistory({
@@ -22,20 +23,44 @@ export function ChatHistory({
   onSelectSession,
   onCreateSession,
   onDeleteSession,
+  onUpdateSessionTitle,
 }: ChatHistoryProps) {
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [editTitle, setEditTitle] = React.useState("");
+
+  const handleStartEdit = (id: string, currentTitle: string) => {
+    setEditingId(id);
+    setEditTitle(currentTitle);
+  };
+
+  const handleSaveEdit = (id: string) => {
+    if (editTitle.trim()) {
+      onUpdateSessionTitle(id, editTitle.trim());
+    }
+    setEditingId(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
+    if (e.key === "Enter") {
+      handleSaveEdit(id);
+    } else if (e.key === "Escape") {
+      setEditingId(null);
+    }
+  };
+
   return (
-    <div className="w-64 border-r border-slate-200 bg-[#fafbfc] flex flex-col h-full shrink-0">
+    <div className="flex flex-col h-full bg-[#f4f5f7] select-none">
       {/* Session Header */}
-      <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+      <div className="p-4 border-b border-[#dfe1e6] flex items-center justify-between bg-[#f4f5f7]">
+        <span className="text-[10px] font-bold text-[#505258] uppercase tracking-wider block">
           Lịch sử trò chuyện
         </span>
         <button
           onClick={onCreateSession}
-          className="p-1 rounded text-[#1868db] hover:bg-[#1868db]/10 transition-colors cursor-pointer flex items-center justify-center"
+          className="p-1 rounded-[3px] text-[#1868db] bg-white border border-[#dfe1e6] hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center shadow-xs"
           title="Tạo hội thoại mới"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -49,37 +74,70 @@ export function ChatHistory({
             <div
               key={session.id}
               onClick={() => onSelectSession(session.id)}
-              className={`flex items-center justify-between px-3 py-2 rounded-[4px] text-xs font-semibold cursor-pointer group transition-all duration-150 ${
+              className={`flex items-center justify-between px-3 py-2 rounded-[3px] text-xs font-semibold cursor-pointer group transition-all duration-100 ${
                 activeSessionId === session.id
-                  ? "bg-[#1868db]/10 text-[#1868db]"
-                  : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-800"
+                  ? "bg-[#deebff] text-[#0747a6]"
+                  : "text-[#505258] hover:bg-[#ebecf0] hover:text-[#292a2e]"
               }`}
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="shrink-0 text-sm">💬</span>
-                <span className="truncate pr-1">
-                  {session.title || "Hội thoại mới"}
-                </span>
+                {editingId === session.id ? (
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onBlur={() => handleSaveEdit(session.id)}
+                    onKeyDown={(e) => handleKeyDown(e, session.id)}
+                    className="flex-1 bg-white border border-[#1868db] rounded-[3px] px-1.5 py-0.5 text-xs text-[#292a2e] focus:outline-none"
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <span className="truncate pr-1">
+                    {session.title || "Hội thoại mới"}
+                  </span>
+                )}
               </div>
 
-              {/* Delete button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteSession(session.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 hover:bg-slate-200/60 p-0.5 rounded cursor-pointer transition-opacity"
-                title="Xóa cuộc trò chuyện"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-              </button>
+              {/* Action buttons */}
+              {editingId !== session.id && (
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Edit button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartEdit(session.id, session.title || "Hội thoại mới");
+                    }}
+                    className="text-[#6b6e76] hover:text-[#1868db] hover:bg-black/5 p-0.5 rounded-[3px] cursor-pointer"
+                    title="Đổi tên cuộc trò chuyện"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteSession(session.id);
+                    }}
+                    className="text-[#6b6e76] hover:text-[#bf2600] hover:bg-black/5 p-0.5 rounded-[3px] cursor-pointer"
+                    title="Xóa cuộc trò chuyện"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-slate-400 text-xs font-medium">
+          <div className="text-center py-8 text-[#6b6e76] text-xs font-semibold italic">
             Chưa có hội thoại nào. Click + để tạo mới!
           </div>
         )}

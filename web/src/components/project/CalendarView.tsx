@@ -7,6 +7,7 @@ import { CalendarGrid } from "./CalendarGrid";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface CalendarViewProps {
   tasks: TaskItem[];
@@ -24,6 +25,7 @@ export default function CalendarView({
   showProjectPrefix = false,
 }: CalendarViewProps) {
   const { user: currentUser } = useAuth();
+  const { alert } = useAlertConfirm();
   
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date(2026, 4, 22));
   const [viewMode, setViewMode] = React.useState<"month" | "week">("month");
@@ -57,10 +59,9 @@ export default function CalendarView({
         setActiveAssignees(projectAssignees);
         setSelectedTask({
           ...fullTask,
-          assigneeUser: fullTask.assigneeUserId ? {
-            id: fullTask.assigneeUserId,
-            displayName: fullTask.assigneeName,
-            avatar: fullTask.assigneeAvatar
+          createdByUser: fullTask.createdByName ? {
+            displayName: fullTask.createdByName,
+            avatar: fullTask.createdByAvatar
           } : null
         });
       }
@@ -88,7 +89,7 @@ export default function CalendarView({
       );
     } catch (err: any) {
       console.error("Failed to update task due date on drop:", err);
-      alert(err.message || "Không thể cập nhật hạn hoàn thành.");
+      alert(err.message || "Không thể cập nhật hạn hoàn thành.", "Thất bại", "danger");
     }
   };
 
@@ -200,12 +201,7 @@ export default function CalendarView({
                 const cols = board?.boardColumns || [];
                 const allTasks = cols.flatMap((col: any) =>
                   (col.taskItems || []).map((t: any) => ({
-                    ...t,
-                    assigneeUser: t.assigneeUserId ? {
-                      id: t.assigneeUserId,
-                      displayName: t.assigneeName,
-                      avatar: t.assigneeAvatar
-                    } : null
+                    ...t
                   }))
                 );
                 setTasks(allTasks);

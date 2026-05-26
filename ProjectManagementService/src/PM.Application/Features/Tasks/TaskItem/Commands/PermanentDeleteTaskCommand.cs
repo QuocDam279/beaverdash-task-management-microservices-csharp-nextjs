@@ -37,18 +37,17 @@ public class PermanentDeleteTaskCommandHandler : IRequestHandler<PermanentDelete
         if (task == null)
             return false;
 
-        // Authorization check (only leader or creator can permanently delete)
+        // Authorization check (only leader can permanently delete in a team project)
         if (task.BoardColumn.Project.TeamId.HasValue)
         {
             var requestingMember = await _dbContext.TeamMembers
                 .FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
 
-            bool isLeader = requestingMember != null && requestingMember.Role == "leader";
-            bool isCreator = task.BoardColumn.Project.CreatedByUserId == currentUserId;
+            bool isLeader = requestingMember != null && (requestingMember.Role == "leader" || requestingMember.Role == "Owner");
 
-            if (!isLeader && !isCreator)
+            if (!isLeader)
             {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người tạo dự án mới có quyền xóa vĩnh viễn công việc.");
+                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền xóa vĩnh viễn công việc.");
             }
         }
         else if (task.BoardColumn.Project.CreatedByUserId != currentUserId)

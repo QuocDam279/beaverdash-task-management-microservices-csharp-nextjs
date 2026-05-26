@@ -40,13 +40,7 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
             if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền thêm SubTask vào Task này.");
 
-            bool isLeader = requestingMember.Role == "leader";
-            bool isParentAssignee = task.AssigneeUserId == currentUserId;
 
-            if (!isLeader && !isParentAssignee)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người được giao thực hiện công việc cha mới có quyền tạo công việc con.");
-            }
         }
         else if (task.BoardColumn.Project.CreatedByUserId != currentUserId)
         {

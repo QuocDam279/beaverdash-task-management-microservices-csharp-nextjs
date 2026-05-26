@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Project } from "@/types/project";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface CreateProjectModalProps {
 
 export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: CreateProjectModalProps) {
   const router = useRouter();
+  const { alert } = useAlertConfirm();
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [teamId, setTeamId] = React.useState<string>("");
@@ -84,9 +86,9 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
         // Redirect to the new project
         router.push(`/projects/${newProject.id}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create project:", err);
-      alert("Đã xảy ra lỗi khi tạo dự án.");
+      alert(err.message || "Đã xảy ra lỗi khi tạo dự án.", "Thất bại", "danger");
     }
   };
 

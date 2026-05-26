@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { EditProjectModal } from "@/components/project";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
+import { FloatingAssistant } from "@/components/features/ai-assistant";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,6 +25,8 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   const [project, setProject] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = React.useState(false);
+  const { alert, confirm } = useAlertConfirm();
 
   const fetchProjectDetails = React.useCallback(async () => {
     try {
@@ -43,8 +47,13 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   }, [fetchProjectDetails]);
 
   const handleDeleteProject = async () => {
-    const confirmDelete = window.confirm(
-      "Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác và tất cả các công việc liên quan sẽ bị xóa hoàn toàn."
+    const confirmDelete = await confirm(
+      "Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác và tất cả các công việc liên quan sẽ bị xóa hoàn toàn.",
+      {
+        title: "Xóa dự án",
+        confirmLabel: "Xóa dự án",
+        variant: "danger",
+      }
     );
     if (!confirmDelete) return;
 
@@ -52,17 +61,17 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
       await api.delete(`/projects/${projectId}`);
       window.location.href = "/";
     } catch (err: any) {
-      alert(err.message || "Không thể xóa dự án.");
+      alert(err.message || "Không thể xóa dự án.", "Thất bại", "danger");
     }
   };
 
 
 
-  const tabs = [
+  const tabs: { name: string; href: string; exact: boolean; disabled?: boolean }[] = [
     { name: "Tổng quan", href: `/projects/${projectId}`, exact: true },
     { name: "Bảng công việc", href: `/projects/${projectId}/board`, exact: false },
     { name: "Lịch", href: `/projects/${projectId}/calendar`, exact: false },
-    { name: "Danh sách", href: `#list`, disabled: true },
+    { name: "Danh sách", href: `/projects/${projectId}/list`, exact: false },
     { name: "Sơ đồ gantt", href: `/projects/${projectId}/gantt`, exact: false },
   ];
 
@@ -215,8 +224,25 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
       </div>
 
       {/* Project Content Area */}
-      <div className="flex-1 min-h-0 w-full overflow-auto bg-white">
-        {children}
+      <div className="flex-1 min-h-0 w-full flex overflow-hidden bg-[#f4f5f7] relative">
+        <div className="flex-1 min-h-0 overflow-auto bg-white">
+          {children}
+        </div>
+
+        {/* Beaver AI Assistant Collapsible Right Sidebar Panel */}
+        <div 
+          className={`shrink-0 transition-all duration-300 ease-in-out bg-white flex flex-col h-full overflow-hidden ${
+            isAssistantOpen ? "w-[360px] border-l border-slate-200 shadow-md" : "w-0 border-l-transparent shadow-none"
+          }`}
+        >
+          <div className="w-[360px] h-full flex flex-col">
+            <FloatingAssistant 
+              projectId={projectId} 
+              isOpen={isAssistantOpen} 
+              setIsOpen={setIsAssistantOpen} 
+            />
+          </div>
+        </div>
       </div>
 
       <EditProjectModal

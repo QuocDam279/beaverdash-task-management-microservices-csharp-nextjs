@@ -41,22 +41,7 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
             if (requestingMember == null)
                 throw new UnauthorizedAccessException("Bạn không có quyền sửa SubTask này.");
 
-            bool isLeader = requestingMember.Role == "leader";
-            bool isParentAssignee = subTask.Task.AssigneeUserId == currentUserId;
-            bool isSubTaskAssignee = subTask.AssigneeUserId == currentUserId;
 
-            // Check if this is a completion-only update
-            bool isCompletionOnly = request.Title == subTask.Title &&
-                                   request.AssigneeUserId == subTask.AssigneeUserId &&
-                                   request.DueDate == subTask.DueDate &&
-                                   request.IsCompleted != subTask.IsCompleted;
-
-            bool hasAccess = isLeader || isParentAssignee || (isCompletionOnly && isSubTaskAssignee);
-
-            if (!hasAccess)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người được giao thực hiện công việc cha mới có quyền chỉnh sửa công việc con này.");
-            }
         }
         else if (project.CreatedByUserId != currentUserId)
         {

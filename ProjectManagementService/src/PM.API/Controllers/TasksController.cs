@@ -56,7 +56,6 @@ public class TasksController : ControllerBase
             TaskId = id,
             Title = request.Title,
             Description = request.Description,
-            AssigneeUserId = request.AssigneeUserId,
             DueDate = request.DueDate,
             StartDate = request.StartDate,
             Priority = request.Priority

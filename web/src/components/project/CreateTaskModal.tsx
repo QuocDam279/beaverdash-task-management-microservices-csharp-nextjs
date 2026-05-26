@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { api } from "@/lib/api";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -22,10 +23,11 @@ export function CreateTaskModal({
   projectStartDate,
   projectDueDate,
 }: CreateTaskModalProps) {
+  const { alert } = useAlertConfirm();
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [boardColumnId, setBoardColumnId] = React.useState("");
-  const [assigneeUserId, setAssigneeUserId] = React.useState("");
+
   const [priority, setPriority] = React.useState("Medium");
   const [startDate, setStartDate] = React.useState("");
   const [dueDate, setDueDate] = React.useState("");
@@ -36,7 +38,7 @@ export function CreateTaskModal({
     if (isOpen) {
       setTitle("");
       setDescription("");
-      setAssigneeUserId("");
+
       setPriority("Medium");
       setStartDate("");
       setDueDate("");
@@ -61,7 +63,7 @@ export function CreateTaskModal({
         title: title.trim(),
         description: description.trim() || null,
         priority: priority || null,
-        assigneeUserId: assigneeUserId || null,
+
         startDate: startDate ? new Date(startDate).toISOString() : null,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       });
@@ -70,7 +72,7 @@ export function CreateTaskModal({
       onClose();
     } catch (err: any) {
       console.error("Failed to create task:", err);
-      alert(err.message || "Đã xảy ra lỗi khi tạo công việc.");
+      alert(err.message || "Đã xảy ra lỗi khi tạo công việc.", "Thất bại", "danger");
     } finally {
       setIsSubmitting(false);
     }
@@ -135,45 +137,23 @@ export function CreateTaskModal({
               />
             </div>
 
-            {/* Grid 2 Columns */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Board Column */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
-                  Cột công việc <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={boardColumnId}
-                  onChange={(e) => setBoardColumnId(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
-                >
-                  {columns.map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Assignee */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
-                  Người thực hiện
-                </label>
-                <select
-                  value={assigneeUserId}
-                  onChange={(e) => setAssigneeUserId(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
-                >
-                  <option value="">Chưa giao việc</option>
-                  {assignees.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.displayName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Board Column */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+                Cột công việc <span className="text-red-500">*</span>
+              </label>
+              <select
+                required
+                value={boardColumnId}
+                onChange={(e) => setBoardColumnId(e.target.value)}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+              >
+                {columns.map((col) => (
+                  <option key={col.id} value={col.id}>
+                    {col.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Grid 3 Columns */}
@@ -188,10 +168,10 @@ export function CreateTaskModal({
                   onChange={(e) => setPriority(e.target.value)}
                   className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
                 >
-                  <option value="Low">Thấp (Low)</option>
-                  <option value="Medium">Trung bình (Medium)</option>
-                  <option value="High">Cao (High)</option>
-                  <option value="Critical">Khẩn cấp (Critical)</option>
+                  <option value="Low">Thấp</option>
+                  <option value="Medium">Trung bình</option>
+                  <option value="High">Cao</option>
+                  <option value="Critical">Khẩn cấp</option>
                 </select>
               </div>
 

@@ -46,7 +46,7 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, List<MyTa
 
         var tasks = await _dbContext.TaskItems
             .AsNoTracking()
-            .Where(t => t.AssigneeUserId == currentUserId && t.DeletedAt == null)
+            .Where(t => t.SubTasks.Any(st => st.AssigneeUserId == currentUserId && st.DeletedAt == null) && t.DeletedAt == null)
             .OrderBy(t => t.DueDate ?? DateTime.MaxValue)
             .Select(t => new MyTaskDto
             {

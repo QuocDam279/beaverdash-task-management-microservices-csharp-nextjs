@@ -47,16 +47,16 @@ public class DeleteProjectCommandHandler : IRequestHandler<DeleteProjectCommand,
             }
         }
 
-        // Check if project has any tasks
-        var hasTasks = await _dbContext.TaskItems
+        // Check if project has any tasks that are not in a completed column (IsDone == false)
+        var hasUncompletedTasks = await _dbContext.TaskItems
             .AnyAsync(t => _dbContext.BoardColumns
-                .Where(bc => bc.ProjectId == request.ProjectId)
+                .Where(bc => bc.ProjectId == request.ProjectId && !bc.IsDone)
                 .Select(bc => bc.Id)
                 .Contains(t.BoardColumnId) && t.DeletedAt == null, cancellationToken);
 
-        if (hasTasks)
+        if (hasUncompletedTasks)
         {
-            throw new InvalidOperationException("Không thể xóa dự án vẫn còn công việc thuộc dự án này. Vui lòng xóa hết công việc trước.");
+            throw new InvalidOperationException("Không thể xóa dự án vì vẫn còn công việc chưa hoàn thành. Vui lòng hoàn thành hoặc xóa hết công việc trước.");
         }
 
         _dbContext.Projects.Remove(project);

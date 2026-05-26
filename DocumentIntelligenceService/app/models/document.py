@@ -95,6 +95,11 @@ class DocumentChunk(Base):
         ForeignKey("documents.id", ondelete="CASCADE"),
         nullable=False,
     )
+    parent_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("document_chunks.id", ondelete="CASCADE"),
+        nullable=True,
+    )
     chunk_index = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
     token_count = Column(Integer, nullable=False)

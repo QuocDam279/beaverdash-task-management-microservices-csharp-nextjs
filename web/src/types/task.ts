@@ -24,7 +24,7 @@ export interface TaskItem {
   id: string; // UUID
   boardColumnId: string; // UUID
   boardColumn?: BoardColumn | null;
-  assigneeUserId: string | null; // UUID
+  assigneeUserId?: string | null; // UUID
   assigneeUser?: User | null;
   title: string;
   description: string | null;
@@ -36,7 +36,7 @@ export interface TaskItem {
   sortOrder: number | null;
   createdByUserId: string; // UUID
   createdByUser?: User | null;
-  assignedAt: string | null; // ISO Date String
+  assignedAt?: string | null; // ISO Date String
   completedAt: string | null; // ISO Date String
   deletedAt: string | null; // ISO Date String
   createdAt: string; // ISO Date String
