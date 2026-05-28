@@ -41,6 +41,7 @@ export interface TaskItem {
   deletedAt: string | null; // ISO Date String
   createdAt: string; // ISO Date String
   updatedAt: string; // ISO Date String
+  teamId?: string | null;
   subTasks?: SubTask[];
 }
 
@@ -55,6 +56,7 @@ export interface SubTask {
   assigneeUser?: User | null;
   title: string;
   isCompleted: boolean;
+  priority?: string | null; // e.g. "Low", "Medium", "High"
   dueDate: string | null; // ISO Date String
   sortOrder: number | null;
   createdAt: string; // ISO Date String

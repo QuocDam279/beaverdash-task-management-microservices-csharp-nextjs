@@ -196,7 +196,7 @@ export default function TeamDetailPage({ params }: PageProps) {
       </div>
 
       {/* 3. Tab Contents area */}
-      <div className="flex-1 min-h-0 w-full overflow-auto bg-white p-6">
+      <div className="flex-1 min-h-0 w-full overflow-auto bg-white p-6 custom-chat-scrollbar">
         {activeTab === "members" && (
           <TeamMembersTable
             teamId={teamId}

@@ -1,7 +1,6 @@
 import { User } from "@/types/auth";
 import { Project } from "@/types/project";
 import { BoardColumn, TaskItem, SubTask, Comment, Attachment, Notification } from "@/types/task";
-import { AiChatSession, AiChatMessage } from "@/types/chat";
 import { Team, TeamMember } from "@/types/team";
 
 // ==========================================
@@ -470,102 +469,6 @@ export const mockTaskItems: TaskItem[] = [
     ]
   }
 ];
-
-// ==========================================
-// 4. MOCK AI CHAT SESSIONS & MESSAGES (Lịch sử chat)
-// ==========================================
-export const mockChatSessions: AiChatSession[] = [
-  {
-    id: "session-1",
-    userId: mockUsers[0].id,
-    projectId: mockProjects[0].id,
-    title: "Khắc phục lỗi định tuyến API Gateway YARP",
-    createdAt: "2026-05-21T06:00:00Z",
-    updatedAt: "2026-05-21T06:15:00Z"
-  },
-  {
-    id: "session-2",
-    userId: mockUsers[0].id,
-    projectId: mockProjects[0].id,
-    title: "Hướng dẫn cài đặt pgvector cho PostgreSQL",
-    createdAt: "2026-05-21T07:20:00Z",
-    updatedAt: "2026-05-21T07:35:00Z"
-  }
-];
-
-export const mockChatMessages: Record<string, AiChatMessage[]> = {
-  "session-1": [
-    {
-      id: "msg1-s1",
-      sessionId: "session-1",
-      role: "user",
-      content: "Tôi đang gọi API thông qua API Gateway chạy ở cổng 5000 nhưng liên tục nhận được lỗi 502 Bad Gateway từ YARP. Tôi nên kiểm tra những gì để sửa lỗi này?",
-      usedDocuments: null,
-      toolCalls: null,
-      toolResults: null,
-      createdAt: "2026-05-21T06:01:00Z"
-    },
-    {
-      id: "msg2-s1",
-      sessionId: "session-1",
-      role: "assistant",
-      content: "Lỗi `502 Bad Gateway` từ YARP Reverse Proxy thường xuất hiện khi Gateway nhận được yêu cầu nhưng không thể thiết lập kết nối đến dịch vụ backend thực tế. Bạn hãy kiểm tra các bước sau:\n\n1. **Kiểm tra trạng thái Service Backend**:\n   Đảm bảo dịch vụ bạn muốn gọi (ví dụ: `IdentityService` chạy cổng `5001` hoặc `ProjectManagementService` chạy cổng `5002`) đang chạy thực tế trên máy của bạn.\n\n2. **Kiểm tra file cấu hình Gateway**:\n   Kiểm tra file `appsettings.Development.json` trong dự án `ApiGateway`. Đảm bảo phần cấu hình `Clusters` trỏ đúng URL của service đích:\n   ```json\n   \"Clusters\": {\n     \"identity-cluster\": {\n       \"Destinations\": {\n         \"destination1\": {\n           \"Address\": \"http://localhost:5001\"\n         }\n       }\n     }\n   }\n   ```\n\n3. **Cấu hình môi trường mạng (Nếu dùng Docker)**:\n   Nếu bạn chạy API Gateway trong container Docker nhưng chạy các Service ở môi trường Host máy local, địa chỉ `localhost:5001` sẽ không truy cập được. Bạn cần sửa địa chỉ Address thành `http://host.docker.internal:5001`.",
-      usedDocuments: [
-        {
-          documentId: "doc-sys-arch",
-          fileName: "System_Architecture.md",
-          chunkIndex: 2,
-          content: "API Gateway (YARP) tại cổng 5000 chuyển hướng yêu cầu HTTP đến IdentityService tại localhost:5001 và ProjectManagementService tại localhost:5002."
-        }
-      ],
-      toolCalls: null,
-      toolResults: null,
-      createdAt: "2026-05-21T06:03:00Z"
-    },
-    {
-      id: "msg3-s1",
-      sessionId: "session-1",
-      role: "user",
-      content: "À, đúng rồi. Tôi quên chưa chạy IdentityService. Sau khi bật lên thì đã hết lỗi 502. Cảm ơn nhé!",
-      usedDocuments: null,
-      toolCalls: null,
-      toolResults: null,
-      createdAt: "2026-05-21T06:14:00Z"
-    },
-    {
-      id: "msg4-s1",
-      sessionId: "session-1",
-      role: "assistant",
-      content: "Tuyệt vời! Rất vui vì đã giúp bạn giải quyết được vấn đề. Nếu bạn gặp thêm khó khăn gì trong việc cấu hình giao tiếp giữa các service hoặc thiết lập RabbitMQ, cứ hỏi tôi nhé!",
-      usedDocuments: null,
-      toolCalls: null,
-      toolResults: null,
-      createdAt: "2026-05-21T06:15:00Z"
-    }
-  ],
-  "session-2": [
-    {
-      id: "msg1-s2",
-      sessionId: "session-2",
-      role: "user",
-      content: "Làm thế nào để kích hoạt extension pgvector trong PostgreSQL chạy bằng Docker?",
-      usedDocuments: null,
-      toolCalls: null,
-      toolResults: null,
-      createdAt: "2026-05-21T07:21:00Z"
-    },
-    {
-      id: "msg2-s2",
-      sessionId: "session-2",
-      role: "assistant",
-      content: "Để cài đặt và kích hoạt extension `pgvector` cho PostgreSQL trong môi trường Docker, bạn thực hiện theo 2 bước đơn giản sau:\n\n1. **Sử dụng Image PostgreSQL hỗ trợ pgvector**:\n   Thay vì dùng image `postgres` tiêu chuẩn, bạn hãy đổi sang image `ankane/pgvector` (được tối ưu và cài sẵn extension này). Cập nhật file `docker-compose.yml`:\n   ```yaml\n   services:\n     db:\n       image: ankane/pgvector:latest\n       ports:\n         - \"5432:5432\"\n       environment:\n         POSTGRES_PASSWORD: your_password\n   ```\n\n2. **Kích hoạt Extension bằng lệnh SQL**:\n   Sau khi khởi chạy container, bạn kết nối vào database và thực thi câu lệnh SQL sau để kích hoạt extension cho cơ sở dữ liệu mong muốn:\n   ```sql\n   CREATE EXTENSION IF NOT EXISTS vector;\n   ```\n\nBạn có thể kiểm tra xem extension đã kích hoạt thành công chưa bằng cách truy vấn bảng `pg_extension`:\n```sql\nSELECT extname FROM pg_extension;\n```\nNếu thấy kết quả có `vector`, bạn đã kích hoạt thành công và có thể khai báo cột dữ liệu dạng vector (ví dụ: `embedding vector(1024)`).",
-      usedDocuments: null,
-      toolCalls: null,
-      toolResults: null,
-      createdAt: "2026-05-21T07:24:00Z"
-    }
-  ]
-};
 
 // ==========================================
 // 8. MOCK NOTIFICATIONS (Danh sách thông báo giả lập)

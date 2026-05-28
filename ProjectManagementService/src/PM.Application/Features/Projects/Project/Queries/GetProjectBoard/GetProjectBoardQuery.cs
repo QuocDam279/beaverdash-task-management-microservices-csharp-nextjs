@@ -83,7 +83,8 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                         IsCompleted = st.IsCompleted,
                         AssigneeUserId = st.AssigneeUserId,
                         AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
-                        AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null
+                        AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,
+                        Priority = st.Priority != null ? st.Priority.ToString() : null
                     }).ToList()
                 }).ToList()
             }).ToList()

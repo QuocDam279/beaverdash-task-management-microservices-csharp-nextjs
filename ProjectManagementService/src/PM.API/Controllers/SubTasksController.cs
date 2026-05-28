@@ -35,7 +35,8 @@ public class SubTasksController : ControllerBase
             Title = request.Title,
             AssigneeUserId = request.AssigneeUserId,
             DueDate = request.DueDate,
-            IsCompleted = request.IsCompleted
+            IsCompleted = request.IsCompleted,
+            Priority = request.Priority
         };
 
         var success = await _mediator.Send(command);

@@ -13,19 +13,8 @@ Luôn tuân thủ cấu trúc App Router bên trong thư mục `src/` của dự
 * **`src/types/`**: Chứa các file định nghĩa kiểu dữ liệu (TypeScript Interfaces/Types) độc lập để chia sẻ trong toàn bộ ứng dụng.
 * **`src/lib/`**: Chứa các file cấu hình và tiện ích dùng chung như `utils.ts` (để định nghĩa hàm `cn`) và `mock-data.ts`.
 
----
 
-## 2. QUY TẮC MOCK DATA (Dữ liệu giả để sẵn sàng cho API thật)
-Để đảm bảo khả năng tích hợp API thật diễn ra mượt mà và không làm thay đổi cấu trúc UI sau này:
-
-* **TUYỆT ĐỐI KHÔNG** hardcode dữ liệu dạng chữ, số hoặc mảng trực tiếp vào trong mã nguồn HTML/JSX của các component.
-* **Tập trung hóa**: Tất cả dữ liệu giả để dựng giao diện mẫu (UI mockups) phải được gom tập trung vào file `src/lib/mock-data.ts` dưới dạng các mảng JSON Object.
-* **Định nghĩa kiểu dữ liệu chặt chẽ**: Mỗi mảng mock data bắt buộc phải được khai báo kiểu dữ liệu từ các interface/type tương ứng trong thư mục `src/types/`.
-* **Khớp cấu trúc Backend**: Cấu trúc các interface của Mock Data phải mô phỏng chính xác cấu trúc Entity của Backend (ví dụ: các trường `id`, `title`, `status`, `assignedTo` của `TaskItem` phải khớp hoàn toàn với cấu trúc JSON của API Backend).
-
----
-
-## 3. TIÊU CHUẨN GIAO DIỆN (UI/UX & Tailwind v4)
+## 2. TIÊU CHUẨN GIAO DIỆN (UI/UX & Tailwind v4)
 Đảm bảo giao diện người dùng đạt tính thẩm mỹ cao, trực quan và dễ sử dụng:
 
 * **Thiết kế hiện đại & Sạch sẽ**: Ưu tiên bố cục dạng thẻ (**Card-based layout**). Khoảng cách (padding, margin) và căn lề phải đồng nhất.
@@ -35,7 +24,7 @@ Luôn tuân thủ cấu trúc App Router bên trong thư mục `src/` của dự
 
 ---
 
-## 4. QUY TẮC PHÂN CHIA SERVER/CLIENT COMPONENTS
+## 3. QUY TẮC PHÂN CHIA SERVER/CLIENT COMPONENTS
 Tối ưu hóa hiệu năng ứng dụng bằng cách phân chia vai trò rõ ràng giữa Client và Server:
 
 * **Mặc định là Server Component**: Tất cả các component mặc định nên được viết dưới dạng Server Component để giảm tải lượng JavaScript gửi về client và tăng tốc độ load trang đầu tiên.

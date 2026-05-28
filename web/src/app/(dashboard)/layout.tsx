@@ -54,7 +54,7 @@ export default function DashboardLayout({
         <TopHeader currentUser={currentUser} />
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 min-h-0 overflow-auto bg-white">
+        <main className="flex-1 min-h-0 overflow-auto bg-white custom-chat-scrollbar">
           {children}
         </main>
       </div>

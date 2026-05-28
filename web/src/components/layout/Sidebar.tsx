@@ -165,6 +165,7 @@ export function Sidebar() {
         <SidebarCollapsedNav
           pathname={pathname}
           activeProjectId={activeProjectId}
+          onExpand={() => setIsCollapsed(false)}
         />
       ) : (
         <SidebarExpandedNav

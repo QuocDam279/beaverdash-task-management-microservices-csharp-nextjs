@@ -15,6 +15,7 @@ export interface BoardToolbarProps {
   setSelectedDueDateFilter: (d: string | null) => void;
   onResetFilters: () => void;
   onCreateTaskClick: () => void;
+  readOnly?: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ export function BoardToolbar({
   setSelectedDueDateFilter,
   onResetFilters,
   onCreateTaskClick,
+  readOnly = false,
 }: BoardToolbarProps) {
   const hasActiveFilters =
     !!searchQuery ||
@@ -66,10 +68,9 @@ export function BoardToolbar({
           className="px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
         >
           <option value="">Tất cả độ ưu tiên</option>
-          <option value="Critical">Khẩn cấp</option>
-          <option value="High">Cao</option>
-          <option value="Medium">Trung bình</option>
-          <option value="Low">Thấp</option>
+          <option value="Required">Bắt buộc</option>
+          <option value="Important">Quan trọng</option>
+          <option value="Extended">Mở rộng</option>
         </select>
 
         {/* Due Date Filter */}
@@ -110,8 +111,23 @@ export function BoardToolbar({
                 </button>
               );
             })}
+            
+            {/* Unassigned button (avatar trống) */}
+            <button
+              onClick={() => setSelectedAssignee(selectedAssignee === "unassigned" ? null : "unassigned")}
+              title="Công việc hoặc subtask chưa phân công"
+              className={`h-7 w-7 rounded-full border-2 border-dashed transition-all cursor-pointer flex items-center justify-center bg-slate-50 hover:bg-slate-100 hover:border-slate-400 ml-1.5 ${
+                selectedAssignee === "unassigned" ? "border-[#1868db] bg-blue-50/50 scale-110 z-10" : "border-slate-300"
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={selectedAssignee === "unassigned" ? "text-[#1868db]" : "text-slate-400"}>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
           </div>
         </div>
+
 
         {/* Clear Filters Button */}
         {hasActiveFilters && (
@@ -129,16 +145,18 @@ export function BoardToolbar({
       </div>
 
       {/* Create Task Button */}
-      <button
-        onClick={onCreateTaskClick}
-        className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-1.5 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        <span>Tạo công việc</span>
-      </button>
+      {!readOnly && (
+        <button
+          onClick={onCreateTaskClick}
+          className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-1.5 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Tạo công việc</span>
+        </button>
+      )}
     </div>
   );
 }

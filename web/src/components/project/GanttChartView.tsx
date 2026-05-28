@@ -14,52 +14,25 @@ import { TaskItem, BoardColumn } from "@/types/task";
 
 interface GanttChartViewProps {
   tasks: TaskItem[];
-  setTasks: React.Dispatch<React.SetStateAction<TaskItem[]>>;
+  setTasks?: React.Dispatch<React.SetStateAction<TaskItem[]>>;
   columns: BoardColumn[];
   assignees: any[];
+  readOnly?: boolean;
+  shareToken?: string;
 }
 
-export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttChartViewProps) {
+export function GanttChartView({
+  tasks,
+  setTasks,
+  columns,
+  assignees,
+  readOnly = false,
+  shareToken,
+}: GanttChartViewProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date(2026, 4, 22));
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
 
-  const leftScrollRef = React.useRef<HTMLDivElement>(null);
   const rightScrollRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const leftEl = leftScrollRef.current;
-    const rightEl = rightScrollRef.current;
-    if (!leftEl || !rightEl) return;
-
-    let isSyncingLeftScroll = false;
-    let isSyncingRightScroll = false;
-
-    const handleLeftScroll = () => {
-      if (isSyncingLeftScroll) {
-        isSyncingLeftScroll = false;
-        return;
-      }
-      isSyncingRightScroll = true;
-      rightEl.scrollTop = leftEl.scrollTop;
-    };
-
-    const handleRightScroll = () => {
-      if (isSyncingRightScroll) {
-        isSyncingRightScroll = false;
-        return;
-      }
-      isSyncingLeftScroll = true;
-      leftEl.scrollTop = rightEl.scrollTop;
-    };
-
-    leftEl.addEventListener("scroll", handleLeftScroll, { passive: true });
-    rightEl.addEventListener("scroll", handleRightScroll, { passive: true });
-
-    return () => {
-      leftEl.removeEventListener("scroll", handleLeftScroll);
-      rightEl.removeEventListener("scroll", handleRightScroll);
-    };
-  }, [tasks]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -76,15 +49,21 @@ export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttCha
 
   const getPriorityColor = (priority: string | null) => {
     const colors: Record<string, string> = {
+      Required: "from-red-500 to-red-600 border-red-700 text-white",
       Critical: "from-red-500 to-red-600 border-red-700 text-white",
-      High: "from-orange-400 to-orange-500 border-orange-600 text-white",
+      High: "from-red-500 to-red-600 border-red-700 text-white",
+      Important: "from-blue-400 to-blue-500 border-blue-600 text-white",
       Medium: "from-blue-400 to-blue-500 border-blue-600 text-white",
+      Extended: "from-slate-400 to-slate-500 border-slate-600 text-white",
+      Low: "from-slate-400 to-slate-500 border-slate-600 text-white",
     };
-    return colors[priority || ""] || "from-slate-400 to-slate-500 border-slate-600 text-white";
+    return colors[priority || ""] || "from-slate-200 to-slate-300 border-slate-400 text-slate-600";
   };
 
   const handleUpdateTask = (updatedTask: TaskItem) => {
-    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+    if (setTasks) {
+      setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+    }
     if (selectedTask?.id === updatedTask.id) setSelectedTask(updatedTask);
   };
 
@@ -120,107 +99,143 @@ export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttCha
           </div>
         </div>
         <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
-          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-red-500" /> Khẩn cấp</div>
-          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-orange-500" /> Cao</div>
-          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-blue-500" /> Trung bình</div>
-          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-slate-400" /> Thấp</div>
+          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-red-500" /> Bắt buộc</div>
+          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-blue-500" /> Quan trọng</div>
+          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-slate-400" /> Mở rộng</div>
         </div>
       </div>
 
       {/* Gantt Container */}
-      <div className="flex-1 overflow-hidden border border-slate-200 rounded-lg flex mt-4 shadow-xs">
-        {/* LEFT TASK LIST */}
-        <div className="w-[280px] border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0">
-          <div className="h-10 border-b border-slate-200 bg-slate-50 flex items-center px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
-            Công việc
-          </div>
-          <div 
-            ref={leftScrollRef}
-            className="flex-1 overflow-y-auto divide-y divide-slate-150 scrollbar-none select-none"
-          >
-            {tasks.map((task) => {
-              return (
-                <div
-                  key={task.id}
-                  onClick={() => setSelectedTask(task)}
-                  className="h-14 px-4 flex flex-col justify-center hover:bg-slate-100 cursor-pointer transition-colors"
-                >
-                  <span className="text-xs font-semibold text-[#292a2e] truncate" title={task.title}>{task.title}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* RIGHT TIMELINE GRID */}
+      <div className="flex-1 overflow-hidden border border-slate-200 rounded-lg flex flex-col mt-4 shadow-xs">
+        
+        {/* Single Scroll Container */}
         <div 
           ref={rightScrollRef}
-          className="flex-1 overflow-auto flex flex-col scrollbar-thin"
+          className="flex-1 overflow-auto scrollbar-thin relative bg-white"
         >
-          {/* Header */}
-          <div
-            className="h-10 border-b border-slate-200 bg-slate-50 sticky top-0 z-20 grid shrink-0"
-            style={{ gridTemplateColumns: `repeat(${daysInMonth}, 36px)`, width: `${daysInMonth * 36}px` }}
+          {/* HEADER AREA (sticky top) */}
+          <div 
+            className="sticky top-0 z-30 h-10 border-b border-slate-200 bg-slate-50 flex shrink-0"
+            style={{ width: `${280 + daysInMonth * 36}px` }}
           >
-            {dayNumbers.map((day) => {
-              const isToday = year === 2026 && month === 4 && day === 22;
-              return (
-                <div
-                  key={day}
-                  className={`border-r border-slate-200 last:border-r-0 flex items-center justify-center text-[10px] font-bold ${
-                    isToday ? "bg-red-50 text-red-600" : "text-slate-500"
-                  }`}
-                >
-                  {day}
-                </div>
-              );
-            })}
+            {/* Top-Left Header Cell (sticky left & top) */}
+            <div className="w-[280px] sticky left-0 z-40 border-r border-slate-200 bg-slate-50 flex items-center px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 select-none">
+              Công việc
+            </div>
+            
+            {/* Days timeline Header */}
+            <div 
+              className="flex-1 grid select-none"
+              style={{ 
+                gridTemplateColumns: `repeat(${daysInMonth}, 36px)`, 
+                width: `${daysInMonth * 36}px` 
+              }}
+            >
+              {dayNumbers.map((day) => {
+                const isToday = year === 2026 && month === 4 && day === 22;
+                return (
+                  <div
+                    key={day}
+                    className={`border-r border-slate-200 last:border-r-0 flex items-center justify-center text-[10px] font-bold ${
+                      isToday ? "bg-red-50 text-red-600" : "text-slate-500"
+                    }`}
+                  >
+                    {day}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Grid Rows */}
-          <div className="flex-1 divide-y divide-slate-150 relative bg-white" style={{ width: `${daysInMonth * 36}px` }}>
-            {/* Today Line */}
+          {/* BODY AREA (scrollable rows) */}
+          <div className="divide-y divide-slate-150 relative" style={{ width: `${280 + daysInMonth * 36}px` }}>
+            {/* Today Line (absolute positioned inside the body container) */}
             {year === 2026 && month === 4 && (
               <div
                 className="absolute top-0 bottom-0 border-l-2 border-dashed border-red-500 z-10 pointer-events-none"
-                style={{ left: `${(22 - 1) * 36 + 18}px` }}
+                style={{ left: `${280 + (22 - 1) * 36 + 18}px` }}
               />
             )}
 
             {tasks.map((task) => {
-              let startDay = 0, spanDays = 0, hasDates = false;
-              if (task.startDate && task.dueDate) {
-                const sDate = new Date(task.startDate), dDate = new Date(task.dueDate);
-                const sMonth = new Date(year, month, 1), eMonth = new Date(year, month + 1, 0);
-                if (sDate <= eMonth && dDate >= sMonth) {
-                  hasDates = true;
-                  startDay = sDate < sMonth ? 1 : sDate.getDate();
-                  spanDays = (dDate > eMonth ? daysInMonth : dDate.getDate()) - startDay + 1;
+              const rawStart = task.startDate;
+              const rawDue = task.dueDate;
+              
+              const hasDates = !!(rawStart || rawDue);
+              let overlapsCurrentMonth = false;
+              let startDay = 0;
+              let spanDays = 0;
+              let sDateObj: Date | null = null;
+              let dDateObj: Date | null = null;
+
+              if (hasDates) {
+                const effectiveStart = rawStart || rawDue!;
+                const effectiveDue = rawDue || rawStart!;
+                
+                sDateObj = new Date(effectiveStart);
+                dDateObj = new Date(effectiveDue);
+                
+                const sMonth = new Date(year, month, 1);
+                const eMonth = new Date(year, month + 1, 0);
+                
+                if (sDateObj <= eMonth && dDateObj >= sMonth) {
+                  overlapsCurrentMonth = true;
+                  startDay = sDateObj < sMonth ? 1 : sDateObj.getDate();
+                  spanDays = (dDateObj > eMonth ? daysInMonth : dDateObj.getDate()) - startDay + 1;
                 }
               }
+
               const percent = getSubtaskPercent(task);
 
               return (
-                <div key={task.id} onClick={() => setSelectedTask(task)} className="h-14 relative hover:bg-slate-50/50 cursor-pointer flex items-center">
-                  <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${daysInMonth}, 36px)` }}>
-                    {dayNumbers.map((d) => <div key={d} className="border-r border-slate-100 last:border-r-0 h-full" />)}
+                <div 
+                  key={task.id} 
+                  className="h-14 flex group hover:bg-slate-50/50 transition-colors"
+                >
+                  {/* Sticky Left Task Cell */}
+                  <div
+                    onClick={() => setSelectedTask(task)}
+                    className="w-[280px] sticky left-0 z-20 border-r border-slate-200 bg-white group-hover:bg-slate-50/80 flex flex-col justify-center px-4 cursor-pointer transition-colors"
+                  >
+                    <span className="text-xs font-semibold text-[#292a2e] truncate" title={task.title}>
+                      {task.title}
+                    </span>
                   </div>
-                  {hasDates ? (
-                    <div
-                      className={`absolute h-7 rounded-md border shadow-xs bg-gradient-to-r flex flex-col justify-between overflow-hidden p-0.5 select-none ${getPriorityColor(task.priority)}`}
-                      style={{ left: `${(startDay - 1) * 36 + 3}px`, width: `${spanDays * 36 - 6}px`, minWidth: "30px" }}
-                      title={`${task.title} (${new Date(task.startDate!).toLocaleDateString("vi-VN")} - ${new Date(task.dueDate!).toLocaleDateString("vi-VN")})`}
-                    >
-                      <span className="text-[9px] font-extrabold truncate px-1 mt-0.5">{percent}%</span>
-                      <div className="w-full bg-black/15 h-1 rounded-sm overflow-hidden">
-                        <div className="bg-white h-full transition-all duration-300" style={{ width: `${percent}%` }} />
+
+                  {/* Right Timeline Cell */}
+                  <div 
+                    onClick={() => setSelectedTask(task)}
+                    className="shrink-0 relative cursor-pointer flex items-center min-w-0"
+                    style={{ width: `${daysInMonth * 36}px` }}
+                  >
+                    {/* Grid Lines */}
+                    <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${daysInMonth}, 36px)` }}>
+                      {dayNumbers.map((d) => <div key={d} className="border-r border-slate-100 last:border-r-0 h-full" />)}
+                    </div>
+
+                    {hasDates ? (
+                      overlapsCurrentMonth && sDateObj && dDateObj ? (
+                        <div
+                          className={`absolute h-7 rounded-md border shadow-xs bg-gradient-to-r flex flex-col justify-between overflow-hidden p-0.5 select-none ${getPriorityColor(task.priority)}`}
+                          style={{ left: `${(startDay - 1) * 36 + 3}px`, width: `${spanDays * 36 - 6}px`, minWidth: "30px" }}
+                          title={`${task.title} (${sDateObj.toLocaleDateString("vi-VN")} - ${dDateObj.toLocaleDateString("vi-VN")})`}
+                        >
+                          <span className="text-[9px] font-extrabold truncate px-1 mt-0.5">{percent}%</span>
+                          <div className="w-full bg-black/15 h-1 rounded-sm overflow-hidden">
+                            <div className="bg-white h-full transition-all duration-300" style={{ width: `${percent}%` }} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="absolute left-4 text-[10px] text-[#80838d] italic pointer-events-none select-none">
+                          (Ngoài phạm vi tháng này)
+                        </div>
+                      )
+                    ) : (
+                      <div className="absolute h-7 rounded-md border border-dashed border-slate-300 bg-slate-50/50 flex items-center justify-center select-none" style={{ left: "12px", right: "12px" }}>
+                        <span className="text-[10px] font-bold text-slate-400">Chưa thiết lập ngày (Start / Due Date)</span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="absolute h-7 rounded-md border border-dashed border-slate-300 bg-slate-50/50 flex items-center justify-center select-none" style={{ left: "12px", right: "12px" }}>
-                      <span className="text-[10px] font-bold text-slate-400">Chưa thiết lập ngày (Start / Due Date)</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -237,6 +252,8 @@ export function GanttChartView({ tasks, setTasks, columns, assignees }: GanttCha
           columns={columns}
           onUpdateTask={handleUpdateTask}
           assignees={assignees}
+          readOnly={readOnly}
+          shareToken={shareToken}
         />
       )}
     </div>

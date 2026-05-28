@@ -6,6 +6,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 
 interface ProjectOverviewStatsProps {
   projectId: string;
+  shareToken?: string;
   completedCount: number;
   createdCount: number;
   upcomingDueCount: number;
@@ -17,14 +18,21 @@ interface ProjectOverviewStatsProps {
  */
 export function ProjectOverviewStats({
   projectId,
+  shareToken,
   completedCount,
   createdCount,
   upcomingDueCount,
 }: ProjectOverviewStatsProps) {
+  const getBoardUrl = (query: string = "") => {
+    return shareToken
+      ? `/shared/projects/${shareToken}/board${query}`
+      : `/projects/${projectId}/board${query}`;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 select-none">
       {/* Card 1: Completed Tasks */}
-      <Link href={`/projects/${projectId}/board`} className="block group">
+      <Link href={getBoardUrl()} className="block group">
         <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300">
           <CardBody className="p-5 flex items-center justify-between">
             <div className="space-y-1.5">
@@ -48,7 +56,7 @@ export function ProjectOverviewStats({
       </Link>
 
       {/* Card 2: Created Tasks */}
-      <Link href={`/projects/${projectId}/board`} className="block group">
+      <Link href={getBoardUrl()} className="block group">
         <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300">
           <CardBody className="p-5 flex items-center justify-between">
             <div className="space-y-1.5">
@@ -73,7 +81,7 @@ export function ProjectOverviewStats({
       </Link>
 
       {/* Card 3: Upcoming Due Tasks */}
-      <Link href={`/projects/${projectId}/board?dueDate=upcoming7`} className="block group">
+      <Link href={getBoardUrl("?dueDate=upcoming7")} className="block group">
         <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300">
           <CardBody className="p-5 flex items-center justify-between">
             <div className="space-y-1.5">

@@ -12,6 +12,7 @@ public class SubTaskBoardDto
     public Guid? AssigneeUserId { get; set; }
     public string? AssigneeAvatar { get; set; }
     public string? AssigneeName { get; set; }
+    public string? Priority { get; set; }
 }
 
 public class TaskItemDto

@@ -20,5 +20,4 @@ export { BoardToolbar } from "./BoardToolbar";
 export { BoardTaskCard } from "./BoardTaskCard";
 export { ProjectListView } from "./ProjectListView";
 export { ProjectListTable } from "./ProjectListTable";
-
-
+export { ShareProjectModal } from "./ShareProjectModal";

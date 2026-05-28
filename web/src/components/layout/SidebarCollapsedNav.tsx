@@ -7,6 +7,7 @@ import { SidebarTooltip } from "@/components/ui/Tooltip";
 interface CollapsedNavProps {
   pathname: string;
   activeProjectId: string | null;
+  onExpand: () => void;
 }
 
 /**
@@ -16,6 +17,7 @@ interface CollapsedNavProps {
 export function SidebarCollapsedNav({
   pathname,
   activeProjectId,
+  onExpand,
 }: CollapsedNavProps) {
   return (
     <nav className="flex-1 py-4 flex flex-col items-center gap-5 overflow-y-auto overflow-x-hidden">
@@ -44,28 +46,6 @@ export function SidebarCollapsedNav({
         </Link>
       </SidebarTooltip>
 
-      <SidebarTooltip text="Dự án">
-        <Link
-          href={activeProjectId ? `/projects/${activeProjectId}` : "/teams"}
-          className={`flex h-10 w-10 items-center justify-center rounded-[4px] transition-all duration-150 cursor-pointer ${
-            pathname.startsWith("/projects/") && !pathname.endsWith("/board")
-              ? "bg-[#1868db]/10 text-[#1868db]"
-              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
-          }`}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-          >
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-        </Link>
-      </SidebarTooltip>
-
       <SidebarTooltip text="Công việc">
         <Link
           href="/tasks"
@@ -89,34 +69,11 @@ export function SidebarCollapsedNav({
         </Link>
       </SidebarTooltip>
 
-      <SidebarTooltip text="Trợ lý Beaver">
-        <Link
-          href="/ai-assistant"
-          className={`flex h-10 w-10 items-center justify-center rounded-[4px] transition-all duration-150 cursor-pointer ${
-            pathname === "/ai-assistant"
-              ? "bg-[#1868db]/10 text-[#1868db]"
-              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
-          }`}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            <path d="M12 7v6M9 10h6" />
-          </svg>
-        </Link>
-      </SidebarTooltip>
-
       <SidebarTooltip text="Thùng rác">
         <Link
           href="/trash"
           className={`flex h-10 w-10 items-center justify-center rounded-[4px] transition-all duration-150 cursor-pointer ${
-            pathname === "/trash"
+            pathname.startsWith("/trash")
               ? "bg-[#1868db]/10 text-[#1868db]"
               : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
           }`}
@@ -135,6 +92,31 @@ export function SidebarCollapsedNav({
             <line x1="14" y1="11" x2="14" y2="17"></line>
           </svg>
         </Link>
+      </SidebarTooltip>
+
+      {/* Divider to separate main menu and projects section, matching the expanded sidebar visual categories */}
+      <div className="w-8 border-t border-slate-200 my-1 shrink-0" />
+
+      <SidebarTooltip text="Dự án">
+        <button
+          onClick={onExpand}
+          className={`flex h-10 w-10 items-center justify-center rounded-[4px] transition-all duration-150 cursor-pointer ${
+            pathname.startsWith("/projects/")
+              ? "bg-[#1868db]/10 text-[#1868db]"
+              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
+          }`}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+          >
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
       </SidebarTooltip>
     </nav>
   );

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Project } from "@/types/project";
 import { api } from "@/lib/api";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface CreateProjectModalProps {
 export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: CreateProjectModalProps) {
   const router = useRouter();
   const { alert } = useAlertConfirm();
+  const { user: currentUser } = useAuth();
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [teamId, setTeamId] = React.useState<string>("");
@@ -22,6 +24,7 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
   const [startDate, setStartDate] = React.useState("");
   const [dueDate, setDueDate] = React.useState("");
   const [teams, setTeams] = React.useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     const fetchTeams = async () => {
@@ -45,6 +48,7 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
     if (!name.trim()) return;
 
     try {
+      setIsSubmitting(true);
       const result = await api.post("/projects", {
         name: name.trim(),
         description: description.trim() || null,
@@ -66,7 +70,7 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
           isPublic,
           shareToken: null,
-          createdByUserId: "", // populated by backend
+          createdByUserId: currentUser?.id || "", // populated by backend
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -89,6 +93,8 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
     } catch (err: any) {
       console.error("Failed to create project:", err);
       alert(err.message || "Đã xảy ra lỗi khi tạo dự án.", "Thất bại", "danger");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -102,7 +108,8 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded hover:bg-slate-100"
+            disabled={isSubmitting}
+            className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <svg
               width="18"
@@ -128,10 +135,11 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
               <input
                 type="text"
                 required
+                disabled={isSubmitting}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ví dụ: Thiết kế Website, Marketing Q1..."
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
               />
             </div>
 
@@ -142,8 +150,9 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
               </label>
               <select
                 value={teamId}
+                disabled={isSubmitting}
                 onChange={(e) => setTeamId(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
               >
                 <option value="">Không có nhóm (Dự án cá nhân)</option>
                 {teams.map(t => (
@@ -161,8 +170,9 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
                 <input
                   type="date"
                   value={startDate}
+                  disabled={isSubmitting}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
                 />
               </div>
 
@@ -173,8 +183,9 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
                 <input
                   type="date"
                   value={dueDate}
+                  disabled={isSubmitting}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
                 />
               </div>
             </div>
@@ -185,10 +196,11 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
                 type="checkbox"
                 id="isPublic"
                 checked={isPublic}
+                disabled={isSubmitting}
                 onChange={(e) => setIsPublic(e.target.checked)}
-                className="h-3.5 w-3.5 accent-[#1868db] cursor-pointer rounded"
+                className="h-3.5 w-3.5 accent-[#1868db] cursor-pointer rounded disabled:opacity-60 disabled:cursor-not-allowed"
               />
-              <label htmlFor="isPublic" className="text-xs text-[#292a2e] cursor-pointer">
+              <label htmlFor="isPublic" className="text-xs text-[#292a2e] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                 Công khai dự án này (Ai có link đều có thể xem)
               </label>
             </div>
@@ -198,15 +210,23 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
             <button
               type="button"
               onClick={onClose}
-              className="bg-transparent hover:bg-slate-100 text-[#505258] text-xs font-bold px-3 py-2 rounded-[4px] border border-slate-200 cursor-pointer transition-colors"
+              disabled={isSubmitting}
+              className="bg-transparent hover:bg-slate-100 text-[#505258] text-xs font-bold px-3 py-2 rounded-[4px] border border-slate-200 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
-              className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-2 rounded-[4px] cursor-pointer transition-colors"
+              disabled={isSubmitting}
+              className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-2 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Tạo dự án
+              {isSubmitting && (
+                <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              )}
+              {isSubmitting ? "Đang tạo..." : "Tạo dự án"}
             </button>
           </div>
         </form>

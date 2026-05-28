@@ -128,7 +128,7 @@
 
 ---
 
-### 3. DocumentIntelligence Service
+### 3. AIAssistant Service
 
 13. `users`
     - `id (uuid, pk)`
@@ -145,39 +145,8 @@
 15. `project_members`
     - `project_id (uuid, pk, fk)`
     - `user_id (uuid, pk, fk)`
-    - `status (varchar)`
-    - `joined_at (timestamp, default now())`
 
-16. `documents`
-   - `id (uuid, pk)`
-   - `user_id (uuid, fk)`
-   - `project_id (uuid, fk)`
-   - `source_type (varchar)`
-   - `file_name (varchar, not null)`
-   - `mime_type (varchar)`
-   - `storage_uri (varchar, not null)`
-   - `file_size (bigint, nullable)` -- Thêm mới để validate dung lượng file và quota hệ thống
-   - `page_count (integer, nullable)` -- Thêm mới để đếm số trang (PDF/DOCX) phục vụ tracking
-   - `checksum (varchar, nullable)` -- Thêm mới mã hash SHA-256 để kiểm soát cơ chế Checksum Guard (chặn re-chunking trùng lặp)
-   - `status (document_status, enum)` -- Chuyển từ varchar sang ENUM ('pending', 'processing', 'completed', 'failed') để tránh lỗi typo
-   - `error_message (text, nullable)` -- Thêm mới để lưu vết lý do cụ thể khi xử lý file thất bại
-   - `created_at (timestamp)`
-   - `updated_at (timestamp)`
-
-17. `document_chunks`
-   - `id (uuid, pk)`
-   - `project_id (uuid, fk)`
-   - `document_id (uuid, fk, ON DELETE CASCADE)` -- Bổ sung khóa ngoại kèm ràng buộc xóa tự động (Cascade Delete) để tránh rác DB
-   - `chunk_index (integer)`
-   - `content (text, not null)`
-   - `token_count (integer, not null)` -- Thêm mới để biết trước số token, tối ưu hóa việc tính toán context window lúc compose prompt chat
-   - `embedding (vector)` -- Kiểu dữ liệu vector lưu dense embedding (Cấu hình kích thước tùy theo model BGE-M3)
-   - `sparse_embedding (jsonb, nullable)`
-   - `metadata (jsonb, nullable)`
-   - `created_at (timestamp)`
-   - `updated_at (timestamp)` -- Thêm mới để hỗ trợ kiểm toán (audit) hoặc debug khi tiến hành cập nhật/nạp lại phân mảnh
-
-18. `ai_chat_sessions`
+16. `ai_chat_sessions`
     - `id (uuid, pk)`
     - `user_id (uuid, fk)`
     - `project_id (uuid, fk)`
@@ -185,12 +154,11 @@
     - `created_at (timestamp)`
     - `updated_at (timestamp)`
 
-19. `ai_chat_messages`
+17. `ai_chat_messages`
     - `id (uuid, pk)`
     - `session_id (uuid, fk)`
-    - `role (varchar)`
+    - `role (varchar)` -- 'user', 'assistant', 'system', 'tool'
     - `content (text)`
-    - `used_documents (jsonb, nullable)`
-    - `tool_calls (jsonb, nullable)`
-    - `tool_results (jsonb, nullable)`
+    - `tool_calls (jsonb, nullable)` -- Lưu thông tin gọi tool của LLM (ví dụ: tạo công việc, công việc con)
+    - `tool_results (jsonb, nullable)` -- Lưu kết quả sau khi thực thi tool (ví dụ: ID của công việc vừa tạo)
     - `created_at (timestamp)`

@@ -40,6 +40,8 @@ public class ProjectOverviewDto
     public Guid? TeamId { get; set; }
     public Guid CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsPublic { get; set; }
+    public string? ShareToken { get; set; }
 
     // Metrics (7 days)
     public int TotalTasksCount { get; set; }
@@ -56,10 +58,9 @@ public class ProjectOverviewDto
     public List<ColumnStatusCountDto> ColumnStatusCounts { get; set; } = new();
 
     // Priority counts
-    public int LowPriorityCount { get; set; }
-    public int MediumPriorityCount { get; set; }
-    public int HighPriorityCount { get; set; }
-    public int CriticalPriorityCount { get; set; }
+    public int RequiredPriorityCount { get; set; }
+    public int ImportantPriorityCount { get; set; }
+    public int ExtendedPriorityCount { get; set; }
 
     // Workload list
     public List<MemberWorkloadDto> MemberWorkloads { get; set; } = new();
@@ -174,10 +175,9 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
         }).OrderBy(c => c.Position).ToList();
 
         // Priority counts
-        int lowCount = tasks.Count(t => t.Priority == TaskPriority.Low || t.Priority == null);
-        int mediumCount = tasks.Count(t => t.Priority == TaskPriority.Medium);
-        int highCount = tasks.Count(t => t.Priority == TaskPriority.High);
-        int criticalCount = tasks.Count(t => t.Priority == TaskPriority.Critical);
+        int requiredCount = tasks.Count(t => t.Priority == TaskPriority.Required);
+        int importantCount = tasks.Count(t => t.Priority == TaskPriority.Important);
+        int extendedCount = tasks.Count(t => t.Priority == TaskPriority.Extended);
 
         // Compute member workloads
         var memberWorkloads = new List<MemberWorkloadDto>();
@@ -243,6 +243,8 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
             TeamId = project.TeamId,
             CreatedByUserId = project.CreatedByUserId,
             CreatedAt = project.CreatedAt,
+            IsPublic = project.IsPublic,
+            ShareToken = project.ShareToken,
 
             TotalTasksCount = totalTasks,
             CompletedTasksCount = completedCount,
@@ -256,10 +258,9 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
             ColumnStatusCounts = columnStatusCounts,
 
-            LowPriorityCount = lowCount,
-            MediumPriorityCount = mediumCount,
-            HighPriorityCount = highCount,
-            CriticalPriorityCount = criticalCount,
+            RequiredPriorityCount = requiredCount,
+            ImportantPriorityCount = importantCount,
+            ExtendedPriorityCount = extendedCount,
 
             MemberWorkloads = memberWorkloads
         };

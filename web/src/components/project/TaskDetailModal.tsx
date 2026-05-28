@@ -18,6 +18,8 @@ interface TaskDetailModalProps {
   onUpdateTask: (updatedTask: TaskItem) => void;
   columns: BoardColumn[];
   assignees: any[];
+  readOnly?: boolean;
+  shareToken?: string;
 }
 
 export function TaskDetailModal({
@@ -27,6 +29,8 @@ export function TaskDetailModal({
   onUpdateTask,
   columns,
   assignees,
+  readOnly = false,
+  shareToken,
 }: TaskDetailModalProps) {
   const { user: currentUser } = useAuth();
   const { alert, confirm } = useAlertConfirm();
@@ -42,7 +46,10 @@ export function TaskDetailModal({
   const reloadTask = async () => {
     try {
       console.log("TaskDetailModal reloadTask started for task:", task.id);
-      const data = await api.get(`/tasks/${task.id}`);
+      const url = readOnly && shareToken
+        ? `/shared/tasks/${task.id}?shareToken=${shareToken}`
+        : `/tasks/${task.id}`;
+      const data = await api.get(url);
       console.log("TaskDetailModal reloadTask API returned:", data);
       if (data) {
         const mappedSubTasks = (data.subTasks || []).map((st: any) => ({
@@ -115,6 +122,7 @@ export function TaskDetailModal({
         assigneeUserId: subtask.assigneeUserId,
         dueDate: subtask.dueDate,
         isCompleted: !subtask.isCompleted,
+        priority: subtask.priority,
       });
       await reloadTask();
     } catch (err) {
@@ -131,6 +139,7 @@ export function TaskDetailModal({
         assigneeUserId: assigneeId || null,
         dueDate: subtask.dueDate,
         isCompleted: subtask.isCompleted,
+        priority: subtask.priority,
       });
       await reloadTask();
     } catch (err) {
@@ -147,6 +156,7 @@ export function TaskDetailModal({
         assigneeUserId: subtask.assigneeUserId,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         isCompleted: subtask.isCompleted,
+        priority: subtask.priority,
       });
       await reloadTask();
     } catch (err) {
@@ -154,11 +164,29 @@ export function TaskDetailModal({
     }
   };
 
-  const handleAddSubtask = async (title: string) => {
+  const handleSubtaskPriorityChange = async (subTaskId: string, priority: string | null) => {
+    const subtask = subtasks.find((st) => st.id === subTaskId);
+    if (!subtask) return;
+    try {
+      await api.patch(`/subtasks/${subTaskId}`, {
+        title: subtask.title,
+        assigneeUserId: subtask.assigneeUserId,
+        dueDate: subtask.dueDate,
+        isCompleted: subtask.isCompleted,
+        priority: priority || null,
+      });
+      await reloadTask();
+    } catch (err) {
+      console.error("Failed to update subtask priority:", err);
+    }
+  };
+
+  const handleAddSubtask = async (title: string, priority: string | null) => {
     try {
       await api.post("/subtasks", {
         taskId: task.id,
         title,
+        priority: priority || null,
       });
       await reloadTask();
     } catch (err) {
@@ -216,18 +244,18 @@ export function TaskDetailModal({
   return (
     <div className="fixed inset-0 bg-[#091e42]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
       <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-        <TaskDetailHeader onClose={onClose} onDelete={handleDeleteTask} />
+        <TaskDetailHeader onClose={onClose} onDelete={readOnly ? undefined : handleDeleteTask} />
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             <TaskDetailTitle
               title={task.title}
-              onUpdateTitle={(title) => handleUpdateDetails({ title })}
-              readOnly={false}
+              onUpdateTitle={(title) => !readOnly && handleUpdateDetails({ title })}
+              readOnly={readOnly}
             />
             <TaskDetailDescription
               description={task.description}
-              onUpdateDescription={(description) => handleUpdateDetails({ description: description || "" })}
-              readOnly={false}
+              onUpdateDescription={(description) => !readOnly && handleUpdateDetails({ description: description || "" })}
+              readOnly={readOnly}
             />
              <TaskSubtasks
               subtasks={subtasks}
@@ -236,23 +264,27 @@ export function TaskDetailModal({
               onToggleSubtask={handleToggleSubtask}
               onSubtaskAssigneeChange={handleSubtaskAssigneeChange}
               onSubtaskDueDateChange={handleSubtaskDueDateChange}
+              onSubtaskPriorityChange={handleSubtaskPriorityChange}
               onAddSubtask={handleAddSubtask}
               onDeleteSubtask={handleDeleteSubtask}
               onAddSubtaskComment={handleAddSubtaskComment}
               onDeleteSubtaskComment={handleDeleteSubtaskComment}
-              currentUser={currentUser || ({} as any)}
+              currentUser={currentUser}
               assignees={assignees}
-              canManageSubtasks={canManageSubtasks}
+              canManageSubtasks={canManageSubtasks && !readOnly}
+              readOnly={readOnly}
+              isPersonalProject={task.teamId === null || !task.teamId}
             />
           </div>
           <TaskSidebarProperties
             task={task}
             columns={columns}
             onStatusChange={handleStatusChange}
-            onAssigneeChange={(assigneeId) => handleUpdateDetails({ assigneeUserId: assigneeId || "00000000-0000-0000-0000-000000000000" })}
-            onPriorityChange={(priority) => handleUpdateDetails({ priority })}
-            onDateChange={(field, value) => handleUpdateDetails({ [field]: value ? new Date(value).toISOString() : null })}
+            onAssigneeChange={(assigneeId) => !readOnly && handleUpdateDetails({ assigneeUserId: assigneeId || "00000000-0000-0000-0000-000000000000" })}
+            onPriorityChange={(priority) => !readOnly && handleUpdateDetails({ priority })}
+            onDateChange={(field, value) => !readOnly && handleUpdateDetails({ [field]: value ? new Date(value).toISOString() : null })}
             assignees={assignees}
+            readOnly={readOnly}
           />
         </div>
       </div>

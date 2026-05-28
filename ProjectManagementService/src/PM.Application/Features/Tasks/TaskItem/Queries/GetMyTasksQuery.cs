@@ -23,6 +23,7 @@ public class MyTaskDto
     public bool ColumnIsDone { get; set; }
     public Guid ProjectId { get; set; }
     public string ProjectName { get; set; } = null!;
+    public Guid? TeamId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -46,7 +47,11 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, List<MyTa
 
         var tasks = await _dbContext.TaskItems
             .AsNoTracking()
-            .Where(t => t.SubTasks.Any(st => st.AssigneeUserId == currentUserId && st.DeletedAt == null) && t.DeletedAt == null)
+            .Where(t => t.DeletedAt == null && (
+                t.SubTasks.Any(st => st.AssigneeUserId == currentUserId && st.DeletedAt == null) ||
+                (t.BoardColumn != null && t.BoardColumn.Project != null && 
+                 t.BoardColumn.Project.TeamId == null && t.BoardColumn.Project.CreatedByUserId == currentUserId)
+            ))
             .OrderBy(t => t.DueDate ?? DateTime.MaxValue)
             .Select(t => new MyTaskDto
             {
@@ -61,6 +66,7 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, List<MyTa
                 ColumnIsDone = t.BoardColumn != null && t.BoardColumn.IsDone,
                 ProjectId = t.BoardColumn != null ? t.BoardColumn.ProjectId : Guid.Empty,
                 ProjectName = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.Name : string.Empty,
+                TeamId = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.TeamId : null,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt
             })

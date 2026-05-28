@@ -20,7 +20,8 @@ interface TaskSubtasksProps {
   onToggleSubtask: (subTaskId: string) => void;
   onSubtaskAssigneeChange: (subTaskId: string, assigneeId: string) => void;
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
-  onAddSubtask: (title: string) => void;
+  onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
+  onAddSubtask: (title: string, priority: string | null) => void;
   onDeleteSubtask: (subTaskId: string) => void;
   onAddSubtaskComment: (
     subTaskId: string,
@@ -33,9 +34,11 @@ interface TaskSubtasksProps {
     }[]
   ) => void;
   onDeleteSubtaskComment: (subTaskId: string, commentId: string) => void;
-  currentUser: User;
+  currentUser: User | null;
   assignees: any[];
   canManageSubtasks: boolean;
+  readOnly?: boolean;
+  isPersonalProject?: boolean;
 }
 
 export function TaskSubtasks({
@@ -45,6 +48,7 @@ export function TaskSubtasks({
   onToggleSubtask,
   onSubtaskAssigneeChange,
   onSubtaskDueDateChange,
+  onSubtaskPriorityChange,
   onAddSubtask,
   onDeleteSubtask,
   onAddSubtaskComment,
@@ -52,8 +56,11 @@ export function TaskSubtasks({
   currentUser,
   assignees,
   canManageSubtasks,
+  readOnly = false,
+  isPersonalProject = false,
 }: TaskSubtasksProps) {
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState("");
+  const [newSubtaskPriority, setNewSubtaskPriority] = React.useState("");
 
   const completedCount = subtasks.filter((st) => st.isCompleted).length;
   const totalCount = subtasks.length;
@@ -63,8 +70,9 @@ export function TaskSubtasks({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubtaskTitle.trim()) return;
-    onAddSubtask(newSubtaskTitle.trim());
+    onAddSubtask(newSubtaskTitle.trim(), newSubtaskPriority || null);
     setNewSubtaskTitle("");
+    setNewSubtaskPriority("");
   };
 
   return (
@@ -116,12 +124,15 @@ export function TaskSubtasks({
               onToggleSubtask={onToggleSubtask}
               onSubtaskAssigneeChange={onSubtaskAssigneeChange}
               onSubtaskDueDateChange={onSubtaskDueDateChange}
+              onSubtaskPriorityChange={onSubtaskPriorityChange}
               onDeleteSubtask={onDeleteSubtask}
               onAddComment={onAddSubtaskComment}
               onDeleteComment={onDeleteSubtaskComment}
               currentUser={currentUser}
               allUsers={assignees}
-              canManage={canManageSubtasks}
+              canManage={canManageSubtasks && !readOnly}
+              readOnly={readOnly}
+              isPersonalProject={isPersonalProject}
             />
           ))
         ) : (
@@ -132,7 +143,7 @@ export function TaskSubtasks({
       </div>
 
       {/* Add Input */}
-      {canManageSubtasks && (
+      {canManageSubtasks && !readOnly && (
         <form onSubmit={handleSubmit} className="flex gap-2 pt-1.5">
           <input
             type="text"
@@ -141,6 +152,16 @@ export function TaskSubtasks({
             onChange={(e) => setNewSubtaskTitle(e.target.value)}
             className="flex-1 px-3 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all placeholder:text-slate-400"
           />
+          <select
+            value={newSubtaskPriority}
+            onChange={(e) => setNewSubtaskPriority(e.target.value)}
+            className="px-2 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-slate-700 font-semibold focus:outline-none cursor-pointer"
+          >
+            <option value="">Độ ưu tiên</option>
+            <option value="High">Cao</option>
+            <option value="Medium">Trung bình</option>
+            <option value="Low">Thấp</option>
+          </select>
           <button
             type="submit"
             disabled={!newSubtaskTitle.trim()}

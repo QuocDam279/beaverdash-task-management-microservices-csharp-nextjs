@@ -72,7 +72,7 @@ export default function TeamMembersTable({
   };
 
   return (
-    <div className="space-y-4 max-w-4xl">
+    <div className="space-y-4 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center pb-2 border-b border-slate-100">
         <h2 className="text-sm font-bold text-[#292a2e] uppercase tracking-wide">

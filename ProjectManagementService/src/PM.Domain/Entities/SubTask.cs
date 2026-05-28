@@ -1,4 +1,5 @@
 using PM.Domain.Common;
+using PM.Domain.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -19,6 +20,8 @@ public class SubTask : BaseEntity
     public bool IsCompleted { get; set; } = false;
     
     public DateTime? DueDate { get; set; }
+    
+    public SubTaskPriority? Priority { get; set; }
     
     public int? SortOrder { get; set; }
     

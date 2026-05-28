@@ -27,7 +27,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || `Yêu cầu thất bại với mã ${response.status}`);
+    throw new Error(errorData.message || errorData.error || errorData.detail || `Yêu cầu thất bại với mã ${response.status}`);
   }
 
   if (response.status === 204) {

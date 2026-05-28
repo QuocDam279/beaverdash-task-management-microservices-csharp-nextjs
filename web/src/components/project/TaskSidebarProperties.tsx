@@ -20,6 +20,7 @@ interface TaskSidebarPropertiesProps {
   onAssigneeChange: (assigneeId: string) => void;
   onPriorityChange: (priority: string) => void;
   onDateChange: (field: "startDate" | "dueDate", value: string) => void;
+  readOnly?: boolean;
 }
 
 export function TaskSidebarProperties({
@@ -30,12 +31,13 @@ export function TaskSidebarProperties({
   onAssigneeChange,
   onPriorityChange,
   onDateChange,
+  readOnly = false,
 }: TaskSidebarPropertiesProps) {
   const { user: currentUser } = useAuth();
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
-  const canModifyProperties = true;
+  const canModifyProperties = !readOnly;
 
   const formatDateForInput = (dateStr: string | null) => {
     if (!dateStr) return "";
@@ -73,17 +75,17 @@ export function TaskSidebarProperties({
           Độ ưu tiên
         </label>
         <select
-          value={task.priority || "Low"}
+          value={task.priority || ""}
           onChange={(e) => onPriorityChange(e.target.value)}
           disabled={!canModifyProperties}
           className={`w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
             !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
           }`}
         >
-          <option value="Low">Thấp</option>
-          <option value="Medium">Trung bình</option>
-          <option value="High">Cao</option>
-          <option value="Critical">Khẩn cấp</option>
+          <option value="">Không có</option>
+          <option value="Required">Bắt buộc</option>
+          <option value="Important">Quan trọng</option>
+          <option value="Extended">Mở rộng</option>
         </select>
       </div>
 

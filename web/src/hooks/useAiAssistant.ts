@@ -1,332 +1,315 @@
 import * as React from "react";
-import { useAuth } from "@/components/providers/AuthProvider";
 import { api } from "@/lib/api";
-import { Document, AiChatSession, AiChatMessage } from "@/types/chat";
 
-// Mapping helpers (snake_case from python backend to camelCase in typescript frontend)
-const mapDocument = (d: any): Document => ({
-  id: d.id,
-  userId: d.user_id,
-  projectId: d.project_id,
-  sourceType: d.source_type,
-  fileName: d.file_name,
-  mimeType: d.mime_type,
-  storageUri: d.storage_uri || "",
-  fileSize: d.file_size,
-  pageCount: d.page_count,
-  checksum: d.checksum,
-  status: d.status,
-  errorMessage: d.error_message,
-  createdAt: d.created_at,
-  updatedAt: d.updated_at || d.created_at,
-});
+export interface ChatMessage {
+  id: string;
+  role: string;
+  content: string | null;
+  tool_calls: Array<{ name: string; args: any }> | null;
+  tool_results: Array<{ name: string; result: string }> | null;
+  created_at: string;
+}
 
-const mapSession = (s: any): AiChatSession => ({
-  id: s.id,
-  userId: s.user_id,
-  projectId: s.project_id,
-  title: s.title,
-  createdAt: s.created_at,
-  updatedAt: s.updated_at,
-});
+export interface ChatSession {
+  id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
-const mapMessage = (m: any): AiChatMessage => ({
-  id: m.id,
-  sessionId: m.session_id,
-  role: m.role,
-  content: m.content,
-  usedDocuments: (m.used_documents || []).map((doc: any) => ({
-    documentId: doc.document_id,
-    fileName: doc.file_name,
-    chunkIndex: doc.chunk_index,
-    content: doc.content || "",
-    score: doc.similarity_score,
-  })),
-  toolCalls: m.tool_calls,
-  toolResults: m.tool_results,
-  createdAt: m.created_at,
-});
-
-export function useAiAssistant() {
-  const { user } = useAuth();
-  const currentUser = user || { id: "unknown", displayName: "User" };
-
-  // Core lists
-  const [projects, setProjects] = React.useState<any[]>([]);
-  const [selectedProjId, setSelectedProjId] = React.useState<string>("");
-  const [documents, setDocuments] = React.useState<Document[]>([]);
-  const [sessions, setSessions] = React.useState<AiChatSession[]>([]);
-  const [messages, setMessages] = React.useState<AiChatMessage[]>([]);
+export function isSessionActive(messages: ChatMessage[]): boolean {
+  if (messages.length === 0) return false;
+  const lastMsg = messages[messages.length - 1];
   
-  // Navigation states
-  const [activeSessionId, setActiveSessionId] = React.useState<string | null>(null);
-  const [isThinking, setIsThinking] = React.useState(false);
-  const [showHistory, setShowHistory] = React.useState(false);
-  const [showDocs, setShowDocs] = React.useState(false);
+  if (lastMsg.role === "user") return true;
+  if (lastMsg.role === "tool") return true;
+  if (lastMsg.role === "assistant") {
+    if (lastMsg.tool_calls && lastMsg.tool_calls.length > 0) {
+      return true;
+    }
+    if (lastMsg.content) {
+      if (
+        lastMsg.content.includes("Hệ thống đang bận hoặc quá tải") ||
+        lastMsg.content.includes("Quá trình có thể lâu hơn chút do quá nhiều yêu cầu")
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
-  // 1. Fetch projects on mount
-  React.useEffect(() => {
-    api.get("/projects")
-      .then((data: any) => {
-        setProjects(data || []);
-        if (data && data.length > 0) {
-          setSelectedProjId(data[0].id);
-        }
-      })
-      .catch((err) => console.error("Error fetching projects for AI assistant:", err));
+export function useAIAssistant(projectId: string) {
+  const [sessions, setSessions] = React.useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = React.useState<string | null>(null);
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = React.useState("");
+  const [isSessionsLoading, setIsSessionsLoading] = React.useState(true);
+  const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
+  const [isSending, setIsSending] = React.useState(false);
+  const [countdown, setCountdown] = React.useState<number>(0);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const lastProcessedMsgId = React.useRef<string | null>(null);
+
+  const fetchMessages = React.useCallback(async (sessionId: string, silent = false) => {
+    try {
+      if (!silent) {
+        setIsHistoryLoading(true);
+      }
+      const data = await api.get(`/v1/chat/sessions/${sessionId}/messages`);
+      if (data) {
+        const msgs = data.messages || [];
+        setMessages(msgs);
+        
+        // Auto-detect if session has an active background task
+        const active = isSessionActive(msgs);
+        setIsSending(active);
+      }
+    } catch (err) {
+      console.error("Failed to load message history:", err);
+    } finally {
+      if (!silent) {
+        setIsHistoryLoading(false);
+      }
+    }
   }, []);
 
-  // 2. Fetch documents and sessions when project changes
-  React.useEffect(() => {
-    if (!selectedProjId) return;
-
-    // Fetch documents
-    api.get(`/v1/documents?project_id=${selectedProjId}`)
-      .then((res: any) => {
-        setDocuments((res.documents || []).map(mapDocument));
-      })
-      .catch((err) => console.error("Error fetching documents:", err));
-
-    // Fetch sessions
-    api.get(`/v1/chat/sessions?project_id=${selectedProjId}`)
-      .then((res: any) => {
-        const mapped = (res || []).map(mapSession);
-        setSessions(mapped);
-        if (mapped.length > 0) {
-          setActiveSessionId(mapped[0].id);
-        } else {
-          setActiveSessionId(null);
-        }
-      })
-      .catch((err) => console.error("Error fetching sessions:", err));
-  }, [selectedProjId]);
-
-  // 3. Fetch messages when active session changes
-  React.useEffect(() => {
-    if (!activeSessionId) {
-      setMessages([]);
-      return;
-    }
-
-    api.get(`/v1/chat/sessions/${activeSessionId}/messages`)
-      .then((res: any) => {
-        setMessages((res || []).map(mapMessage));
-      })
-      .catch((err) => console.error("Error fetching messages for session:", err));
-  }, [activeSessionId]);
-
-  // Create new session
-  const handleCreateSession = async () => {
-    if (!selectedProjId) return;
+  const fetchSessions = React.useCallback(async () => {
     try {
-      const res = await api.post("/v1/chat/sessions", {
-        project_id: selectedProjId,
-        title: "Cuộc trò chuyện mới",
-      });
-      const newSession = mapSession(res);
-      setSessions((prev) => [newSession, ...prev]);
-      setActiveSessionId(newSession.id);
-      
-      // Default welcome message
-      const welcomeMsg: AiChatMessage = {
-        id: `welcome-${Date.now()}`,
-        sessionId: newSession.id,
-        role: "assistant",
-        content: `Xin chào! Tôi là Trợ lý AI Beaver. Tôi đã sẵn sàng hỗ trợ bạn phân tích tài liệu trong dự án. Hãy đặt câu hỏi cho tôi!`,
-        usedDocuments: null,
-        toolCalls: null,
-        toolResults: null,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages([welcomeMsg]);
-    } catch (err) {
-      console.error("Error creating session:", err);
-    }
-  };
-
-  // Delete session
-  const handleDeleteSession = async (id: string) => {
-    try {
-      await api.delete(`/v1/chat/sessions/${id}`);
-      setSessions((prev) => prev.filter((s) => s.id !== id));
-      setMessages((prev) => prev.filter((m) => m.sessionId !== id));
-      if (activeSessionId === id) {
-        setActiveSessionId(null);
+      setIsSessionsLoading(true);
+      setError(null);
+      const data = await api.get(`/v1/chat/sessions?project_id=${projectId}`);
+      const sessionsList = data || [];
+      setSessions(sessionsList);
+      if (sessionsList.length > 0 && !activeSessionId) {
+        setActiveSessionId(sessionsList[0].id);
       }
-    } catch (err) {
-      console.error("Error deleting session:", err);
-    }
-  };
-
-  // Upload document
-  const handleUploadDocument = async (file: File) => {
-    if (!selectedProjId) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("project_id", selectedProjId);
-
-    // Call real backend upload
-    const res = await api.post("/v1/documents", formData);
-    const newDoc = mapDocument(res);
-    setDocuments((prev) => [newDoc, ...prev]);
-
-    // Poll for status completion
-    const pollInterval = setInterval(() => {
-      api.get(`/v1/documents?project_id=${selectedProjId}`)
-        .then((resList: any) => {
-          const list = (resList.documents || []).map(mapDocument);
-          const updated = list.find((d: any) => d.id === newDoc.id);
-          if (updated) {
-            setDocuments((prev) =>
-              prev.map((d) => (d.id === newDoc.id ? updated : d))
-            );
-            if (updated.status === "completed" || updated.status === "failed") {
-              clearInterval(pollInterval);
-            }
-          }
-        })
-        .catch((err) => {
-          console.error("Error polling document status:", err);
-          clearInterval(pollInterval);
-        });
-    }, 2000);
-  };
-
-  // Delete document
-  const handleDeleteDocument = async (id: string) => {
-    try {
-      await api.delete(`/v1/documents/${id}`);
-      setDocuments((prev) => prev.filter((d) => d.id !== id));
-    } catch (err) {
-      console.error("Error deleting document:", err);
-    }
-  };
-
-  // Send chat message
-  const handleSendMessage = async (content: string) => {
-    if (!activeSessionId) return;
-
-    const userMsg: AiChatMessage = {
-      id: `user-temp-${Date.now()}`,
-      sessionId: activeSessionId,
-      role: "user",
-      content,
-      usedDocuments: null,
-      toolCalls: null,
-      toolResults: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setIsThinking(true);
-
-    try {
-      const res = await api.post(`/v1/chat/sessions/${activeSessionId}/messages`, { content });
-      setIsThinking(false);
-
-      const assistantMsg = mapMessage(res);
-      const assistantMsgId = assistantMsg.id;
-      const fullText = assistantMsg.content || "";
-
-      // Append assistant message with empty content first, then stream characters
-      const emptyMsg: AiChatMessage = {
-        ...assistantMsg,
-        content: "",
-      };
-      setMessages((prev) => [...prev, emptyMsg]);
-
-      let index = 0;
-      const interval = setInterval(() => {
-        if (index <= fullText.length) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsgId ? { ...m, content: fullText.substring(0, index) } : m))
-          );
-          index += 3;
-        } else {
-          clearInterval(interval);
-        }
-      }, 15);
-
-      // Re-fetch sessions to update titles (if modified by LLM)
-      api.get(`/v1/chat/sessions?project_id=${selectedProjId}`)
-        .then((resList: any) => setSessions((resList || []).map(mapSession)))
-        .catch((err) => console.error("Error updating sessions title:", err));
-
     } catch (err: any) {
-      setIsThinking(false);
-      const errorMsg: AiChatMessage = {
-        id: `error-${Date.now()}`,
-        sessionId: activeSessionId,
-        role: "assistant",
-        content: `Không thể kết nối dịch vụ AI: ${err.message || err}`,
-        usedDocuments: null,
-        toolCalls: null,
-        toolResults: null,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      console.error("Failed to load chat sessions:", err);
+      setError(err.message || "Không thể tải danh sách phiên trò chuyện.");
+    } finally {
+      setIsSessionsLoading(false);
     }
-  };
+  }, [projectId, activeSessionId]);
 
-  // Download document file
-  const handleDownloadDocument = async (id: string, fileName: string) => {
-    try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("beaverdash_token") : null;
-      const response = await fetch(`http://localhost:5000/api/v1/documents/${id}/download`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.statusText}`);
+  React.useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  React.useEffect(() => {
+    if (activeSessionId) {
+      fetchMessages(activeSessionId);
+    } else {
+      setMessages([]);
+      setIsSending(false);
+    }
+  }, [activeSessionId, fetchMessages]);
+
+  React.useEffect(() => {
+    let intervalId: any = null;
+    if (isSending && activeSessionId) {
+      intervalId = setInterval(() => {
+        fetchMessages(activeSessionId, true);
+      }, 2500);
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
       }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Lỗi khi tải tài liệu:", err);
-      alert("Không thể tải xuống tài liệu này.");
+    };
+  }, [isSending, activeSessionId, fetchMessages]);
+
+  React.useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (
+      lastMsg.role === "assistant" &&
+      lastMsg.content?.includes("thử lại sau 1 phút") &&
+      lastProcessedMsgId.current !== lastMsg.id
+    ) {
+      lastProcessedMsgId.current = lastMsg.id;
+      setCountdown(60);
+      setIsSending(false);
+    }
+  }, [messages]);
+
+  React.useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  const handleCreateSession = async () => {
+    try {
+      const timeStr = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      const title = `Hội thoại ${timeStr}`;
+      const newSession = await api.post("/v1/chat/sessions", {
+        project_id: projectId,
+        title,
+      });
+      if (newSession) {
+        setSessions((prev) => [newSession, ...prev]);
+        setActiveSessionId(newSession.id);
+      }
+    } catch (err: any) {
+      console.error("Failed to create chat session:", err);
     }
   };
 
-  // Update session title
-  const handleUpdateSessionTitle = async (id: string, title: string) => {
+  const handleSendMessage = async (
+    text: string,
+    attachment?: { fileName: string; fileSize: string; content: string } | null
+  ) => {
+    if ((!text.trim() && !attachment) || isSending) return;
+    let sessionId = activeSessionId;
+
     try {
-      const res = await api.patch(`/v1/chat/sessions/${id}`, { title });
-      const updatedSession = mapSession(res);
+      setIsSending(true);
+      setInputText("");
+
+      if (!sessionId) {
+        const timeStr = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+        const newSession = await api.post("/v1/chat/sessions", {
+          project_id: projectId,
+          title: `Hội thoại ${timeStr}`,
+        });
+        if (newSession) {
+          setSessions((prev) => [newSession, ...prev]);
+          setActiveSessionId(newSession.id);
+          sessionId = newSession.id;
+        } else {
+          throw new Error("Không thể tạo phiên hội thoại tự động.");
+        }
+      }
+
+      if (!sessionId) return;
+
+      let payloadContent = text;
+      if (attachment) {
+        payloadContent = JSON.stringify({
+          attachment,
+          text,
+        });
+      }
+
+      const userMsg: ChatMessage = {
+        id: Math.random().toString(),
+        role: "user",
+        content: payloadContent,
+        tool_calls: null,
+        tool_results: null,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+
+      // Call API post which triggers background execution and returns immediately
+      const aiReply = await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
+        content: payloadContent,
+      });
+
+      if (aiReply) {
+        // Poll for changes immediately
+        await fetchMessages(sessionId, true);
+      }
+
       setSessions((prev) =>
-        prev.map((s) => (s.id === id ? updatedSession : s))
+        prev.map((s) => (s.id === sessionId ? { ...s, updated_at: new Date().toISOString() } : s))
       );
+    } catch (err: any) {
+      console.error("Error sending message:", err);
+      if (sessionId) {
+        try {
+          await fetchMessages(sessionId, true);
+        } catch (_) {
+          // ignore
+        }
+      }
+      
+      const active = isSessionActive(messages);
+      if (!active) {
+        const errMsg: ChatMessage = {
+          id: Math.random().toString(),
+          role: "assistant",
+          content: "❌ Không thể kết nối với máy chủ AI. Vui lòng kiểm tra kết nối mạng và thử lại.",
+          tool_calls: null,
+          tool_results: null,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errMsg]);
+        setIsSending(false);
+      }
+    }
+  };
+
+  const handleRenameSession = async (sessionId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+    try {
+      const updated = await api.patch(`/v1/chat/sessions/${sessionId}`, {
+        title: newTitle,
+      });
+      if (updated) {
+        setSessions((prev) =>
+          prev.map((s) => (s.id === sessionId ? { ...s, title: newTitle } : s))
+        );
+      }
     } catch (err) {
-      console.error("Error updating session title:", err);
+      console.error("Failed to rename chat session:", err);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      await api.delete(`/v1/chat/sessions/${sessionId}`);
+      setSessions((prev) => {
+        const filtered = prev.filter((s) => s.id !== sessionId);
+        if (activeSessionId === sessionId) {
+          if (filtered.length > 0) {
+            setActiveSessionId(filtered[0].id);
+          } else {
+            setActiveSessionId(null);
+            setMessages([]);
+          }
+        }
+        return filtered;
+      });
+    } catch (err) {
+      console.error("Failed to delete chat session:", err);
+    }
+  };
+
+  const handleStopAssistant = async () => {
+    if (!activeSessionId) return;
+    try {
+      setIsSending(false);
+      setCountdown(0);
+      const res = await api.post(`/v1/chat/sessions/${activeSessionId}/stop`);
+      if (res) {
+        await fetchMessages(activeSessionId, true);
+      }
+    } catch (err) {
+      console.error("Failed to stop assistant:", err);
     }
   };
 
   return {
-    currentUser,
-    projects,
-    selectedProjId,
-    setSelectedProjId,
-    documents,
     sessions,
-    messages,
     activeSessionId,
     setActiveSessionId,
-    isThinking,
-    showHistory,
-    setShowHistory,
-    showDocs,
-    setShowDocs,
+    messages,
+    inputText,
+    setInputText,
+    isSessionsLoading,
+    isHistoryLoading,
+    isSending,
+    countdown,
+    error,
     handleCreateSession,
-    handleDeleteSession,
-    handleUploadDocument,
-    handleDeleteDocument,
     handleSendMessage,
-    handleDownloadDocument,
-    handleUpdateSessionTitle,
+    handleRenameSession,
+    handleDeleteSession,
+    handleStopAssistant,
   };
 }

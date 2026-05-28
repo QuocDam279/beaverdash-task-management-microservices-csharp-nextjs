@@ -14,18 +14,18 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
-    private readonly IDocumentIntelligenceServiceClient _docIntelClient;
+    private readonly IAIAssistantServiceClient _aiAssistantClient;
     private readonly INotificationService _notificationService;
 
     public AddTeamMemberCommandHandler(
         IPMDbContext dbContext,
         ICurrentUserService currentUserService,
-        IDocumentIntelligenceServiceClient docIntelClient,
+        IAIAssistantServiceClient aiAssistantClient,
         INotificationService notificationService)
     {
         _currentUserService = currentUserService;
         _dbContext = dbContext;
-        _docIntelClient = docIntelClient;
+        _aiAssistantClient = aiAssistantClient;
         _notificationService = notificationService;
     }
 
@@ -111,7 +111,7 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
             Console.WriteLine($"Error creating/sending team invitation notification: {ex.Message}");
         }
 
-        // 5. Đồng bộ thành viên dự án sang DocumentIntelligence Service
+        // 5. Đồng bộ thành viên dự án sang AIAssistant Service
         // Lấy tất cả dự án thuộc team này
         var projectIds = await _dbContext.Set<PM.Domain.Entities.Project>()
             .Where(p => p.TeamId == request.TeamId)
@@ -127,7 +127,7 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
         // Đồng bộ cho từng dự án
         foreach (var projectId in projectIds)
         {
-            await _docIntelClient.SyncProjectMembersAsync(projectId, memberIds);
+            await _aiAssistantClient.SyncProjectMembersAsync(projectId, memberIds);
         }
 
         return true;

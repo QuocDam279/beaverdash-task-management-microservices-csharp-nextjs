@@ -11,36 +11,36 @@ interface BoardTaskCardProps {
   onTaskClick: (task: TaskItem) => void;
   currentUser: any;
   assignees: any[];
+  readOnly?: boolean;
 }
 
 const renderPriority = (priority: string | null) => {
   if (!priority) return null;
   switch (priority) {
+    case "Required":
     case "Critical":
-      return (
-        <span className="flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 border border-red-200">
-          Khẩn cấp
-        </span>
-      );
     case "High":
       return (
-        <span className="flex items-center gap-0.5 rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-orange-700 border border-orange-200">
-          Cao
+        <span className="flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 border border-red-200">
+          Bắt buộc
         </span>
       );
+    case "Important":
     case "Medium":
       return (
-        <span className="flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-blue-700 border border-blue-200">
-          Trung bình
+        <span className="flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700 border border-blue-200">
+          Quan trọng
         </span>
       );
+    case "Extended":
     case "Low":
-    default:
       return (
         <span className="flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600 border border-slate-200">
-          Thấp
+          Mở rộng
         </span>
       );
+    default:
+      return null;
   }
 };
 
@@ -95,6 +95,7 @@ export function BoardTaskCard({
   onTaskClick,
   currentUser,
   assignees,
+  readOnly = false,
 }: BoardTaskCardProps) {
   const subtaskCount = (task as any).subTasksCount || 0;
   const completedSubtaskCount = (task as any).completedSubTasksCount || 0;
@@ -102,7 +103,7 @@ export function BoardTaskCard({
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
-  const canDrag = true;
+  const canDrag = !readOnly;
 
   // Lọc ra các thành viên phụ trách subtask duy nhất và không trùng với người phụ trách chính
   const subtaskAssignees = React.useMemo(() => {
@@ -160,7 +161,25 @@ export function BoardTaskCard({
           <div className="space-y-0.5">
             <div className="flex items-center justify-between text-[9px] font-bold text-slate-500">
               <span>Tiến độ công việc con</span>
-              <span>{completedSubtaskCount}/{subtaskCount}</span>
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const unassignedCount = task.subTasks
+                    ? task.subTasks.filter((st) => !st.assigneeUserId && !st.isCompleted).length
+                    : 0;
+                  if (unassignedCount > 0) {
+                    return (
+                      <span 
+                        className="text-amber-600 bg-amber-50 border border-amber-200 rounded px-1 py-[1px] text-[8px] flex items-center gap-0.5 font-bold" 
+                        title={`Có ${unassignedCount} công việc con chưa được phân công`}
+                      >
+                        ⚠️ {unassignedCount} chưa giao
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+                <span>{completedSubtaskCount}/{subtaskCount}</span>
+              </div>
             </div>
             <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
               <div 
@@ -170,6 +189,7 @@ export function BoardTaskCard({
             </div>
           </div>
         )}
+
 
         <div className="flex items-center justify-end pt-1.5 border-t border-slate-100">
           <div className="flex items-center gap-1.5">

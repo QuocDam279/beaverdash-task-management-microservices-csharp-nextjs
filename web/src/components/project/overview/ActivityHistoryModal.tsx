@@ -7,22 +7,57 @@ import { api } from "@/lib/api";
 import { getActionDetails } from "@/lib/timelineHelper";
 
 interface ActivityHistoryModalProps {
-  projectId: string;
+  projectId?: string;
+  shareToken?: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function ActivityHistoryModal({ projectId, isOpen, onClose }: ActivityHistoryModalProps) {
+export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }: ActivityHistoryModalProps) {
   const [activities, setActivities] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [page, setPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
+  const [selectedUser, setSelectedUser] = React.useState<string>("all");
+  const [selectedDate, setSelectedDate] = React.useState<string>("");
+  const [teamMembers, setTeamMembers] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     if (!isOpen) {
+      setSelectedUser("all");
+      setSelectedDate("");
       setPage(1);
+      return;
     }
-  }, [isOpen]);
+
+    const fetchTeamMembers = async () => {
+      try {
+        const overview = shareToken
+          ? await api.get(`/shared/projects/${shareToken}/overview`)
+          : await api.get(`/projects/${projectId}/overview`);
+
+        if (overview?.memberWorkloads) {
+          setTeamMembers(overview.memberWorkloads.map((m: any) => ({
+            id: m.userId,
+            displayName: m.displayName,
+            avatar: m.avatar,
+          })));
+        } else if (overview?.teamId) {
+          const team = await api.get(`/teams/${overview.teamId}`);
+          if (team?.members) {
+            setTeamMembers(team.members.map((m: any) => ({
+              id: m.userId,
+              displayName: m.displayName,
+              avatar: m.avatar,
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch team members for activity history:", err);
+      }
+    };
+    fetchTeamMembers();
+  }, [projectId, shareToken, isOpen]);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -30,7 +65,16 @@ export function ActivityHistoryModal({ projectId, isOpen, onClose }: ActivityHis
     const fetchActivities = async () => {
       try {
         setIsLoading(true);
-        const data = await api.get(`/projects/${projectId}/activities?page=${page}&pageSize=50`);
+        let url = shareToken
+          ? `/shared/projects/${shareToken}/activities?page=${page}&pageSize=50`
+          : `/projects/${projectId}/activities?page=${page}&pageSize=50`;
+        if (selectedUser !== "all") {
+          url += `&userId=${selectedUser}`;
+        }
+        if (selectedDate) {
+          url += `&date=${selectedDate}`;
+        }
+        const data = await api.get(url);
         setActivities(data || []);
         setHasMore(data && data.length === 50);
       } catch (err) {
@@ -41,7 +85,7 @@ export function ActivityHistoryModal({ projectId, isOpen, onClose }: ActivityHis
     };
 
     fetchActivities();
-  }, [projectId, isOpen, page]);
+  }, [projectId, isOpen, page, selectedUser, selectedDate]);
 
   if (!isOpen) return null;
 
@@ -60,7 +104,7 @@ export function ActivityHistoryModal({ projectId, isOpen, onClose }: ActivityHis
     <div className="fixed inset-0 bg-[#091e42]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
       <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-2xl h-[70vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
           <h3 className="text-sm font-bold text-[#292a2e]">Lịch sử hoạt động dự án</h3>
           <button
             onClick={onClose}
@@ -71,6 +115,49 @@ export function ActivityHistoryModal({ projectId, isOpen, onClose }: ActivityHis
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+        </div>
+
+        {/* Filters Toolbar */}
+        <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/20 flex flex-wrap items-center gap-4 shrink-0">
+          {/* User selector */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 font-semibold">Người thực hiện:</span>
+            <select
+              value={selectedUser}
+              onChange={(e) => { setSelectedUser(e.target.value); setPage(1); }}
+              className="px-2.5 py-1 text-xs border border-slate-200 rounded-[4px] bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+            >
+              <option value="all">Tất cả thành viên</option>
+              {teamMembers.map((m) => (
+                <option key={m.id} value={m.id}>{m.displayName}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date Selector */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 font-semibold">Ngày hoạt động:</span>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => { setSelectedDate(e.target.value); setPage(1); }}
+              className="px-2.5 py-1 text-xs border border-slate-200 rounded-[4px] bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+            />
+          </div>
+
+          {/* Clear Button */}
+          {(selectedUser !== "all" || selectedDate) && (
+            <button
+              onClick={() => {
+                setSelectedUser("all");
+                setSelectedDate("");
+                setPage(1);
+              }}
+              className="text-xs font-bold text-[#1868db] hover:text-[#0052cc] px-2 py-1 cursor-pointer transition-colors"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -101,7 +188,11 @@ export function ActivityHistoryModal({ projectId, isOpen, onClose }: ActivityHis
                   } catch {}
                 }
 
-                const href = taskId ? `/projects/${projectId}/board?taskId=${taskId}` : null;
+                const href = taskId 
+                  ? (shareToken 
+                      ? `/shared/projects/${shareToken}/board?taskId=${taskId}` 
+                      : `/projects/${projectId}/board?taskId=${taskId}`)
+                  : null;
 
                 const content = (
                   <>

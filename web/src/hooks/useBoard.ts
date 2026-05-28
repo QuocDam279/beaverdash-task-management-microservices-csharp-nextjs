@@ -367,9 +367,17 @@ export function useBoard(projectId: string) {
           task.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
       // 2. Assignee (Including subtasks)
-      const matchesAssignee = selectedAssignee
-        ? (task.subTasks && task.subTasks.some((st) => st.assigneeUserId === selectedAssignee))
-        : true;
+      let matchesAssignee = true;
+      if (selectedAssignee) {
+        if (selectedAssignee === "unassigned") {
+          matchesAssignee =
+            !!task.subTasks && task.subTasks.some((st) => !st.assigneeUserId && !st.isCompleted);
+        } else {
+          matchesAssignee =
+            !!task.subTasks && task.subTasks.some((st) => st.assigneeUserId === selectedAssignee);
+        }
+      }
+
 
       // 3. Priority
       const matchesPriority = selectedPriority

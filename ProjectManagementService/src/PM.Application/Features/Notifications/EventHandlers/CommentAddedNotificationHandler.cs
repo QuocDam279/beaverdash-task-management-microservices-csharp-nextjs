@@ -40,7 +40,7 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
         string actionUrl = "/tasks";
         if (subTask.Task?.BoardColumn != null)
         {
-            actionUrl = $"/projects/{subTask.Task.BoardColumn.ProjectId}/board";
+            actionUrl = $"/projects/{subTask.Task.BoardColumn.ProjectId}/board?taskId={subTask.TaskId}";
         }
 
         Notification? subTaskAssigneeNotif = null;

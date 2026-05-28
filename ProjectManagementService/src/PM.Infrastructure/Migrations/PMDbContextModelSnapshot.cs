@@ -352,6 +352,10 @@ namespace PM.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_completed");
 
+                    b.Property<string>("Priority")
+                        .HasColumnType("varchar")
+                        .HasColumnName("priority");
+
                     b.Property<int?>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sort_order");

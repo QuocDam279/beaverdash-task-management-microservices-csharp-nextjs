@@ -8,4 +8,5 @@ public record CreateSubTaskCommand(
     string Title,
     Guid? AssigneeUserId,
     DateTime? DueDate,
-    int? SortOrder) : IRequest<Guid>;
+    int? SortOrder,
+    string? Priority) : IRequest<Guid>;

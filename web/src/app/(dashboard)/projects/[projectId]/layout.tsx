@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { EditProjectModal } from "@/components/project";
+import { EditProjectModal, ShareProjectModal } from "@/components/project";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
-import { FloatingAssistant } from "@/components/features/ai-assistant";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
+import { AIAssistantContainer } from "@/components/features/ai-assistant";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,7 +26,8 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   const [project, setProject] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const [isAssistantOpen, setIsAssistantOpen] = React.useState(false);
+  const [isShareOpen, setIsShareOpen] = React.useState(false);
+  const [isActionPending, setIsActionPending] = React.useState(false);
   const { alert, confirm } = useAlertConfirm();
 
   const fetchProjectDetails = React.useCallback(async () => {
@@ -58,9 +60,11 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     if (!confirmDelete) return;
 
     try {
+      setIsActionPending(true);
       await api.delete(`/projects/${projectId}`);
       window.location.href = "/";
     } catch (err: any) {
+      setIsActionPending(false);
       alert(err.message || "Không thể xóa dự án.", "Thất bại", "danger");
     }
   };
@@ -73,6 +77,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     { name: "Lịch", href: `/projects/${projectId}/calendar`, exact: false },
     { name: "Danh sách", href: `/projects/${projectId}/list`, exact: false },
     { name: "Sơ đồ gantt", href: `/projects/${projectId}/gantt`, exact: false },
+    { name: "AI Trợ lý", href: `/projects/${projectId}/assistant`, exact: false },
   ];
 
   if (isLoading || !project) {
@@ -119,6 +124,20 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
 
             {isLeaderOrOwner && (
               <>
+                <button
+                  onClick={() => setIsShareOpen(true)}
+                  className="p-1.5 rounded-[4px] border border-blue-200 text-[#1868db] hover:bg-blue-50 hover:border-blue-300 transition-colors flex items-center justify-center cursor-pointer"
+                  title="Chia sẻ dự án"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                </button>
+
                 <button
                   onClick={() => setIsEditOpen(true)}
                   className="p-1.5 rounded-[4px] border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center justify-center cursor-pointer"
@@ -225,23 +244,14 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
 
       {/* Project Content Area */}
       <div className="flex-1 min-h-0 w-full flex overflow-hidden bg-[#f4f5f7] relative">
-        <div className="flex-1 min-h-0 overflow-auto bg-white">
-          {children}
+        {/* Persistent AI Assistant chat workspace, hidden when not in assistant route to retain its internal state and session load */}
+        <div className={`flex-1 min-h-0 w-full ${pathname.endsWith("/assistant") ? "flex" : "hidden"}`}>
+          <AIAssistantContainer projectId={projectId} />
         </div>
 
-        {/* Beaver AI Assistant Collapsible Right Sidebar Panel */}
-        <div 
-          className={`shrink-0 transition-all duration-300 ease-in-out bg-white flex flex-col h-full overflow-hidden ${
-            isAssistantOpen ? "w-[360px] border-l border-slate-200 shadow-md" : "w-0 border-l-transparent shadow-none"
-          }`}
-        >
-          <div className="w-[360px] h-full flex flex-col">
-            <FloatingAssistant 
-              projectId={projectId} 
-              isOpen={isAssistantOpen} 
-              setIsOpen={setIsAssistantOpen} 
-            />
-          </div>
+        {/* Regular routing views (Board, Calendar, Gantt, Overview, List), hidden when in assistant route */}
+        <div className={`flex-1 min-h-0 w-full overflow-auto bg-white custom-chat-scrollbar ${pathname.endsWith("/assistant") ? "hidden" : "block"}`}>
+          {children}
         </div>
       </div>
 
@@ -250,6 +260,18 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
         onClose={() => setIsEditOpen(false)}
         project={project}
         onProjectUpdated={fetchProjectDetails}
+      />
+
+      <ShareProjectModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        project={project}
+        onProjectUpdated={fetchProjectDetails}
+      />
+
+      <LoadingOverlay
+        isOpen={isActionPending}
+        message="Đang xóa dự án..."
       />
     </div>
   );

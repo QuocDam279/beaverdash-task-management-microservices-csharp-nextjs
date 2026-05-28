@@ -101,6 +101,41 @@ public class TasksController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("batch-restore")]
+    public async Task<IActionResult> BatchRestore([FromBody] BatchTaskActionDto request)
+    {
+        foreach (var id in request.TaskIds)
+        {
+            var command = new RestoreTaskCommand { TaskId = id };
+            await _mediator.Send(command);
+        }
+        return Ok(new { Message = "Đã khôi phục các công việc thành công." });
+    }
+
+    [HttpPost("batch-permanent-delete")]
+    public async Task<IActionResult> BatchPermanentDelete([FromBody] BatchTaskActionDto request)
+    {
+        foreach (var id in request.TaskIds)
+        {
+            var command = new PermanentDeleteTaskCommand { TaskId = id };
+            await _mediator.Send(command);
+        }
+        return NoContent();
+    }
+
+    [HttpPost("empty-trash")]
+    public async Task<IActionResult> EmptyTrash()
+    {
+        var query = new GetTrashTasksQuery();
+        var trashTasks = await _mediator.Send(query);
+        foreach (var task in trashTasks)
+        {
+            var command = new PermanentDeleteTaskCommand { TaskId = task.Id };
+            await _mediator.Send(command);
+        }
+        return NoContent();
+    }
+
     [HttpPost("{id}/restore")]
     public async Task<IActionResult> RestoreTask(Guid id)
     {
@@ -124,4 +159,9 @@ public class TasksController : ControllerBase
 
         return NoContent();
     }
+}
+
+public class BatchTaskActionDto
+{
+    public System.Collections.Generic.List<Guid> TaskIds { get; set; } = new();
 }

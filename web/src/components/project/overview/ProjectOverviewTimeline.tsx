@@ -9,13 +9,14 @@ import { getActionDetails } from "@/lib/timelineHelper";
 import { ActivityHistoryModal } from "./ActivityHistoryModal";
 
 interface ProjectOverviewTimelineProps {
-  projectId: string;
+  projectId?: string;
+  shareToken?: string;
 }
 
 /**
  * ProjectOverviewTimeline — Trình diễn dòng thời gian (activity timeline) hoạt động gần đây của dự án.
  */
-export function ProjectOverviewTimeline({ projectId }: ProjectOverviewTimelineProps) {
+export function ProjectOverviewTimeline({ projectId, shareToken }: ProjectOverviewTimelineProps) {
   const [activities, setActivities] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
@@ -23,7 +24,10 @@ export function ProjectOverviewTimeline({ projectId }: ProjectOverviewTimelinePr
   React.useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const data = await api.get(`/projects/${projectId}/activities`);
+        const url = shareToken
+          ? `/shared/projects/${shareToken}/activities`
+          : `/projects/${projectId}/activities`;
+        const data = await api.get(url);
         setActivities(data ? data.slice(0, 5) : []); // Only take top 5 for overview
       } catch (err) {
         console.error("Failed to load project activities for timeline:", err);
@@ -33,7 +37,7 @@ export function ProjectOverviewTimeline({ projectId }: ProjectOverviewTimelinePr
     };
 
     fetchActivities();
-  }, [projectId]);
+  }, [projectId, shareToken]);
 
   const formatEventTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -90,7 +94,11 @@ export function ProjectOverviewTimeline({ projectId }: ProjectOverviewTimelinePr
                     } catch {}
                   }
 
-                  const href = taskId ? `/projects/${projectId}/board?taskId=${taskId}` : null;
+                  const href = taskId 
+                    ? (shareToken 
+                        ? `/shared/projects/${shareToken}/board?taskId=${taskId}` 
+                        : `/projects/${projectId}/board?taskId=${taskId}`)
+                    : null;
 
                   const content = (
                     <>
@@ -161,6 +169,7 @@ export function ProjectOverviewTimeline({ projectId }: ProjectOverviewTimelinePr
 
       <ActivityHistoryModal
         projectId={projectId}
+        shareToken={shareToken}
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
       />

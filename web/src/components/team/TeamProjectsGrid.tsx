@@ -21,7 +21,7 @@ export default function TeamProjectsGrid({ projects }: TeamProjectsGridProps) {
   };
 
   return (
-    <div className="space-y-4 max-w-4xl">
+    <div className="space-y-4 max-w-4xl mx-auto">
       <h2 className="text-sm font-bold text-[#292a2e] uppercase tracking-wide pb-2 border-b border-slate-100">
         Dự án trực thuộc nhóm
       </h2>
@@ -60,12 +60,24 @@ export default function TeamProjectsGrid({ projects }: TeamProjectsGridProps) {
                 </CardBody>
 
                 <CardFooter className="p-4 pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[9px] text-[#6b6e76] uppercase tracking-wider font-semibold">
-                    Hạn:{" "}
-                    {project.dueDate
-                      ? new Date(project.dueDate).toLocaleDateString("vi-VN")
-                      : "Không có hạn"}
-                  </span>
+                  <div className="flex flex-col gap-0.5 text-[9px] text-[#6b6e76] uppercase tracking-wider font-semibold">
+                    <div>
+                      Bắt đầu:{" "}
+                      <span className="text-slate-600 font-bold">
+                        {project.startDate
+                          ? new Date(project.startDate).toLocaleDateString("vi-VN")
+                          : "-"}
+                      </span>
+                    </div>
+                    <div>
+                      Hạn chót:{" "}
+                      <span className="text-slate-600 font-bold">
+                        {project.dueDate
+                          ? new Date(project.dueDate).toLocaleDateString("vi-VN")
+                          : "-"}
+                      </span>
+                    </div>
+                  </div>
                   <Link
                     href={`/projects/${project.id}/board`}
                     className="bg-slate-100 hover:bg-slate-200 text-[#292a2e] text-[10px] font-bold px-2.5 py-1.5 rounded border border-slate-200 transition-colors cursor-pointer"
@@ -73,6 +85,7 @@ export default function TeamProjectsGrid({ projects }: TeamProjectsGridProps) {
                     Bảng công việc
                   </Link>
                 </CardFooter>
+
               </Card>
             );
           })}

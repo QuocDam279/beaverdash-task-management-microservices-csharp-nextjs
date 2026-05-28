@@ -14,7 +14,7 @@ Hệ thống được thiết kế theo kiến trúc Microservices, bao gồm 3 
 | **API Gateway** | C# .NET 10 (YARP) | `5000` | Local Host | Entry point, routing, load balancing, SSL termination. | (Không có) |
 | **Identity Service** | C# .NET 10 | `5001` | Local Host | Quản lý người dùng, xác thực, cấp phát token. | `beaverdash_identity_db` (Docker) |
 | **ProjectManagement Service** | C# .NET 10 | `5002` | Local Host | Quản lý dự án, team, board, task, sub-task, comment và activity log. | `beaverdash_pm_db` (Docker) |
-| **DocumentIntelligence Service**| Python (FastAPI) | `5003` | Local Host | Quản lý tài liệu, vector embedding, chunking và AI Chat sessions. | `beaverdash_docintel_db` (Docker) |
+| **AIAssistant Service**| Python (FastAPI) | `5003` | Local Host | Trợ lý AI hỗ trợ tự động gợi ý và tạo công việc, công việc con trong dự án. | `beaverdash_ai_assistant_db` (Docker) |
 | **Message Broker** | RabbitMQ | `5672`, `15672`| Docker | Quản lý Event Bus, truyền tải thông tin bất đồng bộ. | (Không có) |
 | **Database Server** | PostgreSQL | `5432` | Docker | Lưu trữ dữ liệu tập trung cho cả 3 dịch vụ. | Gồm 3 DB nội bộ riêng biệt |
 
@@ -22,7 +22,7 @@ Hệ thống được thiết kế theo kiến trúc Microservices, bao gồm 3 
 - **Đồng bộ (Synchronous):** Client gọi HTTP/REST tới API Gateway tại `http://localhost:5000`. Tại đây, YARP Gateway sẽ forward request xuống các service tương ứng chạy tại local thông qua các địa chỉ:
   - Identity Service: `http://localhost:5001`
   - ProjectManagement Service: `http://localhost:5002`
-  - DocumentIntelligence Service: `http://localhost:5003`
+  - AIAssistant Service: `http://localhost:5003`
 - **Bất đồng bộ (Asynchronous):** Sử dụng **RabbitMQ** chạy trong môi trường Docker làm Event Bus. Các service chạy ở máy host kết nối vào địa chỉ `localhost:5672` để publish hoặc subscribe các sự kiện (Ví dụ: sự kiện `UserCreated` từ Identity Service).
 
 ---
@@ -106,14 +106,13 @@ Beaverdash/
 │           │   ├── SubTasksController.cs
 │           │   └── NotificationsController.cs
 │           └── Program.cs
-└── DocumentIntelligenceService/
+└── AIAssistantService/
     ├── requirements.txt
     ├── Dockerfile
     └── app/
         ├── main.py
         ├── api/
         │   └── v1/
-        │       ├── documents.py
         │       ├── chat.py
         │       └── webhooks.py
         ├── core/
@@ -123,16 +122,13 @@ Beaverdash/
         ├── models/
         │   ├── user.py
         │   ├── project.py
-        │   ├── document.py
+        │   ├── project_member.py
         │   └── chat.py
         ├── schemas/
-        │   ├── document_schema.py
         │   ├── chat_schema.py
         │   └── event_schema.py
         ├── services/
-        │   ├── document_service.py
-        │   ├── embedding_service.py
-        │   ├── rag_service.py
+        │   ├── assistant_service.py
         │   └── chat_service.py
         └── worker/
             ├── consumer.py

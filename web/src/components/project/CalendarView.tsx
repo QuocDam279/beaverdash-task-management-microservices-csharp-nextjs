@@ -12,9 +12,11 @@ import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 interface CalendarViewProps {
   tasks: TaskItem[];
   setTasks: React.Dispatch<React.SetStateAction<TaskItem[]>>;
-  viewContext: "project" | "my-tasks";
+  viewContext: "project" | "my-tasks" | "shared-project";
   projectId?: string;
+  shareToken?: string;
   showProjectPrefix?: boolean;
+  readOnly?: boolean;
 }
 
 export default function CalendarView({
@@ -22,7 +24,9 @@ export default function CalendarView({
   setTasks,
   viewContext,
   projectId,
+  shareToken,
   showProjectPrefix = false,
+  readOnly = false,
 }: CalendarViewProps) {
   const { user: currentUser } = useAuth();
   const { alert } = useAlertConfirm();
@@ -36,14 +40,28 @@ export default function CalendarView({
 
   const handleTaskClick = async (task: TaskItem) => {
     try {
-      const fullTask = await api.get(`/tasks/${task.id}`);
+      const fullTask = readOnly && shareToken
+        ? await api.get(`/shared/tasks/${task.id}?shareToken=${shareToken}`)
+        : await api.get(`/tasks/${task.id}`);
+        
       if (fullTask) {
-        const taskId = fullTask.projectId;
-        const board = await api.get(`/projects/${taskId}/board`);
-        const overview = await api.get(`/projects/${taskId}/overview`);
+        const tId = fullTask.projectId;
+        const board = readOnly && shareToken
+          ? await api.get(`/shared/projects/${shareToken}/board`)
+          : await api.get(`/projects/${tId}/board`);
+        const overview = readOnly && shareToken
+          ? await api.get(`/shared/projects/${shareToken}/overview`)
+          : await api.get(`/projects/${tId}/overview`);
         
         let projectAssignees: any[] = [];
-        if (overview?.teamId) {
+        if (overview?.memberWorkloads) {
+          projectAssignees = overview.memberWorkloads.map((m: any) => ({
+            id: m.userId,
+            displayName: m.displayName,
+            avatar: m.avatar,
+            role: m.role,
+          }));
+        } else if (overview?.teamId) {
           const team = await api.get(`/teams/${overview.teamId}`);
           projectAssignees = team.members.map((m: any) => ({
             id: m.userId,
@@ -71,6 +89,7 @@ export default function CalendarView({
   };
 
   const handleTaskDrop = async (taskId: string, targetDate: Date) => {
+    if (readOnly) return;
     try {
       const origTask = tasks.find((t) => t.id === taskId);
       if (!origTask) return;
@@ -196,7 +215,17 @@ export default function CalendarView({
           onClose={() => {
             setSelectedTask(null);
             // Refresh parent calendar tasks
-            if (viewContext === "project" && projectId) {
+            if (readOnly && shareToken) {
+              api.get(`/shared/projects/${shareToken}/board`).then(board => {
+                const cols = board?.boardColumns || [];
+                const allTasks = cols.flatMap((col: any) =>
+                  (col.taskItems || []).map((t: any) => ({
+                    ...t
+                  }))
+                );
+                setTasks(allTasks);
+              });
+            } else if (viewContext === "project" && projectId) {
               api.get(`/projects/${projectId}/board`).then(board => {
                 const cols = board?.boardColumns || [];
                 const allTasks = cols.flatMap((col: any) =>
@@ -217,6 +246,8 @@ export default function CalendarView({
           columns={activeColumns}
           onUpdateTask={(updated) => setSelectedTask(updated)}
           assignees={activeAssignees}
+          readOnly={readOnly}
+          shareToken={shareToken}
         />
       )}
     </div>

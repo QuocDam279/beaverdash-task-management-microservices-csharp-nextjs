@@ -47,9 +47,14 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id}/activities")]
-    public async Task<IActionResult> GetProjectActivities(Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<IActionResult> GetProjectActivities(
+        Guid id, 
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 50,
+        [FromQuery] Guid? userId = null,
+        [FromQuery] string? date = null)
     {
-        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectActivities.GetProjectActivitiesQuery(id, page, pageSize);
+        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectActivities.GetProjectActivitiesQuery(id, page, pageSize, userId, date);
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -105,15 +110,16 @@ public class ProjectsController : ControllerBase
             Status = statusEnum,
             Progress = request.Progress,
             StartDate = request.StartDate,
-            DueDate = request.DueDate
+            DueDate = request.DueDate,
+            IsPublic = request.IsPublic
         };
 
-        var success = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-        if (!success)
+        if (!result.Success)
             return NotFound(new { Message = "Dự án không tồn tại." });
 
-        return NoContent();
+        return Ok(result);
     }
 
     [HttpDelete("{id}")]

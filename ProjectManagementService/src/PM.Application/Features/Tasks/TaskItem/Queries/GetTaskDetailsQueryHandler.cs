@@ -57,6 +57,7 @@ public class GetTaskDetailsQueryHandler : IRequestHandler<GetTaskDetailsQuery, T
                         AssigneeUserId = st.AssigneeUserId,
                         AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,
                         AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
+                        Priority = st.Priority != null ? st.Priority.ToString() : null,
                         CreatedAt = st.CreatedAt,
                         UpdatedAt = st.UpdatedAt,
                         Comments = st.Comments
@@ -88,6 +89,7 @@ public class GetTaskDetailsQueryHandler : IRequestHandler<GetTaskDetailsQuery, T
 
         taskDto.ProjectStartDate = project.StartDate;
         taskDto.ProjectDueDate = project.DueDate;
+        taskDto.TeamId = project.TeamId;
 
         // Authorization check
         if (project.TeamId.HasValue && !project.IsPublic)

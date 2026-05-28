@@ -10,6 +10,7 @@ public class TaskDetailsDto
     public Guid BoardColumnId { get; set; }
     public Guid ProjectId { get; set; }
     public string ProjectName { get; set; } = null!;
+    public Guid? TeamId { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? Priority { get; set; }
@@ -36,6 +37,7 @@ public class SubTaskDto
     public Guid? AssigneeUserId { get; set; }
     public string? AssigneeName { get; set; }
     public string? AssigneeAvatar { get; set; }
+    public string? Priority { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<CommentDto> Comments { get; set; } = new();

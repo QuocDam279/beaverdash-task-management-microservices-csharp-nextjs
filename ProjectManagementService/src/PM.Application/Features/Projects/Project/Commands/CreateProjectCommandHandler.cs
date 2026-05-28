@@ -13,16 +13,16 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
 {
     private readonly PM.Application.Contracts.IPMDbContext _dbContext;
     private readonly PM.Application.Contracts.ICurrentUserService _currentUserService;
-    private readonly PM.Application.Contracts.IDocumentIntelligenceServiceClient _docIntelClient;
+    private readonly PM.Application.Contracts.IAIAssistantServiceClient _aiAssistantClient;
 
     public CreateProjectCommandHandler(
         PM.Application.Contracts.IPMDbContext dbContext,
         PM.Application.Contracts.ICurrentUserService currentUserService,
-        PM.Application.Contracts.IDocumentIntelligenceServiceClient docIntelClient)
+        PM.Application.Contracts.IAIAssistantServiceClient aiAssistantClient)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
-        _docIntelClient = docIntelClient;
+        _aiAssistantClient = aiAssistantClient;
     }
 
     public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
@@ -81,9 +81,9 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // --- Đồng bộ sang DocumentIntelligence Service ---
+        // --- Đồng bộ sang AIAssistant Service ---
         // 1. Đồng bộ thông tin dự án
-        await _docIntelClient.SyncProjectAsync(project.Id, project.Name, project.Description, project.Status.ToVietnameseString());
+        await _aiAssistantClient.SyncProjectAsync(project.Id, project.Name, project.Description, project.Status.ToVietnameseString());
 
         // 2. Đồng bộ danh sách thành viên
         List<Guid> memberIds;
@@ -101,7 +101,7 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
             memberIds = new List<Guid> { currentUserId };
         }
 
-        await _docIntelClient.SyncProjectMembersAsync(project.Id, memberIds);
+        await _aiAssistantClient.SyncProjectMembersAsync(project.Id, memberIds);
 
         return project.Id;
     }

@@ -16,13 +16,14 @@ import { User } from "@/types/auth";
 interface TaskSubtaskCommentsProps {
   subtaskId: string;
   comments: Comment[];
-  currentUser: User;
+  currentUser: User | null;
   onAddComment: (
     subTaskId: string,
     content: string,
     attachments?: StagedAttachment[]
   ) => void;
   onDeleteComment: (subTaskId: string, commentId: string) => void;
+  readOnly?: boolean;
 }
 
 export function TaskSubtaskComments({
@@ -31,6 +32,7 @@ export function TaskSubtaskComments({
   currentUser,
   onAddComment,
   onDeleteComment,
+  readOnly = false,
 }: TaskSubtaskCommentsProps) {
   const handleCommentSubmit = (content: string, stagedAtts: StagedAttachment[]) => {
     onAddComment(subtaskId, content, stagedAtts);
@@ -47,6 +49,7 @@ export function TaskSubtaskComments({
               comment={comment}
               currentUser={currentUser}
               onDeleteComment={(commentId) => onDeleteComment(subtaskId, commentId)}
+              readOnly={readOnly}
             />
           ))}
         </div>
@@ -57,10 +60,12 @@ export function TaskSubtaskComments({
       )}
 
       {/* Comment Form */}
-      <TaskSubtaskCommentForm
-        subtaskId={subtaskId}
-        onSubmit={handleCommentSubmit}
-      />
+      {!readOnly && (
+        <TaskSubtaskCommentForm
+          subtaskId={subtaskId}
+          onSubmit={handleCommentSubmit}
+        />
+      )}
     </div>
   );
 }

@@ -26,7 +26,7 @@ public class ActivityLogDto
     public string? Avatar { get; set; }
 }
 
-public record GetProjectActivitiesQuery(Guid ProjectId, int Page = 1, int PageSize = 50) : IRequest<List<ActivityLogDto>>;
+public record GetProjectActivitiesQuery(Guid ProjectId, int Page = 1, int PageSize = 50, Guid? UserId = null, string? Date = null) : IRequest<List<ActivityLogDto>>;
 
 public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivitiesQuery, List<ActivityLogDto>>
 {
@@ -65,10 +65,27 @@ public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivi
         int pageSize = request.PageSize > 0 ? request.PageSize : 50;
 
         // Truy vấn ActivityLog theo ProjectId, kết hợp bảng User để lấy tên/avatar
-        var activities = await _dbContext.ActivityLogs
+        var queryable = _dbContext.ActivityLogs
             .AsNoTracking()
             .Include(a => a.User)
-            .Where(a => a.ProjectId == request.ProjectId)
+            .Where(a => a.ProjectId == request.ProjectId);
+
+        if (request.UserId.HasValue)
+        {
+            queryable = queryable.Where(a => a.UserId == request.UserId.Value);
+        }
+
+        if (!string.IsNullOrEmpty(request.Date))
+        {
+            if (DateTime.TryParse(request.Date, out var dateValue))
+            {
+                var startDate = DateTime.SpecifyKind(dateValue.Date, DateTimeKind.Utc);
+                var endDate = DateTime.SpecifyKind(dateValue.Date.AddDays(1), DateTimeKind.Utc);
+                queryable = queryable.Where(a => a.CreatedAt >= startDate && a.CreatedAt < endDate);
+            }
+        }
+
+        var activities = await queryable
             .OrderByDescending(a => a.CreatedAt) // Mới nhất xếp lên đầu
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

@@ -6,3 +6,4 @@ export { SidebarFooter } from "./SidebarFooter";
 export { TopHeader } from "./TopHeader";
 export { ProfileDropdown } from "./ProfileDropdown";
 export { NotificationDropdown } from "./NotificationDropdown";
+export { NotificationItem } from "./NotificationItem";

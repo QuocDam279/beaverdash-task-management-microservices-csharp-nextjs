@@ -23,20 +23,26 @@ export function ProjectListTable({ tasks, columns, onTaskClick }: ProjectListTab
   const renderPriorityBadge = (priority: string | null) => {
     if (!priority) return null;
     const classes: Record<string, string> = {
+      Required: "bg-red-50 text-red-700 border-red-200 font-extrabold",
       Critical: "bg-red-50 text-red-700 border-red-200 font-extrabold",
-      High: "bg-orange-50 text-orange-700 border-orange-200 font-bold",
-      Medium: "bg-blue-50 text-blue-700 border-blue-200 font-semibold",
+      High: "bg-red-50 text-red-700 border-red-200 font-extrabold",
+      Important: "bg-blue-50 text-blue-700 border-blue-200 font-bold",
+      Medium: "bg-blue-50 text-blue-700 border-blue-200 font-bold",
+      Extended: "bg-slate-50 text-slate-600 border-slate-200 font-medium",
       Low: "bg-slate-50 text-slate-600 border-slate-200 font-medium",
     };
     const labels: Record<string, string> = {
-      Critical: "Khẩn cấp",
-      High: "Cao",
-      Medium: "Trung bình",
-      Low: "Thấp",
+      Required: "Bắt buộc",
+      Critical: "Bắt buộc",
+      High: "Bắt buộc",
+      Important: "Quan trọng",
+      Medium: "Quan trọng",
+      Extended: "Mở rộng",
+      Low: "Mở rộng",
     };
     return (
-      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase border tracking-wide ${classes[priority] || classes.Low}`}>
-        {labels[priority] || "Thấp"}
+      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase border tracking-wide ${classes[priority] || "bg-slate-50 text-slate-600 border-slate-200 font-medium"}`}>
+        {labels[priority] || "Mở rộng"}
       </span>
     );
   };
@@ -169,11 +175,30 @@ export function ProjectListTable({ tasks, columns, onTaskClick }: ProjectListTab
                   <td className="py-3 px-4">{renderDate(t.dueDate, true)}</td>
                   <td className="py-3 px-4 text-center">
                     {subTasksCount > 0 && (
-                      <span className="font-bold text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm">
-                        {completedSubTasksCount}/{subTasksCount}
-                      </span>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="font-bold text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm">
+                          {completedSubTasksCount}/{subTasksCount}
+                        </span>
+                        {(() => {
+                          const unassignedCount = t.subTasks
+                            ? t.subTasks.filter((st) => !st.assigneeUserId && !st.isCompleted).length
+                            : 0;
+                          if (unassignedCount > 0) {
+                            return (
+                              <span 
+                                className="text-amber-600 bg-amber-50 border border-amber-200 px-1 py-[1px] rounded text-[9px] font-bold flex items-center" 
+                                title={`Có ${unassignedCount} công việc con chưa phân công`}
+                              >
+                                ⚠️ {unassignedCount}
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
                     )}
                   </td>
+
                 </tr>
               );
             })}

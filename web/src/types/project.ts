@@ -25,7 +25,7 @@ export interface Project {
 }
 
 /**
- * ProjectMember interface mapped from DocumentIntelligenceService project_members
+ * ProjectMember interface mapped from AIAssistantService project_members
  */
 export interface ProjectMember {
   projectId: string; // UUID

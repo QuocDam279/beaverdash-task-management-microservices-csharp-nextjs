@@ -6,25 +6,31 @@ import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 
 interface ProjectOverviewPriorityChartProps {
   projectId: string;
-  lowCount: number;
-  mediumCount: number;
-  highCount: number;
-  criticalCount: number;
+  shareToken?: string;
+  requiredCount: number;
+  importantCount: number;
+  extendedCount: number;
 }
 
 /**
- * ProjectOverviewPriorityChart — Biểu đồ cột phân bổ mức độ ưu tiên công việc (Critical, High, Medium, Low).
+ * ProjectOverviewPriorityChart — Biểu đồ cột phân bổ mức độ ưu tiên công việc (Required, Important, Extended).
  * Hỗ trợ nhấp vào từng cột để chuyển hướng trực tiếp qua Bảng công việc kèm bộ lọc mức độ ưu tiên.
  */
 export function ProjectOverviewPriorityChart({
   projectId,
-  lowCount,
-  mediumCount,
-  highCount,
-  criticalCount,
+  shareToken,
+  requiredCount,
+  importantCount,
+  extendedCount,
 }: ProjectOverviewPriorityChartProps) {
-  const totalCount = lowCount + mediumCount + highCount + criticalCount;
-  const maxCount = Math.max(lowCount, mediumCount, highCount, criticalCount, 1);
+  const totalCount = requiredCount + importantCount + extendedCount;
+  const maxCount = Math.max(requiredCount, importantCount, extendedCount, 1);
+
+  const getBoardUrl = (query: string = "") => {
+    return shareToken
+      ? `/shared/projects/${shareToken}/board${query}`
+      : `/projects/${projectId}/board${query}`;
+  };
 
   // We scale the bar heights to a maximum of 80% to leave room for the numbers on top.
   const getBarHeight = (count: number) => {
@@ -36,7 +42,7 @@ export function ProjectOverviewPriorityChart({
       <CardHeader className="p-5 pb-3 border-b border-slate-100 flex items-center justify-between">
         <h3 className="text-sm font-bold text-[#292a2e]">Mức độ ưu tiên công việc</h3>
         <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-          {totalCount} công việc
+          {totalCount} công việc có thiết lập
         </span>
       </CardHeader>
       
@@ -51,66 +57,50 @@ export function ProjectOverviewPriorityChart({
             <div className="w-full" /> {/* Bottom axis */}
           </div>
 
-          {/* Bar Critical */}
+          {/* Bar Required */}
           <Link 
-            href={`/projects/${projectId}/board?priority=Critical`}
-            className="h-full flex flex-col justify-end items-center w-14 group relative z-10 cursor-pointer block"
+            href={getBoardUrl("?priority=Required")}
+            className="h-full flex flex-col justify-end items-center w-16 group relative z-10 cursor-pointer block"
           >
             <div 
-              style={{ height: getBarHeight(criticalCount) }} 
+              style={{ height: getBarHeight(requiredCount) }} 
               className="w-10 bg-gradient-to-t from-[#ef4444] to-[#f87171] rounded-t-[4px] hover:from-[#dc2626] hover:to-[#ef4444] transition-all duration-300 min-h-[4px] relative shadow-[0_2px_8px_rgba(239,68,68,0.15)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.35)] hover:-translate-y-[1px]"
             >
               {/* Count on top */}
               <span className="text-[11px] font-extrabold text-[#ef4444] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110">
-                {criticalCount}
+                {requiredCount}
               </span>
             </div>
           </Link>
 
-          {/* Bar High */}
+          {/* Bar Important */}
           <Link 
-            href={`/projects/${projectId}/board?priority=High`}
-            className="h-full flex flex-col justify-end items-center w-14 group relative z-10 cursor-pointer block"
+            href={getBoardUrl("?priority=Important")}
+            className="h-full flex flex-col justify-end items-center w-16 group relative z-10 cursor-pointer block"
           >
             <div 
-              style={{ height: getBarHeight(highCount) }} 
-              className="w-10 bg-gradient-to-t from-[#f97316] to-[#fb923c] rounded-t-[4px] hover:from-[#ea580c] hover:to-[#f97316] transition-all duration-300 min-h-[4px] relative shadow-[0_2px_8px_rgba(249,115,22,0.15)] hover:shadow-[0_4px_12px_rgba(249,115,22,0.35)] hover:-translate-y-[1px]"
+              style={{ height: getBarHeight(importantCount) }} 
+              className="w-10 bg-gradient-to-t from-[#1868db] to-[#60a5fa] rounded-t-[4px] hover:from-[#114fa9] hover:to-[#1868db] transition-all duration-300 min-h-[4px] relative shadow-[0_2px_8px_rgba(24,104,219,0.15)] hover:shadow-[0_4px_12px_rgba(24,104,219,0.35)] hover:-translate-y-[1px]"
             >
               {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-[#f97316] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110">
-                {highCount}
+              <span className="text-[11px] font-extrabold text-[#1868db] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110">
+                {importantCount}
               </span>
             </div>
           </Link>
 
-          {/* Bar Medium */}
+          {/* Bar Extended */}
           <Link 
-            href={`/projects/${projectId}/board?priority=Medium`}
-            className="h-full flex flex-col justify-end items-center w-14 group relative z-10 cursor-pointer block"
+            href={getBoardUrl("?priority=Extended")}
+            className="h-full flex flex-col justify-end items-center w-16 group relative z-10 cursor-pointer block"
           >
             <div 
-              style={{ height: getBarHeight(mediumCount) }} 
-              className="w-10 bg-gradient-to-t from-[#3b82f6] to-[#60a5fa] rounded-t-[4px] hover:from-[#2563eb] hover:to-[#3b82f6] transition-all duration-300 min-h-[4px] relative shadow-[0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_4px_12px_rgba(59,130,246,0.35)] hover:-translate-y-[1px]"
-            >
-              {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-[#3b82f6] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110">
-                {mediumCount}
-              </span>
-            </div>
-          </Link>
-
-          {/* Bar Low */}
-          <Link 
-            href={`/projects/${projectId}/board?priority=Low`}
-            className="h-full flex flex-col justify-end items-center w-14 group relative z-10 cursor-pointer block"
-          >
-            <div 
-              style={{ height: getBarHeight(lowCount) }} 
+              style={{ height: getBarHeight(extendedCount) }} 
               className="w-10 bg-gradient-to-t from-[#64748b] to-[#94a3b8] rounded-t-[4px] hover:from-[#475569] hover:to-[#64748b] transition-all duration-300 min-h-[4px] relative shadow-[0_2px_8px_rgba(100,116,139,0.15)] hover:shadow-[0_4px_12px_rgba(100,116,139,0.35)] hover:-translate-y-[1px]"
             >
               {/* Count on top */}
               <span className="text-[11px] font-extrabold text-[#64748b] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110">
-                {lowCount}
+                {extendedCount}
               </span>
             </div>
           </Link>
@@ -118,10 +108,9 @@ export function ProjectOverviewPriorityChart({
 
         {/* Labels Underneath */}
         <div className="flex justify-around pt-2.5 text-[10px] font-extrabold text-slate-500 text-center uppercase tracking-wider">
-          <span className="w-14 text-[#ef4444]">Khẩn cấp</span>
-          <span className="w-14 text-[#f97316]">Cao</span>
-          <span className="w-14 text-[#3b82f6]">Trung bình</span>
-          <span className="w-14 text-[#64748b]">Thấp</span>
+          <span className="w-16 text-[#ef4444]">Bắt buộc</span>
+          <span className="w-16 text-[#1868db]">Quan trọng</span>
+          <span className="w-16 text-[#64748b]">Mở rộng</span>
         </div>
       </CardBody>
     </Card>

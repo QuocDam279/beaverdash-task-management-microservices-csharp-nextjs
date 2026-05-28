@@ -13,16 +13,16 @@ public class RemoveTeamMemberCommandHandler : IRequestHandler<RemoveTeamMemberCo
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
-    private readonly IDocumentIntelligenceServiceClient _docIntelClient;
+    private readonly IAIAssistantServiceClient _aiAssistantClient;
 
     public RemoveTeamMemberCommandHandler(
         IPMDbContext dbContext,
         ICurrentUserService currentUserService,
-        IDocumentIntelligenceServiceClient docIntelClient)
+        IAIAssistantServiceClient aiAssistantClient)
     {
         _currentUserService = currentUserService;
         _dbContext = dbContext;
-        _docIntelClient = docIntelClient;
+        _aiAssistantClient = aiAssistantClient;
     }
 
     public async Task<bool> Handle(RemoveTeamMemberCommand request, CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ public class RemoveTeamMemberCommandHandler : IRequestHandler<RemoveTeamMemberCo
         _dbContext.TeamMembers.Remove(targetMember);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // 5. Đồng bộ thành viên dự án sang DocumentIntelligence Service
+        // 5. Đồng bộ thành viên dự án sang AIAssistant Service
         // Lấy tất cả dự án thuộc team này
         var projectIds = await _dbContext.Set<PM.Domain.Entities.Project>()
             .Where(p => p.TeamId == request.TeamId)
@@ -78,7 +78,7 @@ public class RemoveTeamMemberCommandHandler : IRequestHandler<RemoveTeamMemberCo
         // Đồng bộ cho từng dự án
         foreach (var projectId in projectIds)
         {
-            await _docIntelClient.SyncProjectMembersAsync(projectId, memberIds);
+            await _aiAssistantClient.SyncProjectMembersAsync(projectId, memberIds);
         }
 
         return true;

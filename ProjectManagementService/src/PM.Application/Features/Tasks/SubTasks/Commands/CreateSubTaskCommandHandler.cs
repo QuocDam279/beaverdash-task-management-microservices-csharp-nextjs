@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
 using PM.Domain.Entities;
+using PM.Domain.Enums;
 using System;
 using System.Linq;
 using System.Threading;
@@ -47,6 +48,13 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
             throw new UnauthorizedAccessException("Bạn không có quyền thêm SubTask vào Task này.");
         }
 
+        // Check for duplicate subtask title under the same parent task (case-insensitive)
+        var isDuplicateSubtaskName = await _dbContext.SubTasks
+            .AnyAsync(s => s.Title.ToLower() == request.Title.ToLower() && s.TaskId == request.TaskId && s.DeletedAt == null, cancellationToken);
+
+        if (isDuplicateSubtaskName)
+            throw new InvalidOperationException($"A subtask with the name '{request.Title}' already exists under this parent task.");
+
         // Validate deadline
         if (request.DueDate.HasValue)
         {
@@ -67,13 +75,20 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
             sortOrder = (maxSortOrder ?? 0) + 1;
         }
 
+        SubTaskPriority? priority = null;
+        if (!string.IsNullOrEmpty(request.Priority) && Enum.TryParse<SubTaskPriority>(request.Priority, true, out var parsedPriority))
+        {
+            priority = parsedPriority;
+        }
+
         var subTask = new SubTask
         {
             Id = Guid.NewGuid(),
             TaskId = request.TaskId,
             Title = request.Title,
-            AssigneeUserId = request.AssigneeUserId,
+            AssigneeUserId = !task.BoardColumn.Project.TeamId.HasValue ? currentUserId : request.AssigneeUserId,
             DueDate = request.DueDate,
+            Priority = priority,
             SortOrder = sortOrder,
             IsCompleted = false,
             CreatedAt = DateTime.UtcNow,
@@ -105,7 +120,7 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
                 ActorUserId = currentUserId,
                 Type = "subtask_assigned",
                 Content = $"Bạn vừa được giao subtask '{subTask.Title}' thuộc công việc '{task.Title}'.",
-                ActionUrl = task.BoardColumn != null ? $"/projects/{task.BoardColumn.ProjectId}/board" : "/tasks",
+                ActionUrl = task.BoardColumn != null ? $"/projects/{task.BoardColumn.ProjectId}/board?taskId={task.Id}" : "/tasks",
                 IsRead = false,
                 IsSentViaEmail = false,
                 CreatedAt = DateTime.UtcNow

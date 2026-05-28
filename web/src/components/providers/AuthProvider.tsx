@@ -50,9 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const isAuthPage = pathname === "/login";
+    const isSharedPage = pathname?.startsWith("/shared") || false;
     const hasToken = !!token;
 
-    if (!hasToken && !isAuthPage) {
+    if (!hasToken && !isAuthPage && !isSharedPage) {
       // Redirect to login if trying to access dashboard without token
       routerRef.current.push("/login");
     } else if (hasToken && isAuthPage) {

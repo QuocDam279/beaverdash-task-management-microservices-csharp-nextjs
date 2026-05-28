@@ -42,4 +42,24 @@ public class NotificationsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteNotification(Guid id)
+    {
+        var command = new DeleteNotificationCommand { NotificationId = id };
+        var success = await _mediator.Send(command);
+
+        if (!success)
+            return NotFound(new { Message = "Thông báo không tồn tại." });
+
+        return NoContent();
+    }
+
+    [HttpDelete("clear")]
+    public async Task<IActionResult> ClearAllNotifications()
+    {
+        var command = new ClearAllNotificationsCommand();
+        await _mediator.Send(command);
+        return NoContent();
+    }
 }

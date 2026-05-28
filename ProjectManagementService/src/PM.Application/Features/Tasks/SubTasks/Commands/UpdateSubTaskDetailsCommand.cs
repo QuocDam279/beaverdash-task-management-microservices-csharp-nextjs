@@ -9,6 +9,7 @@ public class UpdateSubTaskDetailsDto
     public Guid? AssigneeUserId { get; set; }
     public DateTime? DueDate { get; set; }
     public bool IsCompleted { get; set; }
+    public string? Priority { get; set; }
 }
 
 public class UpdateSubTaskDetailsCommand : IRequest<bool>
@@ -18,4 +19,5 @@ public class UpdateSubTaskDetailsCommand : IRequest<bool>
     public Guid? AssigneeUserId { get; set; }
     public DateTime? DueDate { get; set; }
     public bool IsCompleted { get; set; }
+    public string? Priority { get; set; }
 }

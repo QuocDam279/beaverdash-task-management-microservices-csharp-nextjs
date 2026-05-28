@@ -60,8 +60,8 @@ builder.Services.AddScoped<PM.Application.Contracts.IPMDbContext>(provider => pr
 builder.Services.AddExceptionHandler<PM.API.Middlewares.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// 5. Đăng ký HttpClient cho DocumentIntelligence Webhook Client
-builder.Services.AddHttpClient<PM.Application.Contracts.IDocumentIntelligenceServiceClient, PM.Infrastructure.Services.DocumentIntelligenceServiceClient>(client =>
+// 5. Đăng ký HttpClient cho AIAssistant Webhook Client
+builder.Services.AddHttpClient<PM.Application.Contracts.IAIAssistantServiceClient, PM.Infrastructure.Services.AIAssistantServiceClient>(client =>
 {
     client.BaseAddress = new Uri("http://localhost:5003");
     // Nếu Python service không phản hồi trong 5 giây, bỏ qua

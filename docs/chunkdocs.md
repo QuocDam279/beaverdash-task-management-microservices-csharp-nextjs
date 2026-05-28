@@ -1,8 +1,4 @@
 # TIÊU CHUẨN XỬ LÝ VÀ CHUNKING TÀI LIỆU RAG (CẬP NHẬT MỞ RỘNG)
-**Target Model:** `BGE-M3` (Embedding Size: Tối đa 8192 tokens, tối ưu RAG ở mức 512-800 tokens).
-**Global Parameters:** `chunk_size = 512 tokens` (~1500 ký tự), `chunk_overlap = 64 tokens` (~150-200 ký tự).
-
----
 
 ## 1. Văn bản Plain Text (.txt)
 * **Cách chunk:** Phân mảnh đệ quy (Recursive Character Splitting) theo mảng ưu tiên: `["\n\n", "\n", ". ", "? ", "! ", " ", ""]`.

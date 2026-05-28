@@ -16,14 +16,21 @@ interface MemberWorkload {
 
 interface ProjectOverviewWorkloadProps {
   projectId: string;
+  shareToken?: string;
   memberWorkloads: MemberWorkload[];
 }
 
 /**
  * ProjectOverviewWorkload — Hiển thị phân bổ thành viên & khối lượng công việc trong dự án.
- * Cho phép click vào thành viên để chuyển hướng qua Bảng công việc kèm bộ lọc theo người thực hiện.
+ * Cho phép click vào thành viên để chuyển hướng trực tiếp qua Bảng công việc kèm bộ lọc theo người thực hiện.
  */
-export function ProjectOverviewWorkload({ projectId, memberWorkloads }: ProjectOverviewWorkloadProps) {
+export function ProjectOverviewWorkload({ projectId, shareToken, memberWorkloads }: ProjectOverviewWorkloadProps) {
+  const getBoardUrl = (query: string = "") => {
+    return shareToken
+      ? `/shared/projects/${shareToken}/board${query}`
+      : `/projects/${projectId}/board${query}`;
+  };
+
   return (
     <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] flex flex-col w-full">
       <CardHeader className="p-5 pb-3 border-b border-slate-100">
@@ -34,7 +41,7 @@ export function ProjectOverviewWorkload({ projectId, memberWorkloads }: ProjectO
           memberWorkloads.map((member) => (
             <Link
               key={member.userId}
-              href={`/projects/${projectId}/board?assigneeId=${member.userId}`}
+              href={getBoardUrl(`?assigneeId=${member.userId}`)}
               className="block group hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors space-y-1.5 cursor-pointer"
             >
               {/* Member info row */}

@@ -15,8 +15,9 @@ import { User } from "@/types/auth";
 
 interface TaskSubtaskCommentItemProps {
   comment: Comment;
-  currentUser: User;
+  currentUser: User | null;
   onDeleteComment: (commentId: string) => void;
+  readOnly?: boolean;
 }
 
 function formatBytes(bytes: number | null): string {
@@ -32,6 +33,7 @@ export function TaskSubtaskCommentItem({
   comment,
   currentUser,
   onDeleteComment,
+  readOnly = false,
 }: TaskSubtaskCommentItemProps) {
   const attachments = comment.attachments || [];
 
@@ -123,7 +125,7 @@ export function TaskSubtaskCommentItem({
         )}
 
         {/* Delete comment button (only for the creator) */}
-        {comment.userId === currentUser.id && (
+        {!readOnly && currentUser && comment.userId === currentUser.id && (
           <button
             onClick={() => onDeleteComment(comment.id)}
             className="absolute right-1.5 top-1.5 opacity-0 group-hover/comment:opacity-100 text-slate-400 hover:text-red-500 cursor-pointer p-0.5 rounded transition-all"

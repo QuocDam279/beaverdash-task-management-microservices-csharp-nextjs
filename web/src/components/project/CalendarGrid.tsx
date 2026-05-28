@@ -37,15 +37,18 @@ export function CalendarGrid({
       return "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100/70";
     }
     switch (task.priority) {
+      case "Required":
       case "Critical":
-        return "bg-red-50 border-red-200 text-red-700 hover:bg-red-100/70 font-semibold";
       case "High":
-        return "bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100/70";
+        return "bg-red-50 border-red-200 text-red-700 hover:bg-red-100/70 font-semibold";
+      case "Important":
       case "Medium":
         return "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100/70";
+      case "Extended":
       case "Low":
-      default:
         return "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100/70";
+      default:
+        return "bg-slate-50 border-slate-150 text-slate-500 hover:bg-slate-100/50";
     }
   };
 

@@ -89,29 +89,6 @@ export function SidebarExpandedNav({
           <span>Công việc</span>
         </Link>
 
-        {/* Trợ lý Beaver Menu */}
-        <Link
-          href="/ai-assistant"
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-[4px] text-sm font-semibold transition-all duration-150 cursor-pointer ${
-            pathname === "/ai-assistant"
-              ? "bg-[#1868db]/10 text-[#1868db]"
-              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
-          }`}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            <path d="M12 7v6M9 10h6" />
-          </svg>
-          <span>Trợ lý Beaver</span>
-        </Link>
-
         {/* Thùng rác Menu */}
         <Link
           href="/trash"

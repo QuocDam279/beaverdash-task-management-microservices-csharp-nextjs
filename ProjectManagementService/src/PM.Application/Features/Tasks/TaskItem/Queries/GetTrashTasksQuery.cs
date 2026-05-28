@@ -14,8 +14,10 @@ public class TrashTaskDto
     public Guid Id { get; set; }
     public string Title { get; set; } = null!;
     public DateTime? DeletedAt { get; set; }
+    public Guid ProjectId { get; set; }
     public string ProjectName { get; set; } = null!;
     public string ColumnName { get; set; } = null!;
+    public bool IsCompleted { get; set; }
     public bool CanPermanentDelete { get; set; }
 }
 
@@ -93,8 +95,10 @@ public class GetTrashTasksQueryHandler : IRequestHandler<GetTrashTasksQuery, Lis
                 Id = t.Id,
                 Title = t.Title,
                 DeletedAt = t.DeletedAt,
+                ProjectId = project?.Id ?? Guid.Empty,
                 ProjectName = project?.Name ?? "Không rõ",
                 ColumnName = t.BoardColumn?.Name ?? "Không rõ",
+                IsCompleted = t.CompletedAt.HasValue || (t.BoardColumn != null && t.BoardColumn.IsDone),
                 CanPermanentDelete = canPermanentDelete
             };
         }).ToList();

@@ -21,6 +21,7 @@ interface TaskSubtaskItemProps {
   onToggleSubtask: (subTaskId: string) => void;
   onSubtaskAssigneeChange: (subTaskId: string, assigneeId: string) => void;
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
+  onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
   onDeleteSubtask: (subTaskId: string) => void;
   onAddComment: (
     subTaskId: string,
@@ -33,9 +34,11 @@ interface TaskSubtaskItemProps {
     }[]
   ) => void;
   onDeleteComment: (subTaskId: string, commentId: string) => void;
-  currentUser: User;
+  currentUser: User | null;
   allUsers: User[];
   canManage: boolean;
+  readOnly?: boolean;
+  isPersonalProject?: boolean;
 }
 
 export function TaskSubtaskItem({
@@ -45,16 +48,19 @@ export function TaskSubtaskItem({
   onToggleSubtask,
   onSubtaskAssigneeChange,
   onSubtaskDueDateChange,
+  onSubtaskPriorityChange,
   onDeleteSubtask,
   onAddComment,
   onDeleteComment,
   currentUser,
   allUsers,
   canManage,
+  readOnly = false,
+  isPersonalProject = false,
 }: TaskSubtaskItemProps) {
   const [isCommentsExpanded, setIsCommentsExpanded] = React.useState(false);
   
-  const canToggle = canManage || (subtask.assigneeUserId === currentUser?.id);
+  const canToggle = !readOnly && (canManage || (currentUser && subtask.assigneeUserId === currentUser.id));
 
   const comments = subtask.comments || [];
 
@@ -135,44 +141,93 @@ export function TaskSubtaskItem({
             />
           </div>
 
-          {/* Subtask Assignee Selector */}
-          <div className="relative h-6 w-6">
+          {/* Subtask Priority Selector */}
+          <div className="relative h-6 w-14">
             <select
-              value={subtask.assigneeUserId || ""}
-              onChange={(e) => onSubtaskAssigneeChange(subtask.id, e.target.value)}
+              value={subtask.priority || ""}
+              onChange={(e) => onSubtaskPriorityChange(subtask.id, e.target.value || null)}
               disabled={!canManage}
               className={`absolute inset-0 opacity-0 w-full h-full z-10 ${canManage ? "cursor-pointer" : "cursor-not-allowed"}`}
-              title={canManage ? "Giao việc cho thành viên" : "Bạn không có quyền giao việc"}
+              title={canManage ? "Thay đổi độ ưu tiên công việc con" : "Độ ưu tiên"}
             >
-              <option value="">Chưa giao</option>
-              {allUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.displayName}
-                </option>
-              ))}
+              <option value="">Không có</option>
+              <option value="High">Cao</option>
+              <option value="Medium">Trung bình</option>
+              <option value="Low">Thấp</option>
             </select>
-            {/* Avatar overlay */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              {subtask.assigneeUser ? (
-                <Avatar
-                  src={subtask.assigneeUser.avatar}
-                  alt={subtask.assigneeUser.displayName}
-                  title={`Giao cho: ${subtask.assigneeUser.displayName}`}
-                  className="h-5 w-5 rounded-full border border-slate-200"
-                />
-              ) : (
-                <div
-                  title="Chưa giao việc"
-                  className="h-5 w-5 rounded-full border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 transition-all"
-                >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="8.5" cy="7" r="4" />
-                  </svg>
-                </div>
-              )}
+            {/* Display Badge overlay */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+              {(() => {
+                switch (subtask.priority) {
+                  case "High":
+                    return (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200 text-orange-700 uppercase tracking-wide">
+                        Cao
+                      </span>
+                    );
+                  case "Medium":
+                    return (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-wide">
+                        T.Bình
+                      </span>
+                    );
+                  case "Low":
+                    return (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-500 uppercase tracking-wide">
+                        Thấp
+                      </span>
+                    );
+                  default:
+                    return (
+                      <div className="flex items-center gap-0.5 border border-dashed border-slate-350 rounded px-1.5 py-0.5 text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 transition-all text-[9px] font-bold">
+                        <span>Ưu tiên</span>
+                      </div>
+                    );
+                }
+              })()}
             </div>
           </div>
+
+          {/* Subtask Assignee Selector */}
+          {!isPersonalProject && (
+            <div className="relative h-6 w-6">
+              <select
+                value={subtask.assigneeUserId || ""}
+                onChange={(e) => onSubtaskAssigneeChange(subtask.id, e.target.value)}
+                disabled={!canManage}
+                className={`absolute inset-0 opacity-0 w-full h-full z-10 ${canManage ? "cursor-pointer" : "cursor-not-allowed"}`}
+                title={canManage ? "Giao việc cho thành viên" : "Bạn không có quyền giao việc"}
+              >
+                <option value="">Chưa giao</option>
+                {allUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.displayName}
+                  </option>
+                ))}
+              </select>
+              {/* Avatar overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {subtask.assigneeUser ? (
+                  <Avatar
+                    src={subtask.assigneeUser.avatar}
+                    alt={subtask.assigneeUser.displayName}
+                    title={`Giao cho: ${subtask.assigneeUser.displayName}`}
+                    className="h-5 w-5 rounded-full border border-slate-200"
+                  />
+                ) : (
+                  <div
+                    title="Chưa giao việc"
+                    className="h-5 w-5 rounded-full border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 transition-all"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="8.5" cy="7" r="4" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Delete Button */}
           {canManage && (
@@ -205,6 +260,7 @@ export function TaskSubtaskItem({
           currentUser={currentUser}
           onAddComment={onAddComment}
           onDeleteComment={onDeleteComment}
+          readOnly={readOnly}
         />
       )}
     </div>

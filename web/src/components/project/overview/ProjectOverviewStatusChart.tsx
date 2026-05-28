@@ -14,6 +14,7 @@ export interface ColumnStatusCount {
 
 interface ProjectOverviewStatusChartProps {
   projectId: string;
+  shareToken?: string;
   columnStatusCounts: ColumnStatusCount[];
 }
 
@@ -38,10 +39,17 @@ const getColumnColor = (isDone: boolean, index: number): string => {
 
 export function ProjectOverviewStatusChart({
   projectId,
+  shareToken,
   columnStatusCounts = [],
 }: ProjectOverviewStatusChartProps) {
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
   const totalCount = columnStatusCounts.reduce((sum, col) => sum + col.taskCount, 0);
+
+  const getBoardUrl = (query: string = "") => {
+    return shareToken
+      ? `/shared/projects/${shareToken}/board${query}`
+      : `/projects/${projectId}/board${query}`;
+  };
 
   // Tính toán dải màu cho biểu đồ Donut
   let currentPercentage = 0;
@@ -76,7 +84,7 @@ export function ProjectOverviewStatusChart({
       <CardBody className="p-6 flex-1 flex flex-col md:flex-row items-center justify-center gap-8 lg:gap-12 min-h-[240px]">
         
         {/* Khung chứa Biểu đồ Tròn */}
-        <Link href={`/projects/${projectId}/board`} className="relative flex items-center justify-center shrink-0 group cursor-pointer block">
+        <Link href={getBoardUrl()} className="relative flex items-center justify-center shrink-0 group cursor-pointer block">
           <div className="absolute inset-0 rounded-full bg-slate-100 scale-105 blur-[2px] opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none" />
           
           <div 
@@ -115,7 +123,7 @@ export function ProjectOverviewStatusChart({
               return (
                 <Link 
                   key={col.columnId || idx} 
-                  href={`/projects/${projectId}/board`}
+                  href={getBoardUrl()}
                   className={`group/item flex flex-col gap-1 p-2 rounded-lg transition-all duration-200 cursor-pointer block
                     ${isCurrentHovered ? "bg-slate-50 translate-x-1" : ""} 
                     ${isAnyHovered && !isCurrentHovered ? "opacity-45 blur-[0.2px]" : "opacity-100"}`}

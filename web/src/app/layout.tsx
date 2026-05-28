@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AlertConfirmProvider } from "@/components/providers/AlertConfirmProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
         <AuthProvider>
-          <AlertConfirmProvider>{children}</AlertConfirmProvider>
+          <AlertConfirmProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AlertConfirmProvider>
         </AuthProvider>
       </body>
     </html>

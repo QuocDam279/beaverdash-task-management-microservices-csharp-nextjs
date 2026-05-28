@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
 using PM.Domain.Entities;
+using PM.Domain.Enums;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -152,7 +153,7 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
                 ActorUserId = currentUserId,
                 Type = "subtask_assigned",
                 Content = $"Bạn vừa được giao subtask '{request.Title}' thuộc công việc '{subTask.Task!.Title}'.",
-                ActionUrl = subTask.Task?.BoardColumn != null ? $"/projects/{subTask.Task.BoardColumn.ProjectId}/board" : "/tasks",
+                ActionUrl = subTask.Task?.BoardColumn != null ? $"/projects/{subTask.Task.BoardColumn.ProjectId}/board?taskId={subTask.TaskId}" : "/tasks",
                 IsRead = false,
                 IsSentViaEmail = false,
                 CreatedAt = DateTime.UtcNow
@@ -160,9 +161,16 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
             _dbContext.Notifications.Add(assignNotif);
         }
 
+        SubTaskPriority? priority = null;
+        if (!string.IsNullOrEmpty(request.Priority) && Enum.TryParse<SubTaskPriority>(request.Priority, true, out var parsedPriority))
+        {
+            priority = parsedPriority;
+        }
+
         subTask.Title = request.Title;
         subTask.AssigneeUserId = request.AssigneeUserId;
         subTask.DueDate = request.DueDate;
+        subTask.Priority = priority;
         subTask.IsCompleted = request.IsCompleted;
         subTask.UpdatedAt = DateTime.UtcNow;
 

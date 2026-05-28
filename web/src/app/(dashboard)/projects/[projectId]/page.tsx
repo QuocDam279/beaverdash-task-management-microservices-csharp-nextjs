@@ -96,10 +96,9 @@ export default function ProjectOverviewPage({ params }: PageProps) {
         {/* Box 3: Bar Chart - Mức độ ưu tiên */}
         <ProjectOverviewPriorityChart
           projectId={projectId}
-          lowCount={data.lowPriorityCount}
-          mediumCount={data.mediumPriorityCount}
-          highCount={data.highPriorityCount}
-          criticalCount={data.criticalPriorityCount}
+          requiredCount={data.requiredPriorityCount}
+          importantCount={data.importantPriorityCount}
+          extendedCount={data.extendedPriorityCount}
         />
 
         {/* Box 4: Teamwork Workload Progress */}

@@ -28,7 +28,7 @@ export function CreateTaskModal({
   const [description, setDescription] = React.useState("");
   const [boardColumnId, setBoardColumnId] = React.useState("");
 
-  const [priority, setPriority] = React.useState("Medium");
+  const [priority, setPriority] = React.useState("");
   const [startDate, setStartDate] = React.useState("");
   const [dueDate, setDueDate] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -39,7 +39,7 @@ export function CreateTaskModal({
       setTitle("");
       setDescription("");
 
-      setPriority("Medium");
+      setPriority("");
       setStartDate("");
       setDueDate("");
       if (columns && columns.length > 0) {
@@ -168,10 +168,10 @@ export function CreateTaskModal({
                   onChange={(e) => setPriority(e.target.value)}
                   className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
                 >
-                  <option value="Low">Thấp</option>
-                  <option value="Medium">Trung bình</option>
-                  <option value="High">Cao</option>
-                  <option value="Critical">Khẩn cấp</option>
+                  <option value="">Không có</option>
+                  <option value="Required">Bắt buộc</option>
+                  <option value="Important">Quan trọng</option>
+                  <option value="Extended">Mở rộng</option>
                 </select>
               </div>
 
