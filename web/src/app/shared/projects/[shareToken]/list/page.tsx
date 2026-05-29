@@ -17,6 +17,7 @@ export default function SharedListPage({ params }: PageProps) {
   const [assignees, setAssignees] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isPersonalProject, setIsPersonalProject] = React.useState(false);
 
   const fetchListData = React.useCallback(async () => {
     try {
@@ -39,13 +40,16 @@ export default function SharedListPage({ params }: PageProps) {
 
       // Load workloads (assignees)
       const overviewData = await api.get(`/shared/projects/${shareToken}/overview`);
-      if (overviewData?.memberWorkloads) {
-        setAssignees(overviewData.memberWorkloads.map((m: any) => ({
-          id: m.userId,
-          displayName: m.displayName,
-          avatar: m.avatar,
-          role: m.role,
-        })));
+      if (overviewData) {
+        setIsPersonalProject(overviewData.teamId === null || !overviewData.teamId);
+        if (overviewData.memberWorkloads) {
+          setAssignees(overviewData.memberWorkloads.map((m: any) => ({
+            id: m.userId,
+            displayName: m.displayName,
+            avatar: m.avatar,
+            role: m.role,
+          })));
+        }
       }
     } catch (err: any) {
       console.error("Failed to load shared list data:", err);
@@ -84,6 +88,7 @@ export default function SharedListPage({ params }: PageProps) {
         onRefresh={fetchListData}
         assignees={assignees}
         readOnly={true}
+        isPersonalProject={isPersonalProject}
       />
     </div>
   );

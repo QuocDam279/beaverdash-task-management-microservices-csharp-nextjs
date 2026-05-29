@@ -21,6 +21,7 @@ interface BoardColumnViewProps {
   onSetColumnDone?: (columnId: string) => void;
   assignees?: any[];
   readOnly?: boolean;
+  isPersonalProject?: boolean;
 }
 
 export function BoardColumnView({
@@ -38,6 +39,7 @@ export function BoardColumnView({
   onSetColumnDone,
   assignees = [],
   readOnly = false,
+  isPersonalProject = false,
 }: BoardColumnViewProps) {
   const { user: currentUser } = useAuth();
   const [newTitle, setNewTitle] = React.useState("");
@@ -93,7 +95,7 @@ export function BoardColumnView({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex flex-col rounded-lg p-3 min-h-[300px] h-full transition-all duration-200 border-2 ${
+      className={`flex flex-col rounded-lg p-3 min-h-[300px] h-fit transition-all duration-200 border-2 ${
         isDraggingOver 
           ? "bg-slate-200 border-dashed border-[#1868db] scale-[1.01]" 
           : isWipExceeded
@@ -238,7 +240,7 @@ export function BoardColumnView({
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto scrollbar-none fade-bottom-mask">
+      <div className="flex-1 flex flex-col gap-2.5">
         {tasks.length > 0 ? (
           tasks.map((task) => (
             <BoardTaskCard
@@ -249,6 +251,7 @@ export function BoardColumnView({
               currentUser={currentUser}
               assignees={assignees}
               readOnly={readOnly}
+              isPersonalProject={isPersonalProject}
             />
           ))
         ) : (

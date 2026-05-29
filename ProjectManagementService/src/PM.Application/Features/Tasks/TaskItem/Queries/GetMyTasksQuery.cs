@@ -26,6 +26,8 @@ public class MyTaskDto
     public Guid? TeamId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public int SubTasksCount { get; set; }
+    public int CompletedSubTasksCount { get; set; }
 }
 
 public record GetMyTasksQuery : IRequest<List<MyTaskDto>>;
@@ -68,7 +70,9 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, List<MyTa
                 ProjectName = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.Name : string.Empty,
                 TeamId = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.TeamId : null,
                 CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt
+                UpdatedAt = t.UpdatedAt,
+                SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
+                CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null)
             })
             .ToListAsync(cancellationToken);
 

@@ -31,6 +31,17 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to the bottom of the chat viewport when messages load, update, or streaming status changes
+  React.useEffect(() => {
+    if (!isHistoryLoading) {
+      // Use standard requestAnimationFrame or small timeout to ensure layout has updated
+      const timer = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, isSending, isHistoryLoading]);
+
   const handleSuggestionClick = (promptText: string) => {
     handleSendMessage(promptText);
   };
@@ -49,16 +60,10 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
       />
 
       {/* 2. RIGHT PANEL: Chat Viewport & Input */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc]">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Chat Header */}
-        <div className="h-11 px-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-700">Trợ lý lập kế hoạch AI</span>
-            <span className="text-[9px] bg-blue-50 text-[#1868db] font-bold px-1.5 py-0.2 rounded border border-blue-100 flex items-center gap-0.5 animate-pulse">
-              <span>Model: Gemini 3.1</span>
-            </span>
-          </div>
-          <span className="text-[10px] text-slate-400 font-semibold italic">Phân rã dự án thành các Tasks & Subtasks</span>
+        <div className="h-13 px-6 border-b border-slate-200/65 bg-white flex items-center shrink-0">
+          <span className="text-xs font-extrabold text-slate-800 tracking-tight uppercase">Trợ lý BeaverDash</span>
         </div>
 
         {/* Message Container Viewport */}
@@ -72,6 +77,7 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
 
         {/* Input Bar Section */}
         <AIAssistantInput
+          projectId={projectId}
           inputText={inputText}
           setInputText={setInputText}
           isSending={isSending}

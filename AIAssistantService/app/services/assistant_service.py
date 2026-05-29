@@ -8,202 +8,10 @@ from google.genai import types
 
 from app.core.config import settings
 from app.models.chat import AIChatMessage
+from app.services.assistant_tools import AIAssistantTools
+from app.services.llm_helpers import call_openai_compatible
 
 logger = logging.getLogger(__name__)
-
-class AIAssistantTools:
-    """
-    Python functions that act as tools for the Gemini model.
-    The docstrings and type annotations will be inspected by the SDK to generate JSON schemas.
-    """
-    def __init__(self, pm_base_url: str, user_id: UUID, project_id: UUID):
-        self.pm_base_url = pm_base_url
-        self.user_id_str = str(user_id)
-        self.project_id_str = str(project_id)
-        self.headers = {
-            "X-User-Id": self.user_id_str,
-            "Content-Type": "application/json"
-        }
-
-    async def create_task(
-        self,
-        title: str,
-        priority: str = "Important",
-        start_date: str = None,
-        due_date: str = None,
-        status: str = None
-    ) -> str:
-        """
-        Tạo một công việc (Task) chính mới cho dự án hiện tại.
-
-        Args:
-            title: Tiêu đề công việc. Không được để trống.
-            priority: Độ ưu tiên của công việc cha (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Bắt buộc/Required, Quan trọng/Important, Mở rộng/Extended). Mặc định là 'Quan trọng'.
-            start_date: Ngày bắt đầu công việc (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
-            due_date: Ngày hạn hoàn thành (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
-            status: Trạng thái/Cột muốn tạo công việc (ví dụ: 'Chưa thực hiện', 'Đang thực hiện', 'Hoàn thành').
-        """
-        try:
-            # Map priority from Vietnamese/English to backend enum
-            p_lower = priority.strip().lower() if priority else "important"
-            if p_lower in ["bắt buộc", "bat buoc", "required"]:
-                mapped_priority = "Required"
-            elif p_lower in ["quan trọng", "quan trong", "important"]:
-                mapped_priority = "Important"
-            elif p_lower in ["mở rộng", "mo rong", "extended"]:
-                mapped_priority = "Extended"
-            else:
-                mapped_priority = "Important"
-
-            # Step 1: Fetch board columns of the project to find the target column
-            board_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/board"
-            async with httpx.AsyncClient() as client:
-                logger.info(f"Fetching board columns from: {board_url} with X-User-Id: {self.user_id_str}")
-                board_response = await client.get(board_url, headers=self.headers, timeout=10.0)
-                
-                if board_response.status_code != 200:
-                    return f"Lỗi: Không lấy được thông tin cột của dự án (HTTP {board_response.status_code})."
-                
-                board_data = board_response.json()
-                columns = board_data.get("boardColumns", [])
-                
-                # Check for duplicate parent task title (case-insensitive)
-                for col in columns:
-                    for task in col.get("taskItems", []):
-                        if task.get("title", "").strip().lower() == title.strip().lower():
-                            task_id = task.get("id")
-                            return f"Thành công: Công việc '{title}' đã tồn tại trong dự án này (ID: {task_id}). Không cần tạo lại."
-                
-                if not columns:
-                    return "Lỗi: Dự án hiện tại không có cột bảng nào để tạo công việc."
-                
-                # Find column by name or select fallback
-                target_col = None
-                if status:
-                    status_normalized = status.strip().lower()
-                    for col in columns:
-                        if col.get("name", "").lower() == status_normalized:
-                            target_col = col
-                            break
-                
-                if not target_col:
-                    for col in columns:
-                        if col.get("name", "").lower() == "chưa thực hiện":
-                            target_col = col
-                            break
-                
-                if not target_col:
-                    # Fallback to column with lowest position
-                    sorted_cols = sorted(columns, key=lambda c: c.get("position", 0))
-                    target_col = sorted_cols[0]
-                
-                column_id = target_col.get("id")
-                column_name = target_col.get("name")
-                
-                # Step 2: Post to PM API to create the task
-                task_payload = {
-                    "BoardColumnId": column_id,
-                    "Title": title,
-                    "Priority": mapped_priority,
-                    "DueDate": due_date,
-                    "StartDate": start_date
-                }
-                
-                create_url = f"{self.pm_base_url}/api/Tasks"
-                logger.info(f"Creating task via PM Service: {create_url} with payload: {task_payload}")
-                response = await client.post(create_url, json=task_payload, headers=self.headers, timeout=10.0)
-                
-                if response.status_code == 201:
-                    result = response.json()
-                    task_id = result.get("id")
-                    return f"Thành công: Đã tạo công việc '{title}' (ID: {task_id}) trong cột '{column_name}'."
-                else:
-                    error_detail = response.text
-                    return f"Lỗi từ ProjectManagement Service: {response.status_code} - {error_detail}"
-                    
-        except Exception as ex:
-            logger.exception("Error executing create_task tool")
-            return f"Lỗi ngoại lệ khi tạo công việc: {str(ex)}"
-
-    async def create_subtask(
-        self,
-        task_id: str,
-        title: str,
-        priority: str = "Medium",
-        due_date: str = None
-    ) -> str:
-        """
-        Tạo một công việc con (Subtask) cho một công việc cha đã tồn tại.
-
-        Args:
-            task_id: ID (UUID) của công việc cha.
-            title: Tiêu đề công việc con. Không được để trống.
-            priority: Độ ưu tiên của công việc con (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Thấp/Low, Trung bình/Medium, Cao/High). Mặc định là 'Trung bình'.
-            due_date: Hạn hoàn thành của công việc con (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
-        """
-        try:
-            # Map priority from Vietnamese/English to backend enum
-            p_lower = priority.strip().lower() if priority else "medium"
-            if p_lower in ["thấp", "thap", "low"]:
-                mapped_priority = "Low"
-            elif p_lower in ["trung bình", "trung binh", "medium"]:
-                mapped_priority = "Medium"
-            elif p_lower in ["cao", "high"]:
-                mapped_priority = "High"
-            else:
-                mapped_priority = "Medium"
-
-            # Step 1: Fetch board to check for duplicate subtask title under the same parent task
-            board_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/board"
-            async with httpx.AsyncClient() as client:
-                logger.info(f"Fetching board from: {board_url} with X-User-Id: {self.user_id_str}")
-                board_response = await client.get(board_url, headers=self.headers, timeout=10.0)
-                
-                if board_response.status_code == 200:
-                    board_data = board_response.json()
-                    columns = board_data.get("boardColumns", [])
-                    
-                    # Find parent task
-                    parent_task = None
-                    for col in columns:
-                        for task in col.get("taskItems", []):
-                            if task.get("id") == task_id:
-                                parent_task = task
-                                break
-                        if parent_task:
-                            break
-                    
-                    if parent_task:
-                        # Check for duplicate subtask title under the same parent task
-                        for st in parent_task.get("subTasks", []):
-                            if st.get("title", "").strip().lower() == title.strip().lower():
-                                subtask_id = st.get("id")
-                                return f"Thành công: Công việc con '{title}' đã tồn tại dưới công việc cha '{parent_task.get('title')}' này (ID: {subtask_id}). Không cần tạo lại."
-            
-            # Step 2: Post to PM API to create the subtask
-            subtask_payload = {
-                "TaskId": task_id,
-                "Title": title,
-                "DueDate": due_date,
-                "Priority": mapped_priority
-            }
-            
-            create_url = f"{self.pm_base_url}/api/SubTasks"
-            async with httpx.AsyncClient() as client:
-                logger.info(f"Creating subtask via PM Service: {create_url} with payload: {subtask_payload}")
-                response = await client.post(create_url, json=subtask_payload, headers=self.headers, timeout=10.0)
-                
-                if response.status_code == 201:
-                    result = response.json()
-                    subtask_id = result.get("id")
-                    return f"Thành công: Đã tạo công việc con '{title}' (ID: {subtask_id}) cho công việc cha '{task_id}'."
-                else:
-                    error_detail = response.text
-                    return f"Lỗi từ ProjectManagement Service: {response.status_code} - {error_detail}"
-                    
-        except Exception as ex:
-            logger.exception("Error executing create_subtask tool")
-            return f"Lỗi ngoại lệ khi tạo công việc con: {str(ex)}"
 
 
 class AIAssistantService:
@@ -238,6 +46,22 @@ class AIAssistantService:
         # Initialize Google GenAI client
         # It automatically loads GEMINI_API_KEY from environment, but we pass it explicitly from settings
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+        # Build the ordered list of model configs for the fallback loop.
+        # Each entry: (label, provider, model_name)
+        #   provider = "gemini" | "github" | "groq"
+        self._model_chain = [
+            ("gemini-primary", "gemini", settings.GEMINI_MODEL_PRIMARY),
+            ("gemini-secondary", "gemini", settings.GEMINI_MODEL_SECONDARY),
+        ]
+        if settings.GITHUB_MODEL_TOKEN:
+            self._model_chain.append(
+                ("gpt-4o-mini", "github", settings.GPT_MODEL)
+            )
+        if settings.GROQ_API_KEY:
+            self._model_chain.append(
+                ("llama-groq", "groq", settings.LLAMA_MODEL)
+            )
 
     def _convert_db_history_to_gemini(self, history: List[AIChatMessage]) -> List[types.Content]:
         """
@@ -309,17 +133,26 @@ class AIAssistantService:
                 
         return gemini_contents
 
+    # ------------------------------------------------------------------
+    # Fallback generation across all configured models
+    # ------------------------------------------------------------------
+
+    _PROVIDER_URLS = {
+        "github": "https://models.inference.ai.azure.com/chat/completions",
+        "groq": "https://api.groq.com/openai/v1/chat/completions",
+    }
+
     async def _generate_content_with_fallback(
         self,
         contents: List[types.Content],
         tools: List[Any]
     ) -> Any:
         """
-        Calls Gemini API using Primary model (Gemini 3.1 Flash Lite) first.
-        Falls back to Secondary model (Gemini 2.5 Flash) on rate limits, token exhaustion, or connection errors.
-        Retries with a delay if both fail.
+        Tries each model in the configured chain in order.
+        On failure the next model is attempted. If every model fails in
+        a single pass the whole chain is retried after a delay.
         """
-        config = types.GenerateContentConfig(
+        gemini_config = types.GenerateContentConfig(
             system_instruction=self.SYSTEM_INSTRUCTION,
             tools=tools,
             temperature=0.2,
@@ -327,40 +160,65 @@ class AIAssistantService:
 
         max_retries = 20
         retry_delay = 10  # seconds
-        
+
         for attempt in range(1, max_retries + 1):
-            try:
-                model = settings.GEMINI_MODEL_PRIMARY
-                logger.info(f"Calling primary model: {model} (Attempt {attempt}/{max_retries})")
-                response = await self.client.aio.models.generate_content(
-                    model=model,
-                    contents=contents,
-                    config=config
-                )
-                return response
-            except Exception as e:
-                logger.warning(
-                    f"Primary model ({settings.GEMINI_MODEL_PRIMARY}) failed on attempt {attempt}: {e}. "
-                    f"Attempting fallback to secondary model: {settings.GEMINI_MODEL_SECONDARY}"
-                )
-                
+            last_error: Optional[Exception] = None
+
+            for label, provider, model_name in self._model_chain:
                 try:
-                    model = settings.GEMINI_MODEL_SECONDARY
-                    logger.info(f"Calling fallback model: {model} (Attempt {attempt}/{max_retries})")
-                    response = await self.client.aio.models.generate_content(
-                        model=model,
-                        contents=contents,
-                        config=config
+                    logger.info(
+                        f"[Attempt {attempt}/{max_retries}] Calling model '{label}' "
+                        f"(provider={provider}, model={model_name})"
                     )
-                    return response
-                except Exception as fe:
-                    logger.error(f"Fallback model also failed on attempt {attempt}: {fe}")
-                    
-                    if attempt == max_retries:
-                        raise fe
-                    
-                    logger.info(f"Both models failed. Resource might be exhausted or rate limited. Sleeping {retry_delay}s before retry...")
-                    await asyncio.sleep(retry_delay)
+
+                    if provider == "gemini":
+                        response = await self.client.aio.models.generate_content(
+                            model=model_name,
+                            contents=contents,
+                            config=gemini_config,
+                        )
+                        return response
+
+                    elif provider == "github":
+                        response = await call_openai_compatible(
+                            api_url=self._PROVIDER_URLS["github"],
+                            api_key=settings.GITHUB_MODEL_TOKEN,
+                            model=model_name,
+                            contents=contents,
+                            tools=tools,
+                            system_instruction=self.SYSTEM_INSTRUCTION,
+                        )
+                        return response
+
+                    elif provider == "groq":
+                        response = await call_openai_compatible(
+                            api_url=self._PROVIDER_URLS["groq"],
+                            api_key=settings.GROQ_API_KEY,
+                            model=model_name,
+                            contents=contents,
+                            tools=tools,
+                            system_instruction=self.SYSTEM_INSTRUCTION,
+                        )
+                        return response
+
+                except Exception as e:
+                    last_error = e
+                    logger.warning(
+                        f"Model '{label}' failed on attempt {attempt}: {e}. "
+                        f"Trying next model in chain..."
+                    )
+                    continue
+
+            # All models in the chain failed for this attempt
+            if attempt == max_retries:
+                logger.error("All models exhausted after maximum retries.")
+                raise last_error  # type: ignore[misc]
+
+            logger.info(
+                f"All models failed on attempt {attempt}. "
+                f"Sleeping {retry_delay}s before retry..."
+            )
+            await asyncio.sleep(retry_delay)
 
     async def chat_with_assistant(
         self,
@@ -518,6 +376,7 @@ class AIAssistantService:
                 break
 
         return final_text_response
+
 
 # Singleton instance
 ai_assistant_service = AIAssistantService()

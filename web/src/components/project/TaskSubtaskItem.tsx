@@ -13,6 +13,7 @@ import { Avatar } from "@/components/ui/Avatar";
 
 import { SubTask } from "@/types/task";
 import { User } from "@/types/auth";
+import { getSubtaskPriorityLabel } from "@/lib/utils";
 
 interface TaskSubtaskItemProps {
   subtask: SubTask;
@@ -158,32 +159,38 @@ export function TaskSubtaskItem({
             {/* Display Badge overlay */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
               {(() => {
-                switch (subtask.priority) {
-                  case "High":
-                    return (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200 text-orange-700 uppercase tracking-wide">
-                        Cao
-                      </span>
-                    );
-                  case "Medium":
-                    return (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-wide">
-                        T.Bình
-                      </span>
-                    );
-                  case "Low":
-                    return (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-500 uppercase tracking-wide">
-                        Thấp
-                      </span>
-                    );
-                  default:
-                    return (
-                      <div className="flex items-center gap-0.5 border border-dashed border-slate-350 rounded px-1.5 py-0.5 text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 transition-all text-[9px] font-bold">
-                        <span>Ưu tiên</span>
-                      </div>
-                    );
+                if (!subtask.priority) {
+                  return (
+                    <div className="flex items-center gap-0.5 border border-dashed border-slate-350 rounded px-1.5 py-0.5 text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 transition-all text-[9px] font-bold">
+                      <span>Ưu tiên</span>
+                    </div>
+                  );
                 }
+                const label = getSubtaskPriorityLabel(subtask.priority);
+                const displayLabel = subtask.priority.toLowerCase() === "medium" ? "T.Bình" : label;
+                const p = subtask.priority.toLowerCase();
+                if (p === "high") {
+                  return (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200 text-orange-700 uppercase tracking-wide">
+                      {displayLabel}
+                    </span>
+                  );
+                }
+                if (p === "medium") {
+                  return (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-wide">
+                      {displayLabel}
+                    </span>
+                  );
+                }
+                if (p === "low") {
+                  return (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-500 uppercase tracking-wide">
+                      {displayLabel}
+                    </span>
+                  );
+                }
+                return null;
               })()}
             </div>
           </div>

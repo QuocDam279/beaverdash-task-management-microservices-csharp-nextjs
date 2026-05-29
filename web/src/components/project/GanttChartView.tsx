@@ -29,7 +29,7 @@ export function GanttChartView({
   readOnly = false,
   shareToken,
 }: GanttChartViewProps) {
-  const [currentDate, setCurrentDate] = React.useState<Date>(new Date(2026, 4, 22));
+  const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
 
   const rightScrollRef = React.useRef<HTMLDivElement>(null);
@@ -83,7 +83,7 @@ export function GanttChartView({
               </svg>
             </button>
             <button
-              onClick={() => setCurrentDate(new Date(2026, 4, 22))}
+              onClick={() => setCurrentDate(new Date())}
               className="px-3 py-1.5 hover:bg-slate-100 active:bg-slate-200 text-xs font-bold text-[#292a2e] border-r border-slate-200 cursor-pointer"
             >
               Hôm nay
@@ -132,7 +132,8 @@ export function GanttChartView({
               }}
             >
               {dayNumbers.map((day) => {
-                const isToday = year === 2026 && month === 4 && day === 22;
+                const today = new Date();
+                const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
                 return (
                   <div
                     key={day}
@@ -150,12 +151,20 @@ export function GanttChartView({
           {/* BODY AREA (scrollable rows) */}
           <div className="divide-y divide-slate-150 relative" style={{ width: `${280 + daysInMonth * 36}px` }}>
             {/* Today Line (absolute positioned inside the body container) */}
-            {year === 2026 && month === 4 && (
-              <div
-                className="absolute top-0 bottom-0 border-l-2 border-dashed border-red-500 z-10 pointer-events-none"
-                style={{ left: `${280 + (22 - 1) * 36 + 18}px` }}
-              />
-            )}
+            {(() => {
+              const today = new Date();
+              const showTodayLine = year === today.getFullYear() && month === today.getMonth();
+              if (showTodayLine) {
+                const todayDay = today.getDate();
+                return (
+                  <div
+                    className="absolute top-0 bottom-0 border-l-2 border-dashed border-red-500 z-10 pointer-events-none"
+                    style={{ left: `${280 + (todayDay - 1) * 36 + 18}px` }}
+                  />
+                );
+              }
+              return null;
+            })()}
 
             {tasks.map((task) => {
               const rawStart = task.startDate;

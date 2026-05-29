@@ -6,6 +6,7 @@
  */
 
 import * as React from "react";
+import { getTaskPriorityLabel } from "@/lib/utils";
 
 interface Task {
   id: string;
@@ -67,23 +68,22 @@ export function MyTasksList({
   };
 
   const getPriorityStyle = (priority: string | null) => {
-    if (priority === "Required" || priority === "Critical" || priority === "High") {
+    if (!priority) return "bg-slate-50 text-slate-400 border-slate-100";
+    const p = priority.toLowerCase();
+    if (p === "required") {
       return "bg-red-50 text-red-700 border-red-200";
     }
-    if (priority === "Important" || priority === "Medium") {
+    if (p === "important") {
       return "bg-blue-50 text-blue-700 border-blue-200";
     }
-    if (priority === "Extended" || priority === "Low") {
+    if (p === "extended") {
       return "bg-slate-50 text-slate-600 border-slate-200";
     }
     return "bg-slate-50 text-slate-400 border-slate-100";
   };
 
   const getPriorityLabel = (priority: string | null) => {
-    if (priority === "Required" || priority === "Critical" || priority === "High") return "Bắt buộc";
-    if (priority === "Important" || priority === "Medium") return "Quan trọng";
-    if (priority === "Extended" || priority === "Low") return "Mở rộng";
-    return "Không có";
+    return getTaskPriorityLabel(priority);
   };
 
   return (

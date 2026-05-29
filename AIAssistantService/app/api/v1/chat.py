@@ -74,7 +74,9 @@ async def run_assistant_background(session_id: UUID, user_id: UUID, new_prompt_c
             
             # The last message is the user prompt we just saved in the route.
             # We pass history[:-1] to chat_with_assistant to avoid duplicating the prompt in Gemini history.
+            # To optimize token usage and avoid rate limits, we limit the active context to the last 20 messages (sliding window).
             history_before_prompt = history[:-1] if history else []
+            history_before_prompt = history_before_prompt[-20:]
 
             # Helper to save messages using its own session to avoid cross-coroutine session conflicts
             async def save_message_callback(
@@ -306,6 +308,63 @@ async def upload_document(
     return {
         "fileName": file.filename,
         "fileSize": f"{len(content) // 1024} KB",
+        "content": extracted_text,
+        "estimatedTokens": estimated_tokens
+    }
+
+from pydantic import BaseModel
+
+class ExtractProjectDocumentRequest(BaseModel):
+    fileUrl: str
+    fileName: str
+
+@router.post("/extract-project-document")
+async def extract_project_document(
+    request_data: ExtractProjectDocumentRequest,
+    user_id: UUID = Depends(get_current_user_id)
+):
+    """
+    Tải tệp tin từ tài liệu dự án, trích xuất văn bản và trả về cho AI.
+    """
+    import httpx
+    
+    file_url = request_data.fileUrl
+    if not file_url.startswith("http"):
+        file_url = f"http://localhost:5002{file_url}"
+        
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(file_url)
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Không thể tải tệp tin từ tài liệu dự án (Mã lỗi: {response.status_code})"
+                )
+            content = response.content
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Không thể kết nối tải tệp tin từ tài liệu dự án: {str(e)}"
+        )
+        
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # Giới hạn 10MB
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="Tệp tin vượt quá kích thước xử lý tối đa (10MB)."
+        )
+        
+    extracted_text = await extract_text_from_file(request_data.fileName, content)
+    estimated_tokens = int(len(extracted_text) * 0.35)
+    
+    file_size_kb = len(content) // 1024
+    file_size_str = f"{file_size_kb} KB"
+    if file_size_kb > 1024:
+        file_size_str = f"{file_size_kb / 1024:.1f} MB"
+        
+    return {
+        "fileName": request_data.fileName,
+        "fileSize": file_size_str,
         "content": extracted_text,
         "estimatedTokens": estimated_tokens
     }

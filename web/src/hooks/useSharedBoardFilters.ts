@@ -9,6 +9,7 @@ export function useSharedBoardFilters(tasks: TaskItem[], columns: BoardColumn[])
   const [selectedAssignee, setSelectedAssignee] = React.useState<string | null>(null);
   const [selectedPriority, setSelectedPriority] = React.useState<string | null>(null);
   const [selectedDueDateFilter, setSelectedDueDateFilter] = React.useState<string | null>(null);
+  const [sortBy, setSortBy] = React.useState<string>("manual");
 
   const filteredTasks = React.useMemo(() => {
     const now = new Date();
@@ -49,6 +50,49 @@ export function useSharedBoardFilters(tasks: TaskItem[], columns: BoardColumn[])
     });
   }, [tasks, columns, searchQuery, selectedAssignee, selectedPriority, selectedDueDateFilter]);
 
+  const getPriorityWeight = (p: string | null) => {
+    if (!p) return 0;
+    switch (p) {
+      case "Required": case "Critical": case "High": return 3;
+      case "Important": case "Medium": return 2;
+      case "Extended": case "Low": return 1;
+      default: return 0;
+    }
+  };
+
+  const sortedTasks = React.useMemo(() => {
+    const list = [...filteredTasks];
+    if (sortBy === "dueDate") {
+      list.sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          const diff = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+          if (diff !== 0) return diff;
+        } else if (a.dueDate) {
+          return -1;
+        } else if (b.dueDate) {
+          return 1;
+        }
+        return getPriorityWeight(b.priority) - getPriorityWeight(a.priority);
+      });
+    } else if (sortBy === "priority") {
+      list.sort((a, b) => {
+        const diff = getPriorityWeight(b.priority) - getPriorityWeight(a.priority);
+        if (diff !== 0) return diff;
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        } else if (a.dueDate) {
+          return -1;
+        } else if (b.dueDate) {
+          return 1;
+        }
+        return 0;
+      });
+    } else {
+      list.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    }
+    return list;
+  }, [filteredTasks, sortBy]);
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedAssignee(null);
@@ -65,7 +109,9 @@ export function useSharedBoardFilters(tasks: TaskItem[], columns: BoardColumn[])
     setSelectedPriority,
     selectedDueDateFilter,
     setSelectedDueDateFilter,
-    filteredTasks,
+    filteredTasks: sortedTasks,
     handleResetFilters,
+    sortBy,
+    setSortBy,
   };
 }

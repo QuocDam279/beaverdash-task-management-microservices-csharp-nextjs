@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     GEMINI_MODEL_PRIMARY: str = "gemini-3.1-flash-lite"
     GEMINI_MODEL_SECONDARY: str = "gemini-2.5-flash"
 
+    # OpenAI-compatible LLM Settings
+    GITHUB_MODEL_TOKEN: str = ""
+    GPT_MODEL: str = "gpt-4o-mini"
+    GROQ_API_KEY: str = ""
+    LLAMA_MODEL: str = "llama-3.1-8b-instant"
+
     # Service-to-service
     PM_SERVICE_BASE_URL: str = "http://localhost:5002"
 

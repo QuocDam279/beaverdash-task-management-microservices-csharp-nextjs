@@ -71,4 +71,18 @@ public class SharedController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("projects/{shareToken}/documents")]
+    public async Task<IActionResult> GetSharedProjectDocuments(string shareToken)
+    {
+        var overviewQuery = new GetSharedProjectOverviewQuery(shareToken);
+        var overview = await _mediator.Send(overviewQuery);
+
+        if (overview == null)
+            return NotFound(new { Message = "Dự án chia sẻ không tồn tại hoặc đã bị khóa." });
+
+        var query = new PM.Application.Features.Projects.Project.Queries.ProjectDocuments.GetProjectDocumentsQuery(overview.Id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }

@@ -8,47 +8,48 @@
 import * as React from "react";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { Avatar } from "@/components/ui/Avatar";
+import { getTaskPriorityLabel } from "@/lib/utils";
 
 interface ProjectListTableProps {
   tasks: TaskItem[];
   columns: BoardColumn[];
   onTaskClick: (task: TaskItem) => void;
+  isPersonalProject?: boolean;
+  showProjectColumn?: boolean;
 }
 
-export function ProjectListTable({ tasks, columns, onTaskClick }: ProjectListTableProps) {
+export function ProjectListTable({
+  tasks,
+  columns,
+  onTaskClick,
+  isPersonalProject = false,
+  showProjectColumn = false,
+}: ProjectListTableProps) {
   const getStatusName = (columnId: string): string => {
     return columns.find((c) => c.id === columnId)?.name || "Chưa rõ";
   };
 
   const renderPriorityBadge = (priority: string | null) => {
     if (!priority) return null;
-    const classes: Record<string, string> = {
-      Required: "bg-red-50 text-red-700 border-red-200 font-extrabold",
-      Critical: "bg-red-50 text-red-700 border-red-200 font-extrabold",
-      High: "bg-red-50 text-red-700 border-red-200 font-extrabold",
-      Important: "bg-blue-50 text-blue-700 border-blue-200 font-bold",
-      Medium: "bg-blue-50 text-blue-700 border-blue-200 font-bold",
-      Extended: "bg-slate-50 text-slate-600 border-slate-200 font-medium",
-      Low: "bg-slate-50 text-slate-600 border-slate-200 font-medium",
-    };
-    const labels: Record<string, string> = {
-      Required: "Bắt buộc",
-      Critical: "Bắt buộc",
-      High: "Bắt buộc",
-      Important: "Quan trọng",
-      Medium: "Quan trọng",
-      Extended: "Mở rộng",
-      Low: "Mở rộng",
-    };
+    const p = priority.toLowerCase();
+    const label = getTaskPriorityLabel(priority);
+    let badgeClass = "bg-slate-50 text-slate-600 border-slate-200 font-medium";
+    if (p === "required") {
+      badgeClass = "bg-red-50 text-red-700 border-red-200 font-extrabold";
+    } else if (p === "important") {
+      badgeClass = "bg-blue-50 text-blue-700 border-blue-200 font-bold";
+    } else if (p === "extended") {
+      badgeClass = "bg-slate-50 text-slate-600 border-slate-200 font-medium";
+    }
     return (
-      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase border tracking-wide ${classes[priority] || "bg-slate-50 text-slate-600 border-slate-200 font-medium"}`}>
-        {labels[priority] || "Mở rộng"}
+      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase border tracking-wide ${badgeClass}`}>
+        {label}
       </span>
     );
   };
 
-  const renderStatusBadge = (columnId: string) => {
-    const name = getStatusName(columnId);
+  const renderStatusBadge = (columnId: string, columnName?: string) => {
+    const name = columnName || getStatusName(columnId);
     let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
     if (name.includes("Hoàn thành") || name.toLowerCase().includes("done")) {
       badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold";
@@ -120,12 +121,19 @@ export function ProjectListTable({ tasks, columns, onTaskClick }: ProjectListTab
         <table className="w-full text-left text-xs border-collapse">
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
             <tr>
-              <th className="py-2.5 px-4 w-[40%] min-w-[200px]">
+              <th className="py-2.5 px-4 w-[35%] min-w-[200px]">
                 Tiêu đề
               </th>
-              <th className="py-2.5 px-4 w-[15%] min-w-[120px] text-center">
-                Người thực hiện
-              </th>
+              {showProjectColumn && (
+                <th className="py-2.5 px-4 w-[12%] min-w-[100px]">
+                  Dự án
+                </th>
+              )}
+              {!isPersonalProject && (
+                <th className="py-2.5 px-4 w-[15%] min-w-[120px] text-center">
+                  Người thực hiện
+                </th>
+              )}
               <th className="py-2.5 px-4 w-[15%] min-w-[120px] text-center">
                 Trạng thái
               </th>
@@ -151,25 +159,34 @@ export function ProjectListTable({ tasks, columns, onTaskClick }: ProjectListTab
                   onClick={() => onTaskClick(t)}
                   className="hover:bg-blue-50/20 transition-colors cursor-pointer"
                 >
-                  <td className="py-3 px-4 font-semibold text-[#292a2e] max-w-xs truncate">{t.title}</td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex -space-x-1.5 justify-center items-center">
-                      {taskAssignees.length > 0 ? (
-                        taskAssignees.map((user) => (
-                          <Avatar
-                            key={user.id}
-                            src={user.avatar}
-                            alt={user.displayName}
-                            title={user.displayName}
-                            className="h-6 w-6 rounded-full border border-white hover:z-10 transition-all scale-95"
-                          />
-                        ))
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </div>
+                  <td className="py-3 px-4 font-semibold text-[#292a2e] max-w-xs truncate">
+                    {t.title}
                   </td>
-                  <td className="py-3 px-4 text-center">{renderStatusBadge(t.boardColumnId)}</td>
+                  {showProjectColumn && (
+                    <td className="py-3 px-4 text-slate-500 font-bold max-w-xs truncate">
+                      {(t as any).projectName || "-"}
+                    </td>
+                  )}
+                  {!isPersonalProject && (
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex -space-x-1.5 justify-center items-center">
+                        {taskAssignees.length > 0 ? (
+                          taskAssignees.map((user) => (
+                            <Avatar
+                              key={user.id}
+                              src={user.avatar}
+                              alt={user.displayName}
+                              title={user.displayName}
+                              className="h-6 w-6 rounded-full border border-white hover:z-10 transition-all scale-95"
+                            />
+                          ))
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  <td className="py-3 px-4 text-center">{renderStatusBadge(t.boardColumnId, (t as any).columnName)}</td>
                   <td className="py-3 px-4 text-center">{renderPriorityBadge(t.priority)}</td>
                   <td className="py-3 px-4">{renderDate(t.startDate)}</td>
                   <td className="py-3 px-4">{renderDate(t.dueDate, true)}</td>

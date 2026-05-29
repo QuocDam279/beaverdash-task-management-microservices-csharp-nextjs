@@ -48,18 +48,23 @@ export function TrashToolbar({
         </div>
 
         {/* Lọc dự án */}
-        <select
-          value={selectedProjectId}
-          onChange={(e) => setSelectedProjectId(e.target.value)}
-          className="px-3 py-1.5 text-xs border border-slate-200 rounded bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] font-semibold cursor-pointer"
-        >
-          <option value="">Tất cả dự án</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <svg className="absolute left-2.5 top-[9px] h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+          </svg>
+          <select
+            value={selectedProjectId}
+            onChange={(e) => setSelectedProjectId(e.target.value)}
+            className="pl-7 pr-3 py-1.5 text-xs border border-slate-200 rounded bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] font-semibold cursor-pointer"
+          >
+            <option value="">Tất cả dự án</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Thao tác hàng loạt */}

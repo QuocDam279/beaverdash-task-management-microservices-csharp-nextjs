@@ -52,6 +52,9 @@ builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, PM.A
 // 2. Đăng ký Service đẩy thông báo Realtime
 builder.Services.AddScoped<PM.Application.Contracts.INotificationService, PM.API.Services.SignalRNotificationService>();
 
+// 2.1. Đăng ký Service gửi Email thông báo
+builder.Services.AddScoped<PM.Application.Contracts.IEmailService, PM.Infrastructure.Services.EmailService>();
+
 // 3. Đăng ký ICurrentUserService
 builder.Services.AddScoped<PM.Application.Contracts.ICurrentUserService, PM.API.Services.CurrentUserService>();
 
@@ -71,6 +74,8 @@ builder.Services.AddHttpClient<PM.Application.Contracts.IAIAssistantServiceClien
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseStaticFiles();
 
 app.UseAuthorization();
 app.MapControllers();

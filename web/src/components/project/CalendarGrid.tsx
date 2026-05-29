@@ -53,7 +53,7 @@ export function CalendarGrid({
   };
 
   const weekdayHeaders = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
-  const todayStr = getLocalDateString(new Date(2026, 4, 22)); // May 22, 2026
+  const todayStr = getLocalDateString(new Date());
 
   return (
     <div className="flex-1 min-h-0 w-full overflow-hidden border border-slate-200 rounded-lg flex flex-col shadow-xs bg-slate-50/20">

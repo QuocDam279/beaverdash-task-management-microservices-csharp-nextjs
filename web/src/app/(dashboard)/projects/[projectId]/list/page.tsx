@@ -25,6 +25,7 @@ export default function ProjectListPage({ params }: PageProps) {
   const [assignees, setAssignees] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isPersonalProject, setIsPersonalProject] = React.useState(false);
   const isInitialLoad = React.useRef(true);
 
   const fetchListTasks = React.useCallback(async () => {
@@ -58,19 +59,22 @@ export default function ProjectListPage({ params }: PageProps) {
         setTasks(allTasks);
       }
 
-      if (overview?.teamId) {
-        const team = await api.get(`/teams/${overview.teamId}`);
-        if (team?.members) {
-          setAssignees(team.members.map((m: any) => ({
-            id: m.userId,
-            displayName: m.displayName,
-            avatar: m.avatar,
-            email: m.email,
-            role: m.role,
-          })));
+      if (overview) {
+        setIsPersonalProject(overview.teamId === null || !overview.teamId);
+        if (overview.teamId) {
+          const team = await api.get(`/teams/${overview.teamId}`);
+          if (team?.members) {
+            setAssignees(team.members.map((m: any) => ({
+              id: m.userId,
+              displayName: m.displayName,
+              avatar: m.avatar,
+              email: m.email,
+              role: m.role,
+            })));
+          }
+        } else if (currentUser) {
+          setAssignees([currentUser]);
         }
-      } else if (currentUser) {
-        setAssignees([currentUser]);
       }
 
       isInitialLoad.current = false;
@@ -114,6 +118,7 @@ export default function ProjectListPage({ params }: PageProps) {
         projectId={projectId}
         onRefresh={fetchListTasks}
         assignees={assignees}
+        isPersonalProject={isPersonalProject}
       />
     </div>
   );

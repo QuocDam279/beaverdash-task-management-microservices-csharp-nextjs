@@ -82,16 +82,20 @@ export function useAIAssistant(projectId: string) {
       const data = await api.get(`/v1/chat/sessions?project_id=${projectId}`);
       const sessionsList = data || [];
       setSessions(sessionsList);
-      if (sessionsList.length > 0 && !activeSessionId) {
-        setActiveSessionId(sessionsList[0].id);
-      }
+      
+      setActiveSessionId((prev) => {
+        if (!prev && sessionsList.length > 0) {
+          return sessionsList[0].id;
+        }
+        return prev;
+      });
     } catch (err: any) {
       console.error("Failed to load chat sessions:", err);
       setError(err.message || "Không thể tải danh sách phiên trò chuyện.");
     } finally {
       setIsSessionsLoading(false);
     }
-  }, [projectId, activeSessionId]);
+  }, [projectId]);
 
   React.useEffect(() => {
     fetchSessions();

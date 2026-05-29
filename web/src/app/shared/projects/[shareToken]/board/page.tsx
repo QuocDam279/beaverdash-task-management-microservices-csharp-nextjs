@@ -27,6 +27,7 @@ export default function SharedBoardPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
+  const [isPersonalProject, setIsPersonalProject] = React.useState(false);
 
   const {
     searchQuery, setSearchQuery,
@@ -34,6 +35,7 @@ export default function SharedBoardPage({ params }: PageProps) {
     selectedPriority, setSelectedPriority,
     selectedDueDateFilter, setSelectedDueDateFilter,
     filteredTasks, handleResetFilters,
+    sortBy, setSortBy,
   } = useSharedBoardFilters(tasks, columns);
 
   const fetchBoardData = React.useCallback(async () => {
@@ -52,10 +54,13 @@ export default function SharedBoardPage({ params }: PageProps) {
       }
 
       const overviewData = await api.get(`/shared/projects/${shareToken}/overview`);
-      if (overviewData?.memberWorkloads) {
-        setAssignees(overviewData.memberWorkloads.map((m: any) => ({
-          id: m.userId, displayName: m.displayName, avatar: m.avatar, role: m.role,
-        })));
+      if (overviewData) {
+        setIsPersonalProject(overviewData.teamId === null || !overviewData.teamId);
+        if (overviewData.memberWorkloads) {
+          setAssignees(overviewData.memberWorkloads.map((m: any) => ({
+            id: m.userId, displayName: m.displayName, avatar: m.avatar, role: m.role,
+          })));
+        }
       }
     } catch (err: any) {
       console.error("Failed to load shared board data:", err);
@@ -104,7 +109,7 @@ export default function SharedBoardPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex flex-col h-full w-full p-6 pt-4 select-none bg-white">
+    <div className="flex flex-col min-h-full w-full p-6 pt-4 select-none bg-white">
       <BoardToolbar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -118,11 +123,14 @@ export default function SharedBoardPage({ params }: PageProps) {
         onResetFilters={handleResetFilters}
         onCreateTaskClick={() => {}}
         readOnly={true}
+        isPersonalProject={isPersonalProject}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
       />
 
-      <div className="flex-1 flex gap-4 overflow-x-auto overflow-y-hidden pb-4 items-stretch min-h-[450px] scrollbar-thin">
+      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-start min-h-[450px] scrollbar-thin">
         {columns.map((column, index) => (
-          <div key={column.id} className="w-80 shrink-0 flex flex-col h-full">
+          <div key={column.id} className="w-80 shrink-0 flex flex-col">
             <BoardColumnView
               column={column}
               tasks={filteredTasks.filter((t) => t.boardColumnId === column.id)}
@@ -137,6 +145,7 @@ export default function SharedBoardPage({ params }: PageProps) {
               onMoveTask={async () => {}}
               assignees={assignees}
               readOnly={true}
+              isPersonalProject={isPersonalProject}
             />
           </div>
         ))}

@@ -17,6 +17,7 @@ export function useBoard(projectId: string) {
   const [assignees, setAssignees] = React.useState<any[]>([]);
   const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
   const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
+  const [isPersonalProject, setIsPersonalProject] = React.useState(false);
 
   const [searchQuery, setSearchQuery] = React.useState("");
 
@@ -43,6 +44,7 @@ export function useBoard(projectId: string) {
       if (overview) {
         setProjectStartDate(overview.startDate || null);
         setProjectDueDate(overview.dueDate || null);
+        setIsPersonalProject(overview.teamId === null || !overview.teamId);
       }
       
       if (board) {
@@ -105,6 +107,7 @@ export function useBoard(projectId: string) {
   const selectedPriority = searchParams ? searchParams.get("priority") : null;
   const selectedDueDateFilter = searchParams ? searchParams.get("dueDate") : null;
   const selectedAssignee = searchParams ? searchParams.get("assigneeId") : null;
+  const sortBy = (searchParams && searchParams.get("sortBy")) || "manual";
 
   const handleSetPriority = React.useCallback((val: string | null) => {
     if (typeof window !== "undefined") {
@@ -131,6 +134,16 @@ export function useBoard(projectId: string) {
       const params = new URLSearchParams(window.location.search);
       if (val) params.set("assigneeId", val);
       else params.delete("assigneeId");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [pathname, router]);
+
+  const handleSetSortBy = React.useCallback((val: string) => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (val && val !== "manual") params.set("sortBy", val);
+      else params.delete("sortBy");
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname);
     }
@@ -403,6 +416,49 @@ export function useBoard(projectId: string) {
     });
   }, [tasks, searchQuery, selectedAssignee, selectedPriority, selectedDueDateFilter, columns]);
 
+  const getPriorityWeight = (p: string | null) => {
+    if (!p) return 0;
+    switch (p) {
+      case "Required": case "Critical": case "High": return 3;
+      case "Important": case "Medium": return 2;
+      case "Extended": case "Low": return 1;
+      default: return 0;
+    }
+  };
+
+  const sortedTasks = React.useMemo(() => {
+    const list = [...filteredTasks];
+    if (sortBy === "dueDate") {
+      list.sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          const diff = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+          if (diff !== 0) return diff;
+        } else if (a.dueDate) {
+          return -1;
+        } else if (b.dueDate) {
+          return 1;
+        }
+        return getPriorityWeight(b.priority) - getPriorityWeight(a.priority);
+      });
+    } else if (sortBy === "priority") {
+      list.sort((a, b) => {
+        const diff = getPriorityWeight(b.priority) - getPriorityWeight(a.priority);
+        if (diff !== 0) return diff;
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        } else if (a.dueDate) {
+          return -1;
+        } else if (b.dueDate) {
+          return 1;
+        }
+        return 0;
+      });
+    } else {
+      list.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    }
+    return list;
+  }, [filteredTasks, sortBy]);
+
   return {
     columns,
     tasks,
@@ -411,6 +467,7 @@ export function useBoard(projectId: string) {
     projectStartDate,
     projectDueDate,
     assignees,
+    isPersonalProject,
     searchQuery,
     setSearchQuery,
     selectedAssignee,
@@ -444,6 +501,8 @@ export function useBoard(projectId: string) {
     handleConfirmDelete,
     handleMoveTask,
     handleSetColumnDone,
-    filteredTasks,
+    filteredTasks: sortedTasks,
+    sortBy,
+    setSortBy: handleSetSortBy,
   };
 }

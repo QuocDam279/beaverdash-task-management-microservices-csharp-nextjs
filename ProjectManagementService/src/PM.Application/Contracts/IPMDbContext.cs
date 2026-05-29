@@ -16,6 +16,7 @@ public interface IPMDbContext
     DbSet<SubTask> SubTasks { get; }
     DbSet<Comment> Comments { get; }
     DbSet<Attachment> Attachments { get; }
+    DbSet<ProjectDocument> ProjectDocuments { get; }
     DbSet<ActivityLog> ActivityLogs { get; }
     DbSet<Notification> Notifications { get; }
 

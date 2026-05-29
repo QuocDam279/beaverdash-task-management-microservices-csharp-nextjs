@@ -77,6 +77,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     { name: "Lịch", href: `/projects/${projectId}/calendar`, exact: false },
     { name: "Danh sách", href: `/projects/${projectId}/list`, exact: false },
     { name: "Sơ đồ gantt", href: `/projects/${projectId}/gantt`, exact: false },
+    { name: "Tài liệu", href: `/projects/${projectId}/documents`, exact: false },
     { name: "AI Trợ lý", href: `/projects/${projectId}/assistant`, exact: false },
   ];
 

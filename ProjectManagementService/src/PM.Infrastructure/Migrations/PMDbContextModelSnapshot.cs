@@ -323,6 +323,52 @@ namespace PM.Infrastructure.Migrations
                     b.ToTable("projects", (string)null);
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ProjectDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("file_name");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size_bytes");
+
+                    b.Property<string>("FileType")
+                        .HasColumnType("varchar")
+                        .HasColumnName("file_type");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("file_url");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("project_documents", (string)null);
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -636,6 +682,25 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ProjectDocument", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany("ProjectDocuments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PM.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("UploadedByUser");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
                 {
                     b.HasOne("PM.Domain.Entities.User", "AssigneeUser")
@@ -716,6 +781,8 @@ namespace PM.Infrastructure.Migrations
             modelBuilder.Entity("PM.Domain.Entities.Project", b =>
                 {
                     b.Navigation("BoardColumns");
+
+                    b.Navigation("ProjectDocuments");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>

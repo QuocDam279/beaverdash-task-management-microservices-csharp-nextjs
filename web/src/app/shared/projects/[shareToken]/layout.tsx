@@ -46,6 +46,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
     { name: "Danh sách", href: `/shared/projects/${shareToken}/list`, exact: false },
     { name: "Lịch", href: `/shared/projects/${shareToken}/calendar`, exact: false },
     { name: "Sơ đồ gantt", href: `/shared/projects/${shareToken}/gantt`, exact: false },
+    { name: "Tài liệu", href: `/shared/projects/${shareToken}/documents`, exact: false },
   ];
 
   if (isLoading) {

@@ -28,3 +28,30 @@ export function formatRelativeTime(dateString: string): string {
   return `${diffDays} ngày trước`;
 }
 
+/**
+ * Maps English task priority names to Vietnamese.
+ * Valid values: "Required" (Bắt buộc), "Important" (Quan trọng), "Extended" (Mở rộng).
+ */
+export function getTaskPriorityLabel(priority: string | null | undefined): string {
+  if (!priority) return "Không xác định";
+  const p = priority.toLowerCase();
+  if (p === "required") return "Bắt buộc";
+  if (p === "important") return "Quan trọng";
+  if (p === "extended") return "Mở rộng";
+  return priority;
+}
+
+/**
+ * Maps English subtask priority names to Vietnamese.
+ * Valid values: "High" (Cao), "Medium" (Trung bình), "Low" (Thấp).
+ */
+export function getSubtaskPriorityLabel(priority: string | null | undefined): string {
+  if (!priority) return "Không có";
+  const p = priority.toLowerCase();
+  if (p === "high") return "Cao";
+  if (p === "medium") return "Trung bình";
+  if (p === "low") return "Thấp";
+  return priority;
+}
+
+

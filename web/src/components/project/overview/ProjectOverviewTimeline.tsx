@@ -81,7 +81,8 @@ export function ProjectOverviewTimeline({ projectId, shareToken }: ProjectOvervi
                   const { actionText, targetText, iconBg, icon } = getActionDetails(
                     event.actionType,
                     event.entityType,
-                    event.newValue
+                    event.newValue,
+                    event.oldValue
                   );
 
                   let taskId: string | null = null;

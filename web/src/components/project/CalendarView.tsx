@@ -31,7 +31,7 @@ export default function CalendarView({
   const { user: currentUser } = useAuth();
   const { alert } = useAlertConfirm();
   
-  const [currentDate, setCurrentDate] = React.useState<Date>(new Date(2026, 4, 22));
+  const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [viewMode, setViewMode] = React.useState<"month" | "week">("month");
   
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
@@ -197,7 +197,7 @@ export default function CalendarView({
           const d = currentDate.getDate();
           setCurrentDate(viewMode === "month" ? new Date(y, m + 1, 1) : new Date(y, m, d + 7));
         }}
-        onToday={() => setCurrentDate(new Date(2026, 4, 22))}
+        onToday={() => setCurrentDate(new Date())}
       />
 
       <CalendarGrid

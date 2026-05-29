@@ -4,6 +4,7 @@ import * as React from "react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { TaskItem, BoardColumn } from "@/types/task";
+import { getTaskPriorityLabel } from "@/lib/utils";
 
 interface BoardTaskCardProps {
   task: TaskItem;
@@ -12,36 +13,35 @@ interface BoardTaskCardProps {
   currentUser: any;
   assignees: any[];
   readOnly?: boolean;
+  isPersonalProject?: boolean;
 }
 
 const renderPriority = (priority: string | null) => {
   if (!priority) return null;
-  switch (priority) {
-    case "Required":
-    case "Critical":
-    case "High":
-      return (
-        <span className="flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 border border-red-200">
-          Bắt buộc
-        </span>
-      );
-    case "Important":
-    case "Medium":
-      return (
-        <span className="flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700 border border-blue-200">
-          Quan trọng
-        </span>
-      );
-    case "Extended":
-    case "Low":
-      return (
-        <span className="flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600 border border-slate-200">
-          Mở rộng
-        </span>
-      );
-    default:
-      return null;
+  const p = priority.toLowerCase();
+  const label = getTaskPriorityLabel(priority);
+  if (p === "required") {
+    return (
+      <span className="flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 border border-red-200">
+        {label}
+      </span>
+    );
   }
+  if (p === "important") {
+    return (
+      <span className="flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700 border border-blue-200">
+        {label}
+      </span>
+    );
+  }
+  if (p === "extended") {
+    return (
+      <span className="flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600 border border-slate-200">
+        {label}
+      </span>
+    );
+  }
+  return null;
 };
 
 const renderDueDate = (dueDateStr: string | null) => {
@@ -96,6 +96,7 @@ export function BoardTaskCard({
   currentUser,
   assignees,
   readOnly = false,
+  isPersonalProject = false,
 }: BoardTaskCardProps) {
   const subtaskCount = (task as any).subTasksCount || 0;
   const completedSubtaskCount = (task as any).completedSubTasksCount || 0;
@@ -191,10 +192,10 @@ export function BoardTaskCard({
         )}
 
 
-        <div className="flex items-center justify-end pt-1.5 border-t border-slate-100">
-          <div className="flex items-center gap-1.5">
-            {/* Stack avatar công việc phụ (subtasks) */}
-            {subtaskAssignees.length > 0 && (
+        {!isPersonalProject && subtaskAssignees.length > 0 && (
+          <div className="flex items-center justify-end pt-1.5 border-t border-slate-100">
+            <div className="flex items-center gap-1.5">
+              {/* Stack avatar công việc phụ (subtasks) */}
               <div className="flex -space-x-1.5 items-center mr-1" title="Những người thực hiện công việc con">
                 {subtaskAssignees.map((user) => (
                   <Avatar
@@ -206,9 +207,9 @@ export function BoardTaskCard({
                   />
                 ))}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </CardBody>
     </Card>
   );

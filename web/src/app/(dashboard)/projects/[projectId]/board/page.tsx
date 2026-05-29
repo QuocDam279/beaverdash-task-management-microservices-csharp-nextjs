@@ -27,7 +27,7 @@ export default function BoardPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex flex-col h-full w-full p-6 pt-4 select-none bg-white">
+    <div className="flex flex-col min-h-full w-full p-6 pt-4 select-none bg-white">
       {/* TOOLBAR */}
       <BoardToolbar
         searchQuery={b.searchQuery}
@@ -41,12 +41,15 @@ export default function BoardPage({ params }: PageProps) {
         setSelectedDueDateFilter={b.setSelectedDueDateFilter}
         onResetFilters={b.handleResetFilters}
         onCreateTaskClick={() => b.setIsCreateTaskModalOpen(true)}
+        isPersonalProject={b.isPersonalProject}
+        sortBy={b.sortBy}
+        onSortChange={b.setSortBy}
       />
 
       {/* KANBAN BOARD */}
-      <div className="flex-1 flex gap-4 overflow-x-auto overflow-y-hidden pb-4 items-stretch min-h-0 scrollbar-thin">
+      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-start scrollbar-thin">
         {b.columns.map((column, index) => (
-          <div key={column.id} className="w-80 shrink-0 flex flex-col h-full">
+          <div key={column.id} className="w-80 shrink-0 flex flex-col">
             <BoardColumnView
               column={column}
               tasks={b.filteredTasks.filter((t) => t.boardColumnId === column.id)}
@@ -61,6 +64,7 @@ export default function BoardPage({ params }: PageProps) {
               onMoveTask={b.handleMoveTask}
               onSetColumnDone={b.handleSetColumnDone}
               assignees={b.assignees}
+              isPersonalProject={b.isPersonalProject}
             />
           </div>
         ))}

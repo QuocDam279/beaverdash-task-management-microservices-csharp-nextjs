@@ -133,6 +133,37 @@ public class ProjectsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPost("{id}/documents")]
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> UploadDocument(Guid id, [FromForm] Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        var command = new PM.Application.Features.Projects.Project.Commands.ProjectDocuments.UploadProjectDocumentCommand
+        {
+            ProjectId = id,
+            File = file
+        };
+        var documentId = await _mediator.Send(command);
+        return StatusCode(201, new { Id = documentId });
+    }
+
+    [HttpGet("{id}/documents")]
+    public async Task<IActionResult> GetProjectDocuments(Guid id)
+    {
+        var query = new PM.Application.Features.Projects.Project.Queries.ProjectDocuments.GetProjectDocumentsQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}/documents/{documentId}")]
+    public async Task<IActionResult> DeleteDocument(Guid id, Guid documentId)
+    {
+        var command = new PM.Application.Features.Projects.Project.Commands.ProjectDocuments.DeleteProjectDocumentCommand(id, documentId);
+        var result = await _mediator.Send(command);
+        if (!result)
+            return NotFound(new { Message = "Tài liệu không tồn tại." });
+        return NoContent();
+    }
 }
 
 public record CreateActivityDto(
