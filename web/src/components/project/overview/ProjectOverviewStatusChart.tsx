@@ -4,46 +4,30 @@ import * as React from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 
-export interface ColumnStatusCount {
-  columnId: string;
-  columnName: string;
-  taskCount: number;
-  isDone: boolean;
-  position: number;
-}
-
 interface ProjectOverviewStatusChartProps {
   projectId: string;
   shareToken?: string;
-  columnStatusCounts: ColumnStatusCount[];
+  todoSubTasksCount: number;
+  inProgressSubTasksCount: number;
+  doneSubTasksCount: number;
 }
-
-const getColumnColor = (isDone: boolean, index: number): string => {
-  if (isDone) return "#10b981"; // Đã hoàn thành (Green)
-  
-  const colors = [
-    "#94a3b8", // Chưa thực hiện (Slate)
-    "#3b82f6", // Đang thực hiện (Blue)
-    "#f59e0b", // Đang duyệt (Amber)
-    "#6366f1", // Tím Indigo
-    "#a855f7", 
-    "#ec4899", 
-    "#f97316", 
-    "#14b8a6", 
-    "#06b6d4", 
-    "#ef4444", 
-    "#84cc16", 
-  ];
-  return colors[index % colors.length];
-};
 
 export function ProjectOverviewStatusChart({
   projectId,
   shareToken,
-  columnStatusCounts = [],
+  todoSubTasksCount = 0,
+  inProgressSubTasksCount = 0,
+  doneSubTasksCount = 0,
 }: ProjectOverviewStatusChartProps) {
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
-  const totalCount = columnStatusCounts.reduce((sum, col) => sum + col.taskCount, 0);
+
+  const totalCount = todoSubTasksCount + inProgressSubTasksCount + doneSubTasksCount;
+
+  const statusItems = [
+    { name: "Chưa thực hiện", count: todoSubTasksCount, color: "#94a3b8" },
+    { name: "Đang thực hiện", count: inProgressSubTasksCount, color: "#3b82f6" },
+    { name: "Đã hoàn thành", count: doneSubTasksCount, color: "#10b981" },
+  ];
 
   const getBoardUrl = (query: string = "") => {
     return shareToken
@@ -55,12 +39,12 @@ export function ProjectOverviewStatusChart({
   let currentPercentage = 0;
   const gradientSlices: string[] = [];
 
-  columnStatusCounts.forEach((col, idx) => {
-    let color = getColumnColor(col.isDone, idx);
+  statusItems.forEach((item, idx) => {
+    let color = item.color;
     if (hoveredIndex !== null && hoveredIndex !== idx) {
       color = `${color}40`; // Làm mờ các phân đoạn không được chọn
     }
-    const percentage = totalCount > 0 ? (col.taskCount / totalCount) * 100 : 0;
+    const percentage = totalCount > 0 ? (item.count / totalCount) * 100 : 0;
     const nextPercentage = currentPercentage + percentage;
     gradientSlices.push(`${color} ${currentPercentage.toFixed(2)}% ${nextPercentage.toFixed(2)}%`);
     currentPercentage = nextPercentage;
@@ -89,14 +73,14 @@ export function ProjectOverviewStatusChart({
           
           <div 
             style={conicGradientStyle}
-            className="h-36 w-36 rounded-full flex items-center justify-center relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] select-none transition-all duration-500 ease-out transform group-hover:scale-[1.02]"
+            className="h-44 w-44 rounded-full flex items-center justify-center relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] select-none transition-all duration-500 ease-out transform group-hover:scale-[1.02]"
           >
-            <div className="h-[100px] w-[100px] rounded-full bg-white flex flex-col items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-              <span className="text-3xl font-black text-slate-800 tracking-tighter transition-transform duration-300 group-hover:scale-110">
+            <div className="h-[124px] w-[124px] rounded-full bg-white flex flex-col items-center justify-center text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] select-none gap-0.5">
+              <span className="text-3xl font-black text-slate-800 tracking-tighter transition-transform duration-300 group-hover:scale-110 leading-none">
                 {totalCount}
               </span>
-              <span className="text-[9px] uppercase font-bold text-slate-400 tracking-widest mt-0.5">
-                công việc
+              <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider leading-none mt-1">
+                công việc con
               </span>
             </div>
           </div>
@@ -114,15 +98,15 @@ export function ProjectOverviewStatusChart({
             className="w-full h-full overflow-y-auto pt-2 pb-2 pr-1 flex flex-col gap-1
                        [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
-            {columnStatusCounts.map((col, idx) => {
-              const color = getColumnColor(col.isDone, idx);
-              const percentage = totalCount > 0 ? Math.round((col.taskCount / totalCount) * 100) : 0;
+            {statusItems.map((item, idx) => {
+              const color = item.color;
+              const percentage = totalCount > 0 ? Math.round((item.count / totalCount) * 100) : 0;
               const isCurrentHovered = hoveredIndex === idx;
               const isAnyHovered = hoveredIndex !== null;
 
               return (
                 <Link 
-                  key={col.columnId || idx} 
+                  key={idx} 
                   href={getBoardUrl()}
                   className={`group/item flex flex-col gap-1 p-2 rounded-lg transition-all duration-200 cursor-pointer block
                     ${isCurrentHovered ? "bg-slate-50 translate-x-1" : ""} 
@@ -136,13 +120,13 @@ export function ProjectOverviewStatusChart({
                         className="h-2.5 w-2.5 rounded-full block shrink-0 transition-transform duration-300 group-hover/item:scale-125" 
                         style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}40` }}
                       />
-                      <span className="text-slate-600 font-medium truncate max-w-[140px]" title={col.columnName}>
-                        {col.columnName}
+                      <span className="text-slate-600 font-medium truncate max-w-[140px]" title={item.name}>
+                        {item.name}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-slate-400 text-[11px] font-normal">{percentage}%</span>
-                      <span className="text-slate-800 font-bold min-w-[16px] text-right">{col.taskCount}</span>
+                      <span className="text-slate-800 font-bold min-w-[16px] text-right">{item.count}</span>
                     </div>
                   </div>
 

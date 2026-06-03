@@ -13,6 +13,8 @@ namespace PM.Application.Features.Tasks.TaskItem.Queries;
 public class MyTaskDto
 {
     public Guid Id { get; set; }
+    public Guid ParentTaskId { get; set; }
+    public string ParentTaskTitle { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? Priority { get; set; }
@@ -21,6 +23,7 @@ public class MyTaskDto
     public Guid BoardColumnId { get; set; }
     public string ColumnName { get; set; } = null!;
     public bool ColumnIsDone { get; set; }
+    public bool IsCompleted { get; set; }
     public Guid ProjectId { get; set; }
     public string ProjectName { get; set; } = null!;
     public Guid? TeamId { get; set; }
@@ -47,32 +50,31 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, List<MyTa
     {
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
-        var tasks = await _dbContext.TaskItems
+        var tasks = await _dbContext.SubTasks
             .AsNoTracking()
-            .Where(t => t.DeletedAt == null && (
-                t.SubTasks.Any(st => st.AssigneeUserId == currentUserId && st.DeletedAt == null) ||
-                (t.BoardColumn != null && t.BoardColumn.Project != null && 
-                 t.BoardColumn.Project.TeamId == null && t.BoardColumn.Project.CreatedByUserId == currentUserId)
-            ))
-            .OrderBy(t => t.DueDate ?? DateTime.MaxValue)
-            .Select(t => new MyTaskDto
+            .Where(st => st.DeletedAt == null && st.AssigneeUserId == currentUserId && st.Task != null)
+            .OrderBy(st => st.DueDate ?? DateTime.MaxValue)
+            .Select(st => new MyTaskDto
             {
-                Id = t.Id,
-                Title = t.Title,
-                Description = t.Description,
-                Priority = t.Priority != null ? t.Priority.ToString() : null,
-                StartDate = t.StartDate,
-                DueDate = t.DueDate,
-                BoardColumnId = t.BoardColumnId,
-                ColumnName = t.BoardColumn != null ? t.BoardColumn.Name : string.Empty,
-                ColumnIsDone = t.BoardColumn != null && t.BoardColumn.IsDone,
-                ProjectId = t.BoardColumn != null ? t.BoardColumn.ProjectId : Guid.Empty,
-                ProjectName = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.Name : string.Empty,
-                TeamId = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.TeamId : null,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt,
-                SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
-                CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null)
+                Id = st.Id,
+                ParentTaskId = st.TaskId,
+                ParentTaskTitle = st.Task!.Title,
+                Title = st.Title,
+                Description = st.Task.Description,
+                Priority = st.Priority != null ? st.Priority.ToString() : null,
+                StartDate = st.Task.StartDate,
+                DueDate = st.DueDate,
+                BoardColumnId = st.Task.BoardColumnId,
+                ColumnName = st.Task.BoardColumn != null ? st.Task.BoardColumn.Name : string.Empty,
+                ColumnIsDone = st.Task.BoardColumn != null && st.Task.BoardColumn.IsDone,
+                IsCompleted = st.IsCompleted,
+                ProjectId = st.Task.BoardColumn != null ? st.Task.BoardColumn.ProjectId : Guid.Empty,
+                ProjectName = st.Task.BoardColumn != null && st.Task.BoardColumn.Project != null ? st.Task.BoardColumn.Project.Name : string.Empty,
+                TeamId = st.Task.BoardColumn != null && st.Task.BoardColumn.Project != null ? st.Task.BoardColumn.Project.TeamId : null,
+                CreatedAt = st.CreatedAt,
+                UpdatedAt = st.UpdatedAt,
+                SubTasksCount = st.Task.SubTasks.Count(s => s.DeletedAt == null),
+                CompletedSubTasksCount = st.Task.SubTasks.Count(s => s.IsCompleted && s.DeletedAt == null)
             })
             .ToListAsync(cancellationToken);
 

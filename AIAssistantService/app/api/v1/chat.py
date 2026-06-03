@@ -5,6 +5,7 @@ from typing import List
 import logging
 
 from app.core.database import get_db, AsyncSessionLocal
+from app.core.config import settings
 from app.core.security import get_current_user_id
 from app.schemas.chat_schema import (
     AIChatSessionCreate,
@@ -330,7 +331,7 @@ async def extract_project_document(
     
     file_url = request_data.fileUrl
     if not file_url.startswith("http"):
-        file_url = f"http://localhost:5002{file_url}"
+        file_url = f"{settings.PM_SERVICE_BASE_URL}{file_url}"
         
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:

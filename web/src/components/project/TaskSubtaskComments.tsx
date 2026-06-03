@@ -39,10 +39,20 @@ export function TaskSubtaskComments({
   };
 
   return (
-    <div className="pl-7 pt-2 pb-1 border-t border-slate-100/50 space-y-2.5 animate-in slide-in-from-top-1 duration-150">
+    <div className="flex-1 flex flex-col min-h-0 space-y-3 animate-in fade-in duration-200">
+      {/* Comment Form */}
+      {!readOnly && (
+        <div className="pb-1 flex-shrink-0">
+          <TaskSubtaskCommentForm
+            subtaskId={subtaskId}
+            onSubmit={handleCommentSubmit}
+          />
+        </div>
+      )}
+
       {/* Comments List */}
       {comments.length > 0 ? (
-        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+        <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100/80 border-t border-slate-100 pt-1 scrollbar-thin">
           {comments.map((comment) => (
             <TaskSubtaskCommentItem
               key={comment.id}
@@ -54,17 +64,9 @@ export function TaskSubtaskComments({
           ))}
         </div>
       ) : (
-        <p className="text-[10px] text-slate-400 font-medium italic py-1">
-          Chưa có bình luận nào cho công việc con này.
+        <p className="text-[10px] text-slate-400 font-medium italic py-1 px-1 flex-shrink-0">
+          Chưa có thảo luận nào cho công việc con này.
         </p>
-      )}
-
-      {/* Comment Form */}
-      {!readOnly && (
-        <TaskSubtaskCommentForm
-          subtaskId={subtaskId}
-          onSubmit={handleCommentSubmit}
-        />
       )}
     </div>
   );

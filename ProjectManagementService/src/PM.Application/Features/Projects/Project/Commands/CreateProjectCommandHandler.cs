@@ -52,6 +52,11 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
             }
         }
 
+        if (request.StartDate.HasValue && request.DueDate.HasValue && request.StartDate.Value > request.DueDate.Value)
+        {
+            throw new InvalidOperationException("Ngày bắt đầu không thể lớn hơn ngày kết thúc.");
+        }
+
         var project = new PM.Domain.Entities.Project
         {
             Id = Guid.NewGuid(),

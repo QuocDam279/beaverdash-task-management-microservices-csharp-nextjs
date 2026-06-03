@@ -43,6 +43,9 @@ export function BoardColumnView({
 }: BoardColumnViewProps) {
   const { user: currentUser } = useAuth();
   const [newTitle, setNewTitle] = React.useState("");
+  const [priority, setPriority] = React.useState("");
+  const [startDate, setStartDate] = React.useState("");
+  const [dueDate, setDueDate] = React.useState("");
   const [isAdding, setIsAdding] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isDraggingOver, setIsDraggingOver] = React.useState(false);
@@ -77,8 +80,14 @@ export function BoardColumnView({
       await api.post("/tasks", {
         boardColumnId: column.id,
         title: newTitle.trim(),
+        priority: priority || null,
+        startDate: startDate ? new Date(startDate).toISOString() : null,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       });
       setNewTitle("");
+      setPriority("");
+      setStartDate("");
+      setDueDate("");
       setIsAdding(false);
       onRefresh();
     } catch (err) {
@@ -95,7 +104,7 @@ export function BoardColumnView({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex flex-col rounded-lg p-3 min-h-[300px] h-fit transition-all duration-200 border-2 ${
+      className={`flex flex-col rounded-lg p-3 min-h-[300px] h-full transition-all duration-200 border-2 ${
         isDraggingOver 
           ? "bg-slate-200 border-dashed border-[#1868db] scale-[1.01]" 
           : isWipExceeded
@@ -264,29 +273,74 @@ export function BoardColumnView({
       {!readOnly && (
         <div className="mt-3">
           {isAdding ? (
-            <form onSubmit={handleCreateTask} className="space-y-2">
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Nhập tiêu đề công việc..."
-                className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db]"
-                autoFocus
-              />
-              <div className="flex gap-2 justify-end">
+            <form onSubmit={handleCreateTask} className="space-y-2.5 bg-white p-3 rounded-lg border border-slate-200 shadow-sm animate-in fade-in duration-200">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tiêu đề công việc</label>
+                <input
+                  type="text"
+                  required
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Nhập tiêu đề..."
+                  className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Độ ưu tiên</label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+                >
+                  <option value="">Không có</option>
+                  <option value="Required">Bắt buộc</option>
+                  <option value="Important">Quan trọng</option>
+                  <option value="Extended">Mở rộng</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ngày bắt đầu</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    max={dueDate || undefined}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hạn chót</label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    min={startDate || undefined}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-1">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewTitle("");
+                    setPriority("");
+                    setStartDate("");
+                    setDueDate("");
                   }}
-                  className="px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-200 rounded"
+                  className="px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 rounded border-0 bg-transparent cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-2 py-1 text-[11px] bg-[#1868db] text-white rounded hover:bg-[#0052cc]"
+                  className="px-2.5 py-1 text-[11px] font-semibold bg-[#1868db] text-white rounded hover:bg-[#0052cc] border-0 cursor-pointer"
                 >
                   Thêm
                 </button>

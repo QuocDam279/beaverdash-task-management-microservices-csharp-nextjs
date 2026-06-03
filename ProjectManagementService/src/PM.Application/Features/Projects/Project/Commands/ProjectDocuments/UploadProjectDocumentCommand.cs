@@ -104,7 +104,7 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
             EntityId = document.Id,
             ActionType = "Upload",
             OldValue = null,
-            NewValue = document.FileName,
+            NewValue = System.Text.Json.JsonSerializer.Serialize(document.FileName),
             CreatedAt = DateTime.UtcNow
         };
         _dbContext.ActivityLogs.Add(log);

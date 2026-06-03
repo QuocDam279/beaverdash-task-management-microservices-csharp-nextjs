@@ -14,33 +14,129 @@ interface Project {
 interface ExpandedNavProps {
   pathname: string;
   activeProjectId: string | null;
-  personalProjects: Project[];
-  managedProjects: Project[];
-  joinedProjects: Project[];
-  openCategories: { personal: boolean; managed: boolean; joined: boolean };
-  toggleCategory: (category: "personal" | "managed" | "joined") => void;
+  projects: Project[];
   onOpenCreateProject: () => void;
 }
 
+const renderProjectIcon = (id: string) => {
+  const colors = [
+    { bg: "bg-rose-50 text-rose-600 border-rose-200/80", color: "#e11d48" },
+    { bg: "bg-indigo-50 text-indigo-600 border-indigo-200/80", color: "#4f46e5" },
+    { bg: "bg-amber-50 text-amber-600 border-amber-200/80", color: "#d97706" },
+    { bg: "bg-emerald-50 text-emerald-600 border-emerald-200/80", color: "#059669" },
+    { bg: "bg-sky-50 text-sky-600 border-sky-200/80", color: "#0284c7" },
+    { bg: "bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200/80", color: "#c026d3" },
+    { bg: "bg-orange-50 text-orange-600 border-orange-200/80", color: "#ea580c" },
+    { bg: "bg-teal-50 text-teal-600 border-teal-200/80", color: "#0d9488" },
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colorIndex = Math.abs(hash) % colors.length;
+  const shapeIndex = Math.abs(hash >> 2) % 6;
+
+  const activeColor = colors[colorIndex];
+  const strokeColor = activeColor.color;
+
+  switch (shapeIndex) {
+    case 0: // Circle
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+        </span>
+      );
+    case 1: // Square
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+          </svg>
+        </span>
+      );
+    case 2: // Triangle
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <path d="M12 3L2 21h20L12 3z" />
+          </svg>
+        </span>
+      );
+    case 3: // Diamond
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <path d="M12 2L2 12l10 10 10-10L12 2z" />
+          </svg>
+        </span>
+      );
+    case 4: // Hexagon
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <path d="M6 2h12l5 10-5 10H6l-5-10L6 2z" />
+          </svg>
+        </span>
+      );
+    case 5: // Star
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+          </svg>
+        </span>
+      );
+    default:
+      return (
+        <span className={`h-5 w-5 rounded-[4px] border flex items-center justify-center shrink-0 select-none ${activeColor.bg}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: strokeColor }}>
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+        </span>
+      );
+  }
+};
+
 /**
  * Thanh điều hướng Sidebar ở chế độ mở rộng (expanded).
- * Bao gồm menu chính (Nhóm, Công việc, Trợ lý) và
- * Accordion nhóm dự án (Cá nhân, Quản lý, Tham gia).
+ * Hiển thị các menu chính và danh sách phẳng các dự án có nhóm.
  */
 export function SidebarExpandedNav({
   pathname,
   activeProjectId,
-  personalProjects,
-  managedProjects,
-  joinedProjects,
-  openCategories,
-  toggleCategory,
+  projects,
   onOpenCreateProject,
 }: ExpandedNavProps) {
   return (
     <nav className="flex-1 p-3 space-y-4 overflow-y-auto overflow-x-hidden">
       {/* Main Navigation Group */}
       <div className="space-y-1">
+        {/* Công việc của tôi Menu */}
+        <Link
+          href="/tasks"
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-[4px] text-sm font-semibold transition-all duration-150 cursor-pointer ${
+            pathname.startsWith("/tasks")
+              ? "bg-[#1868db]/10 text-[#1868db]"
+              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
+          }`}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+          <span>Công việc của tôi</span>
+        </Link>
+
         {/* Nhóm Menu */}
         <Link
           href="/teams"
@@ -64,29 +160,6 @@ export function SidebarExpandedNav({
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           <span>Nhóm</span>
-        </Link>
-
-        {/* Công việc Menu */}
-        <Link
-          href="/tasks"
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-[4px] text-sm font-semibold transition-all cursor-pointer ${
-            pathname.startsWith("/tasks")
-              ? "bg-[#1868db]/10 text-[#1868db]"
-              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
-          }`}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="m9 12 2 2 4-4" />
-          </svg>
-          <span>Công việc</span>
         </Link>
 
         {/* Thùng rác Menu */}
@@ -138,130 +211,8 @@ export function SidebarExpandedNav({
           </button>
         </div>
 
-        {/* Categorized Project Accordion submenus */}
-        <div className="space-y-1.5 pl-1">
-          {/* 1. Dự án cá nhân Accordion */}
-          <ProjectCategoryAccordion
-            label="Dự án cá nhân"
-            icon={
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                className="text-slate-400"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            }
-            isOpen={openCategories.personal}
-            onToggle={() => toggleCategory("personal")}
-            projects={personalProjects}
-            activeProjectId={activeProjectId}
-          />
-
-          {/* 2. Dự án quản lý Accordion */}
-          <ProjectCategoryAccordion
-            label="Dự án quản lý"
-            icon={
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-slate-400"
-              >
-                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
-                <path d="M3 20h18" />
-              </svg>
-            }
-            isOpen={openCategories.managed}
-            onToggle={() => toggleCategory("managed")}
-            projects={managedProjects}
-            activeProjectId={activeProjectId}
-          />
-
-          {/* 3. Dự án tham gia Accordion */}
-          <ProjectCategoryAccordion
-            label="Dự án tham gia"
-            icon={
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-slate-400"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            }
-            isOpen={openCategories.joined}
-            onToggle={() => toggleCategory("joined")}
-            projects={joinedProjects}
-            activeProjectId={activeProjectId}
-          />
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-/* ─── Sub-component: Accordion cho từng nhóm dự án ─── */
-
-interface ProjectCategoryAccordionProps {
-  label: string;
-  icon: React.ReactNode;
-  isOpen: boolean;
-  onToggle: () => void;
-  projects: Project[];
-  activeProjectId: string | null;
-}
-
-function ProjectCategoryAccordion({
-  label,
-  icon,
-  isOpen,
-  onToggle,
-  projects,
-  activeProjectId,
-}: ProjectCategoryAccordionProps) {
-  return (
-    <div className="space-y-0.5">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-2 py-1.5 rounded-[4px] text-[10px] font-bold text-slate-400 hover:bg-slate-200/50 hover:text-[#1868db] tracking-wide cursor-pointer transition-colors"
-      >
-        <div className="flex items-center gap-1.5 shrink-0">
-          {icon}
-          <span>{label}</span>
-        </div>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          className={`transition-transform duration-150 text-slate-400 shrink-0 ${
-            isOpen ? "rotate-0" : "-rotate-90"
-          }`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-
-      {isOpen && (
-        <div className="pl-6 space-y-0.5 transition-all">
+        {/* Danh sách dự án dạng phẳng */}
+        <div className="space-y-0.5 pl-1 max-h-[350px] overflow-y-auto overflow-x-hidden custom-chat-scrollbar">
           {projects.length > 0 ? (
             projects.map((p) => {
               const isActiveProject = activeProjectId === p.id;
@@ -269,24 +220,25 @@ function ProjectCategoryAccordion({
                 <ProjectTooltip key={p.id} text={p.name}>
                   <Link
                     href={`/projects/${p.id}`}
-                    className={`flex items-center justify-between px-2 py-1 rounded-[4px] text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all min-w-0 ${
                       isActiveProject
                         ? "bg-white border border-slate-300 text-[#1868db] font-bold shadow-sm"
                         : "text-[#505258] hover:bg-slate-200/50 hover:text-[#1868db]"
                     }`}
                   >
+                    {renderProjectIcon(p.id)}
                     <span className="truncate flex-1 text-left">{p.name}</span>
                   </Link>
                 </ProjectTooltip>
               );
             })
           ) : (
-            <span className="px-2 py-1 text-[11px] text-slate-400 italic block">
-              Không có dự án
+            <span className="px-3 py-2 text-[11px] text-slate-400 italic block">
+              Không có dự án nào
             </span>
           )}
         </div>
-      )}
-    </div>
+      </div>
+    </nav>
   );
 }

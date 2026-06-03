@@ -62,6 +62,24 @@ public class ProjectOverviewDto
     public int ImportantPriorityCount { get; set; }
     public int ExtendedPriorityCount { get; set; }
 
+    // Subtask Status Counts
+    public int TodoSubTasksCount { get; set; }
+    public int InProgressSubTasksCount { get; set; }
+    public int DoneSubTasksCount { get; set; }
+
+    // Subtask Priority Breakdown inside Parent Priorities
+    public int RequiredSubTasksHighCount { get; set; }
+    public int RequiredSubTasksMediumCount { get; set; }
+    public int RequiredSubTasksLowCount { get; set; }
+
+    public int ImportantSubTasksHighCount { get; set; }
+    public int ImportantSubTasksMediumCount { get; set; }
+    public int ImportantSubTasksLowCount { get; set; }
+
+    public int ExtendedSubTasksHighCount { get; set; }
+    public int ExtendedSubTasksMediumCount { get; set; }
+    public int ExtendedSubTasksLowCount { get; set; }
+
     // Workload list
     public List<MemberWorkloadDto> MemberWorkloads { get; set; } = new();
 }
@@ -179,6 +197,62 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
         int importantCount = tasks.Count(t => t.Priority == TaskPriority.Important);
         int extendedCount = tasks.Count(t => t.Priority == TaskPriority.Extended);
 
+        // Subtask Status Counts & Priority Breakdown inside Parent Priorities
+        int todoSubTasksCount = 0;
+        int inProgressSubTasksCount = 0;
+        int doneSubTasksCount = 0;
+
+        int reqHigh = 0, reqMed = 0, reqLow = 0;
+        int impHigh = 0, impMed = 0, impLow = 0;
+        int extHigh = 0, extMed = 0, extLow = 0;
+
+        foreach (var task in tasks)
+        {
+            var col = columns.FirstOrDefault(c => c.Id == task.BoardColumnId);
+            if (col == null) continue;
+
+            var colNameLower = col.Name.ToLower();
+            bool isTodoColumn = colNameLower.Contains("todo") || colNameLower.Contains("cần làm") || colNameLower.Contains("to do") || col.Position == 1;
+
+            foreach (var st in task.SubTasks.Where(s => s.DeletedAt == null))
+            {
+                // Status counts
+                if (st.IsCompleted)
+                {
+                    doneSubTasksCount++;
+                }
+                else if (isTodoColumn)
+                {
+                    todoSubTasksCount++;
+                }
+                else
+                {
+                    inProgressSubTasksCount++;
+                }
+
+                // Priority breakdown
+                var stPrio = st.Priority;
+                if (task.Priority == TaskPriority.Required)
+                {
+                    if (stPrio == SubTaskPriority.High) reqHigh++;
+                    else if (stPrio == SubTaskPriority.Medium) reqMed++;
+                    else reqLow++;
+                }
+                else if (task.Priority == TaskPriority.Important)
+                {
+                    if (stPrio == SubTaskPriority.High) impHigh++;
+                    else if (stPrio == SubTaskPriority.Medium) impMed++;
+                    else impLow++;
+                }
+                else if (task.Priority == TaskPriority.Extended)
+                {
+                    if (stPrio == SubTaskPriority.High) extHigh++;
+                    else if (stPrio == SubTaskPriority.Medium) extMed++;
+                    else extLow++;
+                }
+            }
+        }
+
         // Compute member workloads
         var memberWorkloads = new List<MemberWorkloadDto>();
         int totalSubTasks = tasks.SelectMany(t => t.SubTasks).Count(st => st.DeletedAt == null);
@@ -261,6 +335,22 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
             RequiredPriorityCount = requiredCount,
             ImportantPriorityCount = importantCount,
             ExtendedPriorityCount = extendedCount,
+
+            TodoSubTasksCount = todoSubTasksCount,
+            InProgressSubTasksCount = inProgressSubTasksCount,
+            DoneSubTasksCount = doneSubTasksCount,
+
+            RequiredSubTasksHighCount = reqHigh,
+            RequiredSubTasksMediumCount = reqMed,
+            RequiredSubTasksLowCount = reqLow,
+
+            ImportantSubTasksHighCount = impHigh,
+            ImportantSubTasksMediumCount = impMed,
+            ImportantSubTasksLowCount = impLow,
+
+            ExtendedSubTasksHighCount = extHigh,
+            ExtendedSubTasksMediumCount = extMed,
+            ExtendedSubTasksLowCount = extLow,
 
             MemberWorkloads = memberWorkloads
         };

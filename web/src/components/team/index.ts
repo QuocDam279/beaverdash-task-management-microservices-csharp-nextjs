@@ -5,3 +5,5 @@ export { default as TeamMembersTable } from "./TeamMembersTable";
 export { default as TeamProjectsGrid } from "./TeamProjectsGrid";
 export { default as CreateTeamModal } from "./CreateTeamModal";
 export { default as AddMemberResults } from "./AddMemberResults";
+export { default as DesignateLeaderModal } from "./DesignateLeaderModal";
+

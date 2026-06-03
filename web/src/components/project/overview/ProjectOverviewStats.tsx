@@ -46,7 +46,11 @@ export function ProjectOverviewStats({
                 công việc đã kết thúc thành công
               </span>
             </div>
-            <div className="h-12 w-12 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center text-[#10b981] group-hover:scale-105 transition-transform">
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all
+              ${completedCount === 0 
+                ? "bg-slate-50 border border-slate-200/60 text-slate-400 opacity-40" 
+                : "bg-green-50 border border-green-100 text-[#10b981]"}`}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
@@ -95,7 +99,11 @@ export function ProjectOverviewStats({
                 nhiệm vụ cần ưu tiên hoàn thành gấp
               </span>
             </div>
-            <div className="h-12 w-12 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 group-hover:scale-105 transition-transform">
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all
+              ${upcomingDueCount === 0 
+                ? "bg-slate-50 border border-slate-200/60 text-slate-400 opacity-40" 
+                : "bg-orange-50 border border-orange-100 text-orange-600"}`}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />

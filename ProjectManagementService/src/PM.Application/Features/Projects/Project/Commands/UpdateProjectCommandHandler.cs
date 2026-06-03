@@ -82,6 +82,20 @@ public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand,
         if (request.Description != null)
             project.Description = request.Description;
 
+        // Validate proposed dates
+        var proposedStartDate = request.StartDate.HasValue 
+            ? (request.StartDate.Value == DateTime.MinValue ? null : (DateTime?)request.StartDate.Value) 
+            : project.StartDate;
+
+        var proposedDueDate = request.DueDate.HasValue 
+            ? (request.DueDate.Value == DateTime.MinValue ? null : (DateTime?)request.DueDate.Value) 
+            : project.DueDate;
+
+        if (proposedStartDate.HasValue && proposedDueDate.HasValue && proposedStartDate.Value > proposedDueDate.Value)
+        {
+            throw new InvalidOperationException("Ngày bắt đầu không thể lớn hơn ngày kết thúc.");
+        }
+
         if (request.Status.HasValue)
             project.Status = request.Status.Value;
 
@@ -90,12 +104,12 @@ public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand,
 
         if (request.StartDate.HasValue)
         {
-            project.StartDate = request.StartDate.Value == DateTime.MinValue ? null : request.StartDate.Value;
+            project.StartDate = proposedStartDate;
         }
 
         if (request.DueDate.HasValue)
         {
-            project.DueDate = request.DueDate.Value == DateTime.MinValue ? null : request.DueDate.Value;
+            project.DueDate = proposedDueDate;
         }
 
         if (request.IsPublic.HasValue)

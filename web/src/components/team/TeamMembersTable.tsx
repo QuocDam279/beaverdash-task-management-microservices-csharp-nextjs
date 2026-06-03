@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/Avatar";
 import { api } from "@/lib/api";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
+import DesignateLeaderModal from "./DesignateLeaderModal";
 
 /** Props for TeamMembersTable */
 interface TeamMembersTableProps {
@@ -27,7 +29,70 @@ export default function TeamMembersTable({
   onMemberRemoved,
   onAddMemberClick,
 }: TeamMembersTableProps) {
+  const router = useRouter();
   const { alert, confirm } = useAlertConfirm();
+
+  const [isDesignateOpen, setIsDesignateOpen] = React.useState(false);
+
+  const hasActionsColumn = isOwnerOrAdmin || members.some((m) => m.userId === currentUserId);
+
+  const handleLeaveTeam = async () => {
+    // 1. Kiểm tra xem người dùng hiện tại có phải là leader/owner không
+    const myRecord = members.find((m) => m.userId === currentUserId);
+    const isMyRoleLeader =
+      myRecord?.role?.toLowerCase() === "leader" || myRecord?.role?.toLowerCase() === "owner";
+
+    if (isMyRoleLeader) {
+      const otherMembers = members.filter((m) => m.userId !== currentUserId);
+      if (otherMembers.length === 0) {
+        alert(
+          "Bạn là trưởng nhóm duy nhất và không có thành viên khác để bàn giao. Vui lòng giải tán nhóm bằng chức năng Xóa nhóm ở phía trên.",
+          "Thông báo",
+          "warning"
+        );
+        return;
+      }
+      setIsDesignateOpen(true);
+      return;
+    }
+
+    // 2. Nếu là thành viên bình thường, cho phép rời đi trực tiếp sau khi xác nhận
+    const confirmLeave = await confirm("Bạn có chắc chắn muốn rời khỏi nhóm này không?", {
+      title: "Rời khỏi nhóm",
+      confirmLabel: "Rời nhóm",
+      variant: "danger",
+    });
+    if (!confirmLeave) return;
+
+    try {
+      await api.delete(`/teams/${teamId}/members/${currentUserId}`);
+      alert("Bạn đã rời khỏi nhóm thành công.", "Thành công", "success");
+      router.push("/teams");
+      router.refresh();
+    } catch (err: any) {
+      console.error("Failed to leave team:", err);
+      alert(err.message || "Rời nhóm thất bại.", "Thất bại", "danger");
+    }
+  };
+
+  const handleConfirmDesignateAndLeave = async (newLeaderId: string) => {
+    try {
+      // 1. Cập nhật quyền của trưởng nhóm mới lên "leader"
+      await api.put(`/teams/${teamId}/members/${newLeaderId}/role`, { newRole: "leader" });
+
+      // 2. Thực hiện rời khỏi nhóm
+      await api.delete(`/teams/${teamId}/members/${currentUserId}`);
+
+      setIsDesignateOpen(false);
+      alert("Bạn đã nhượng quyền trưởng nhóm và rời khỏi nhóm thành công.", "Thành công", "success");
+      router.push("/teams");
+      router.refresh();
+    } catch (err: any) {
+      console.error("Failed to designate leader and leave:", err);
+      alert(err.message || "Quá trình nhượng quyền hoặc rời nhóm thất bại.", "Thất bại", "danger");
+      setIsDesignateOpen(false);
+    }
+  };
 
   const handleRemoveMember = async (userId: string) => {
     if (userId === currentUserId) {
@@ -100,7 +165,7 @@ export default function TeamMembersTable({
               <th className="px-5 py-3">Thành viên</th>
               <th className="px-5 py-3">Email</th>
               <th className="px-5 py-3">Vai trò</th>
-              {isOwnerOrAdmin && <th className="px-5 py-3 text-right">Hành động</th>}
+              {hasActionsColumn && <th className="px-5 py-3 text-right">Hành động</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -124,9 +189,9 @@ export default function TeamMembersTable({
                 </td>
                 <td className="px-5 py-3.5 text-slate-500 font-medium">{member.email}</td>
                 <td className="px-5 py-3.5">{renderRoleBadge(member.role)}</td>
-                {isOwnerOrAdmin && (
+                {hasActionsColumn && (
                   <td className="px-5 py-3.5 text-right">
-                    {member.userId !== currentUserId && member.role !== "Owner" && member.role !== "leader" ? (
+                    {isOwnerOrAdmin && member.userId !== currentUserId && member.role !== "Owner" && member.role !== "leader" ? (
                       <button
                         onClick={() => handleRemoveMember(member.userId)}
                         title="Xóa khỏi nhóm"
@@ -135,6 +200,18 @@ export default function TeamMembersTable({
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="3 6 5 6 21 6" />
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    ) : member.userId === currentUserId ? (
+                      <button
+                        onClick={handleLeaveTeam}
+                        title="Rời khỏi nhóm"
+                        className="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded transition-all cursor-pointer inline-flex items-center justify-center border border-transparent hover:border-amber-200"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                          <polyline points="16 17 21 12 16 7" />
+                          <line x1="21" y1="12" x2="9" y2="12" />
                         </svg>
                       </button>
                     ) : (
@@ -147,6 +224,16 @@ export default function TeamMembersTable({
           </tbody>
         </table>
       </div>
+
+      {currentUserId && (
+        <DesignateLeaderModal
+          isOpen={isDesignateOpen}
+          members={members}
+          currentUserId={currentUserId}
+          onClose={() => setIsDesignateOpen(false)}
+          onConfirm={handleConfirmDesignateAndLeave}
+        />
+      )}
     </div>
   );
 }

@@ -128,7 +128,7 @@ export default function SharedBoardPage({ params }: PageProps) {
         onSortChange={setSortBy}
       />
 
-      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-start min-h-[450px] scrollbar-thin">
+      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-stretch min-h-[450px] scrollbar-thin">
         {columns.map((column, index) => (
           <div key={column.id} className="w-80 shrink-0 flex flex-col">
             <BoardColumnView

@@ -9,6 +9,16 @@ using System.Threading.Tasks;
 
 namespace PM.Application.Features.Tasks.Comments.Queries;
 
+public class AttachmentDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = null!;
+    public string FileUrl { get; set; } = null!;
+    public string? FileType { get; set; }
+    public long? FileSizeBytes { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
 public class CommentDto
 {
     public Guid Id { get; set; }
@@ -21,6 +31,8 @@ public class CommentDto
     // Thông tin hiển thị của người bình luận
     public string DisplayName { get; set; } = null!;
     public string? Avatar { get; set; }
+
+    public List<AttachmentDto> Attachments { get; set; } = new();
 }
 
 public record GetTaskCommentsQuery(Guid SubTaskId) : IRequest<List<CommentDto>>;
@@ -71,7 +83,18 @@ public class GetTaskCommentsQueryHandler : IRequestHandler<GetTaskCommentsQuery,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
                 DisplayName = c.User != null ? c.User.DisplayName : "Unknown User",
-                Avatar = c.User != null ? c.User.Avatar : null
+                Avatar = c.User != null ? c.User.Avatar : null,
+                Attachments = c.Attachments
+                    .OrderBy(a => a.CreatedAt)
+                    .Select(a => new AttachmentDto
+                    {
+                        Id = a.Id,
+                        FileName = a.FileName,
+                        FileUrl = a.FileUrl,
+                        FileType = a.FileType,
+                        FileSizeBytes = a.FileSizeBytes,
+                        CreatedAt = a.CreatedAt
+                    }).ToList()
             })
             .ToListAsync(cancellationToken);
 

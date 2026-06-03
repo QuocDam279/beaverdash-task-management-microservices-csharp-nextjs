@@ -13,7 +13,7 @@ import { CreateProjectModal } from "@/components/project";
 /**
  * Sidebar chính của Dashboard.
  * Quản lý trạng thái đóng/mở, kéo giãn chiều rộng,
- * và accordion nhóm dự án lấy từ API thật.
+ * và danh sách dự án của các nhóm làm việc.
  */
 export function Sidebar() {
   const pathname = usePathname();
@@ -44,14 +44,10 @@ export function Sidebar() {
   const projectMatch = pathname.match(/\/projects\/([^\/]+)/);
   const activeProjectId = projectMatch ? projectMatch[1] : null;
 
-  // Project categorization
-  const personalProjects = projects.filter((p) => p.teamId === null);
-  const managedProjects = projects.filter(
-    (p) => p.teamId !== null && currentUser && p.createdByUserId === currentUser.id
-  );
-  const joinedProjects = projects.filter(
-    (p) => p.teamId !== null && currentUser && p.createdByUserId !== currentUser.id
-  );
+  // Lọc chỉ giữ lại dự án có nhóm làm việc (Team Projects)
+  const teamProjects = React.useMemo(() => {
+    return projects.filter((p) => p.teamId !== null);
+  }, [projects]);
 
   // Sidebar collapse state
   const [isCollapsed, setIsCollapsed] = React.useState(false);
@@ -80,38 +76,8 @@ export function Sidebar() {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Accordion states for project groups (mặc định mở rộng hết khi đăng nhập)
-  const [openCategories, setOpenCategories] = React.useState({
-    personal: true,
-    managed: true,
-    joined: true,
-  });
-
   // Modal state
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = React.useState(false);
-
-  // Auto-expand the matching group when current active project changes (giữ các group khác mở)
-  React.useEffect(() => {
-    if (activeProjectId && projects.length > 0) {
-      const isPersonal = personalProjects.some((p) => p.id === activeProjectId);
-      const isManaged = managedProjects.some((p) => p.id === activeProjectId);
-      const isJoined = joinedProjects.some((p) => p.id === activeProjectId);
-
-      setOpenCategories((prev) => ({
-        ...prev,
-        personal: isPersonal || prev.personal,
-        managed: isManaged || prev.managed,
-        joined: isJoined || prev.joined,
-      }));
-    }
-  }, [activeProjectId, projects]);
-
-  const toggleCategory = (category: "personal" | "managed" | "joined") => {
-    setOpenCategories((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
-  };
 
   return (
     <aside
@@ -171,11 +137,7 @@ export function Sidebar() {
         <SidebarExpandedNav
           pathname={pathname}
           activeProjectId={activeProjectId}
-          personalProjects={personalProjects}
-          managedProjects={managedProjects}
-          joinedProjects={joinedProjects}
-          openCategories={openCategories}
-          toggleCategory={toggleCategory}
+          projects={teamProjects}
           onOpenCreateProject={() => setIsCreateProjectModalOpen(true)}
         />
       )}

@@ -9,7 +9,7 @@ export function useSharedBoardFilters(tasks: TaskItem[], columns: BoardColumn[])
   const [selectedAssignee, setSelectedAssignee] = React.useState<string | null>(null);
   const [selectedPriority, setSelectedPriority] = React.useState<string | null>(null);
   const [selectedDueDateFilter, setSelectedDueDateFilter] = React.useState<string | null>(null);
-  const [sortBy, setSortBy] = React.useState<string>("manual");
+  const [sortBy, setSortBy] = React.useState<string>("dueDate");
 
   const filteredTasks = React.useMemo(() => {
     const now = new Date();

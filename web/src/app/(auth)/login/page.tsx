@@ -3,14 +3,15 @@
 /**
  * @page LoginPage
  * @description Trang Đăng nhập Beaverdash với tùy chọn đăng nhập bằng tài khoản Google,
- * hiển thị danh sách tính năng nổi bật, chỉ số tin cậy và liên kết cột đồ họa Showcase bên phải.
+ * hiển thị bảng giới thiệu tính năng tương tác (FeaturesShowcase), logo tương tác 3D và cột đồ họa Showcase 3D Parallax bên phải.
  */
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { LoginShowcase } from "./components/LoginShowcase";
+import { Interactive3DLogo } from "./components/Interactive3DLogo";
+import { FeaturesShowcase } from "./components/FeaturesShowcase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -115,47 +116,22 @@ export default function LoginPage() {
         </div>
 
         {/* Center Auth Container */}
-        <div className="flex-1 flex flex-col justify-center items-center max-w-[360px] mx-auto w-full py-8">
-          {/* Logo */}
-          <div className="flex mb-4 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 animate-fade-slide-up delay-100">
-            <Image src="/logo.svg" alt="Beaverdash Logo" width={56} height={56} className="object-contain" />
+        <div className="flex-1 flex flex-col justify-center items-center max-w-[360px] mx-auto w-full py-6">
+          {/* Logo 3D */}
+          <div className="mb-4 animate-fade-slide-up delay-100 flex justify-center items-center">
+            <Interactive3DLogo width={56} height={56} />
           </div>
 
-          <div className="space-y-1.5 mb-5 animate-fade-slide-up delay-200 text-center">
+          <div className="space-y-1 mb-4 animate-fade-slide-up delay-200 text-center">
             <h1 className="text-xl font-bold tracking-tight text-[#292a2e]">Đăng nhập Beaverdash</h1>
             <p className="text-xs text-[#505258] leading-relaxed">
               Truy cập nhanh không gian làm việc của bạn bằng tài khoản Google.
             </p>
           </div>
 
-          {/* Features Checklist */}
-          <div className="w-full space-y-3 my-5 text-left border-y border-slate-100/80 py-4 bg-slate-50/20 rounded-xl px-3.5 select-none animate-fade-slide-up delay-250">
-            {[
-              {
-                title: "Kanban Kéo Thả Trực Quan",
-                desc: "Sắp xếp công việc, phân chia tài nguyên và kiểm soát tiến độ dễ dàng.",
-              },
-              {
-                title: "Thống kê Tiến độ Tự động",
-                desc: "Theo dõi tỉ lệ hoàn thành nhiệm vụ chi tiết và trực quan theo thời gian thực.",
-              },
-              {
-                title: "Trao Đổi Nhóm Thời Gian Thực",
-                desc: "Cập nhật phản hồi nhanh qua bình luận và thông báo tích hợp.",
-              },
-            ].map((f, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-[#1868db]/10 text-[#1868db]">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-                <div className="space-y-0.5">
-                  <h4 className="text-[11px] font-bold text-[#292a2e]">{f.title}</h4>
-                  <p className="text-[10px] text-[#505258] leading-normal">{f.desc}</p>
-                </div>
-              </div>
-            ))}
+          {/* Features Checklist / Interactive Tabs */}
+          <div className="w-full animate-fade-slide-up delay-250">
+            <FeaturesShowcase />
           </div>
 
           {error && (
@@ -174,7 +150,7 @@ export default function LoginPage() {
             {isLoading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/95 z-20 rounded-xl">
                 <svg className="animate-spin h-5 w-5 text-[#1868db]" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
                 <span className="text-[10px] text-[#505258] font-bold">Xác thực tài khoản Google...</span>
@@ -189,7 +165,7 @@ export default function LoginPage() {
           </div>
 
           {/* Trust stats indicators */}
-          <div className="flex justify-between items-center w-full max-w-[280px] mt-6 border-t border-slate-100 pt-4 text-[9px] text-slate-400 font-bold select-none uppercase tracking-wider animate-fade-slide-up delay-350">
+          <div className="flex justify-between items-center w-full max-w-[280px] mt-5 border-t border-slate-100 pt-4 text-[9px] text-slate-400 font-bold select-none uppercase tracking-wider animate-fade-slide-up delay-350">
             <span>5K+ Users</span>
             <span className="h-1 w-1 bg-slate-300 rounded-full" />
             <span>99.9% Uptime</span>
@@ -210,7 +186,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL: Showcase */}
+      {/* RIGHT PANEL: Showcase 3D Parallax */}
       <LoginShowcase />
     </div>
   );

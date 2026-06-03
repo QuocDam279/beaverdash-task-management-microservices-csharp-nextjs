@@ -23,22 +23,13 @@ interface TaskSubtasksProps {
   onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
   onAddSubtask: (title: string, priority: string | null) => void;
   onDeleteSubtask: (subTaskId: string) => void;
-  onAddSubtaskComment: (
-    subTaskId: string,
-    content: string,
-    attachments?: {
-      fileName: string;
-      fileUrl: string;
-      fileType: string;
-      fileSizeBytes: number | null;
-    }[]
-  ) => void;
-  onDeleteSubtaskComment: (subTaskId: string, commentId: string) => void;
   currentUser: User | null;
   assignees: any[];
   canManageSubtasks: boolean;
   readOnly?: boolean;
   isPersonalProject?: boolean;
+  activeSubtaskId?: string | null;
+  onSelectSubtask?: (subTaskId: string | null) => void;
 }
 
 export function TaskSubtasks({
@@ -51,16 +42,24 @@ export function TaskSubtasks({
   onSubtaskPriorityChange,
   onAddSubtask,
   onDeleteSubtask,
-  onAddSubtaskComment,
-  onDeleteSubtaskComment,
   currentUser,
   assignees,
   canManageSubtasks,
   readOnly = false,
   isPersonalProject = false,
+  activeSubtaskId = null,
+  onSelectSubtask,
 }: TaskSubtasksProps) {
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState("");
   const [newSubtaskPriority, setNewSubtaskPriority] = React.useState("");
+
+  const sortedSubtasks = React.useMemo(() => {
+    return [...subtasks].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [subtasks]);
 
   const completedCount = subtasks.filter((st) => st.isCompleted).length;
   const totalCount = subtasks.length;
@@ -76,9 +75,9 @@ export function TaskSubtasks({
   };
 
   return (
-    <div className="space-y-3 pt-2 border-t border-slate-100">
+    <div className="space-y-3 pt-2 border-t border-slate-100 flex-1 flex flex-col min-h-0">
       {/* Title & Count */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <svg
             width="14"
@@ -104,7 +103,7 @@ export function TaskSubtasks({
 
       {/* Progress Bar */}
       {totalCount > 0 && (
-        <div className="w-full bg-slate-150 h-1.5 rounded-full overflow-hidden border border-slate-200/20">
+        <div className="w-full bg-slate-150 h-1.5 rounded-full overflow-hidden border border-slate-200/20 flex-shrink-0">
           <div
             style={{ width: `${progressPercentage}%` }}
             className="bg-[#10b981] h-full rounded-full transition-all duration-300"
@@ -112,39 +111,9 @@ export function TaskSubtasks({
         </div>
       )}
 
-      {/* Subtasks List */}
-      <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-        {subtasks.length > 0 ? (
-          subtasks.map((st) => (
-            <TaskSubtaskItem
-              key={st.id}
-              subtask={st}
-              taskStartDate={taskStartDate}
-              taskDueDate={taskDueDate}
-              onToggleSubtask={onToggleSubtask}
-              onSubtaskAssigneeChange={onSubtaskAssigneeChange}
-              onSubtaskDueDateChange={onSubtaskDueDateChange}
-              onSubtaskPriorityChange={onSubtaskPriorityChange}
-              onDeleteSubtask={onDeleteSubtask}
-              onAddComment={onAddSubtaskComment}
-              onDeleteComment={onDeleteSubtaskComment}
-              currentUser={currentUser}
-              allUsers={assignees}
-              canManage={canManageSubtasks && !readOnly}
-              readOnly={readOnly}
-              isPersonalProject={isPersonalProject}
-            />
-          ))
-        ) : (
-          <div className="text-center py-6 border-2 border-dashed border-slate-200/50 rounded-lg text-slate-400 text-xs font-medium">
-            {canManageSubtasks ? "Chưa có công việc con nào. Nhập tiêu đề bên dưới để tạo!" : "Chưa có công việc con nào."}
-          </div>
-        )}
-      </div>
-
       {/* Add Input */}
       {canManageSubtasks && !readOnly && (
-        <form onSubmit={handleSubmit} className="flex gap-2 pt-1.5">
+        <form onSubmit={handleSubmit} className="flex gap-2 pt-1.5 flex-shrink-0">
           <input
             type="text"
             placeholder="Thêm công việc con..."
@@ -182,6 +151,36 @@ export function TaskSubtasks({
           </button>
         </form>
       )}
+
+      {/* Subtasks List */}
+      <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin space-y-2.5 min-h-0">
+        {sortedSubtasks.length > 0 ? (
+          sortedSubtasks.map((st) => (
+            <TaskSubtaskItem
+              key={st.id}
+              subtask={st}
+              taskStartDate={taskStartDate}
+              taskDueDate={taskDueDate}
+              onToggleSubtask={onToggleSubtask}
+              onSubtaskAssigneeChange={onSubtaskAssigneeChange}
+              onSubtaskDueDateChange={onSubtaskDueDateChange}
+              onSubtaskPriorityChange={onSubtaskPriorityChange}
+              onDeleteSubtask={onDeleteSubtask}
+              currentUser={currentUser}
+              allUsers={assignees}
+              canManage={canManageSubtasks && !readOnly}
+              readOnly={readOnly}
+              isPersonalProject={isPersonalProject}
+              isActive={st.id === activeSubtaskId}
+              onSelect={() => onSelectSubtask?.(st.id === activeSubtaskId ? null : st.id)}
+            />
+          ))
+        ) : (
+          <div className="text-center py-6 border-2 border-dashed border-slate-200/50 rounded-lg text-slate-400 text-xs font-medium animate-in fade-in duration-200 flex-shrink-0">
+            {canManageSubtasks ? "Chưa có công việc con nào. Nhập tiêu đề ở trên để tạo!" : "Chưa có công việc con nào."}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -69,7 +69,18 @@ public class GetSharedTaskDetailsQueryHandler : IRequestHandler<GetSharedTaskDet
                                 SubTaskId = c.SubTaskId,
                                 Content = c.Content,
                                 CreatedAt = c.CreatedAt,
-                                UpdatedAt = c.UpdatedAt
+                                UpdatedAt = c.UpdatedAt,
+                                Attachments = c.Attachments
+                                    .OrderBy(a => a.CreatedAt)
+                                    .Select(a => new AttachmentDto
+                                    {
+                                        Id = a.Id,
+                                        FileName = a.FileName,
+                                        FileUrl = a.FileUrl,
+                                        FileType = a.FileType,
+                                        FileSizeBytes = a.FileSizeBytes,
+                                        CreatedAt = a.CreatedAt
+                                    }).ToList()
                             }).ToList()
                     }).ToList()
             })

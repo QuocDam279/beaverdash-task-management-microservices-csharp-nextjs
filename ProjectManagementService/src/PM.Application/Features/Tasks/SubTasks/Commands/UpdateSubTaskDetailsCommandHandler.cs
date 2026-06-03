@@ -152,7 +152,7 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
                 UserId = request.AssigneeUserId.Value,
                 ActorUserId = currentUserId,
                 Type = "subtask_assigned",
-                Content = $"Bạn vừa được giao subtask '{request.Title}' thuộc công việc '{subTask.Task!.Title}'.",
+                Content = $"Bạn vừa được giao công việc con '{request.Title}' thuộc công việc '{subTask.Task!.Title}'.",
                 ActionUrl = subTask.Task?.BoardColumn != null ? $"/projects/{subTask.Task.BoardColumn.ProjectId}/board?taskId={subTask.TaskId}" : "/tasks",
                 IsRead = false,
                 IsSentViaEmail = false,

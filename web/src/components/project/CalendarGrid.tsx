@@ -116,8 +116,9 @@ export function CalendarGrid({
                     onClick={() => onTaskClick(task)}
                     className={`w-full text-left truncate text-[10px] font-bold p-1 px-1.5 rounded-[4px] border flex items-center justify-between cursor-grab active:cursor-grabbing transition-all ${getTaskColorClass(task)}`}
                   >
-                    <span className="truncate max-w-[78%]">
+                    <span className="truncate max-w-[78%]" title={`${(task as any).projectName ? `[${(task as any).projectName}] ` : ""}${(task as any).parentTaskTitle ? `[${(task as any).parentTaskTitle}] ` : ""}${task.title}`}>
                       {showProjectPrefix && (task as any).projectName ? `[${(task as any).projectName}] ` : ""}
+                      {(task as any).parentTaskTitle ? `[${(task as any).parentTaskTitle}] ` : ""}
                       {task.title}
                     </span>
 

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { TaskSubtasks } from "./TaskSubtasks";
+import { TaskSubtaskDrawer } from "./TaskSubtaskDrawer";
 import { TaskSidebarProperties } from "./TaskSidebarProperties";
 import { TaskDetailHeader } from "./TaskDetailHeader";
 import { TaskDetailTitle } from "./TaskDetailTitle";
@@ -20,6 +21,7 @@ interface TaskDetailModalProps {
   assignees: any[];
   readOnly?: boolean;
   shareToken?: string;
+  initialActiveSubtaskId?: string | null;
 }
 
 export function TaskDetailModal({
@@ -31,6 +33,7 @@ export function TaskDetailModal({
   assignees,
   readOnly = false,
   shareToken,
+  initialActiveSubtaskId = null,
 }: TaskDetailModalProps) {
   const { user: currentUser } = useAuth();
   const { alert, confirm } = useAlertConfirm();
@@ -42,6 +45,14 @@ export function TaskDetailModal({
   const canManageSubtasks = true;
 
   const subtasks = task.subTasks || [];
+  const [activeSubtaskId, setActiveSubtaskId] = React.useState<string | null>(initialActiveSubtaskId);
+  const activeSubtask = subtasks.find((st) => st.id === activeSubtaskId) || null;
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveSubtaskId(initialActiveSubtaskId);
+    }
+  }, [isOpen, initialActiveSubtaskId]);
 
   const reloadTask = async () => {
     try {
@@ -130,6 +141,23 @@ export function TaskDetailModal({
     }
   };
 
+  const handleSubtaskTitleChange = async (subTaskId: string, title: string) => {
+    const subtask = subtasks.find((st) => st.id === subTaskId);
+    if (!subtask) return;
+    try {
+      await api.patch(`/subtasks/${subTaskId}`, {
+        title,
+        assigneeUserId: subtask.assigneeUserId,
+        dueDate: subtask.dueDate,
+        isCompleted: subtask.isCompleted,
+        priority: subtask.priority,
+      });
+      await reloadTask();
+    } catch (err) {
+      console.error("Failed to update subtask title:", err);
+    }
+  };
+
   const handleSubtaskAssigneeChange = async (subTaskId: string, assigneeId: string) => {
     const subtask = subtasks.find((st) => st.id === subTaskId);
     if (!subtask) return;
@@ -203,9 +231,20 @@ export function TaskDetailModal({
     }
   };
 
-  const handleAddSubtaskComment = async (subTaskId: string, content: string) => {
+  const handleAddSubtaskComment = async (subTaskId: string, content: string, attachments?: any[]) => {
     try {
-      await api.post(`/subtasks/${subTaskId}/comments`, { content });
+      const data = await api.post(`/subtasks/${subTaskId}/comments`, { content });
+      const commentId = data?.id || data?.Id;
+
+      if (commentId && attachments && attachments.length > 0) {
+        for (const att of attachments) {
+          if (att.file) {
+            const formData = new FormData();
+            formData.append("file", att.file);
+            await api.post(`/subtasks/${subTaskId}/comments/${commentId}/attachments`, formData);
+          }
+        }
+      }
       await reloadTask();
     } catch (err) {
       console.error("Failed to add subtask comment:", err);
@@ -243,21 +282,25 @@ export function TaskDetailModal({
 
   return (
     <div className="fixed inset-0 bg-[#091e42]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
-      <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+      <div className="relative bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
         <TaskDetailHeader onClose={onClose} onDelete={readOnly ? undefined : handleDeleteTask} />
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-            <TaskDetailTitle
-              title={task.title}
-              onUpdateTitle={(title) => !readOnly && handleUpdateDetails({ title })}
-              readOnly={readOnly}
-            />
-            <TaskDetailDescription
-              description={task.description}
-              onUpdateDescription={(description) => !readOnly && handleUpdateDetails({ description: description || "" })}
-              readOnly={readOnly}
-            />
-             <TaskSubtasks
+          <div className="flex-1 flex flex-col p-6 gap-6 overflow-hidden min-h-0">
+            <div className="flex-shrink-0">
+              <TaskDetailTitle
+                title={task.title}
+                onUpdateTitle={(title) => !readOnly && handleUpdateDetails({ title })}
+                readOnly={readOnly}
+              />
+            </div>
+            <div className="flex-shrink-0">
+              <TaskDetailDescription
+                description={task.description}
+                onUpdateDescription={(description) => !readOnly && handleUpdateDetails({ description: description || "" })}
+                readOnly={readOnly}
+              />
+            </div>
+            <TaskSubtasks
               subtasks={subtasks}
               taskStartDate={task.startDate}
               taskDueDate={task.dueDate}
@@ -267,13 +310,13 @@ export function TaskDetailModal({
               onSubtaskPriorityChange={handleSubtaskPriorityChange}
               onAddSubtask={handleAddSubtask}
               onDeleteSubtask={handleDeleteSubtask}
-              onAddSubtaskComment={handleAddSubtaskComment}
-              onDeleteSubtaskComment={handleDeleteSubtaskComment}
               currentUser={currentUser}
               assignees={assignees}
               canManageSubtasks={canManageSubtasks && !readOnly}
               readOnly={readOnly}
               isPersonalProject={task.teamId === null || !task.teamId}
+              activeSubtaskId={activeSubtaskId}
+              onSelectSubtask={setActiveSubtaskId}
             />
           </div>
           <TaskSidebarProperties
@@ -287,6 +330,28 @@ export function TaskDetailModal({
             readOnly={readOnly}
           />
         </div>
+
+        {/* Slide-in Subtask Details & Comments Drawer */}
+        <TaskSubtaskDrawer
+          isOpen={activeSubtaskId !== null}
+          subtask={activeSubtask}
+          onClose={() => setActiveSubtaskId(null)}
+          taskStartDate={task.startDate}
+          taskDueDate={task.dueDate}
+          onToggleSubtask={handleToggleSubtask}
+          onSubtaskTitleChange={handleSubtaskTitleChange}
+          onSubtaskAssigneeChange={handleSubtaskAssigneeChange}
+          onSubtaskDueDateChange={handleSubtaskDueDateChange}
+          onSubtaskPriorityChange={handleSubtaskPriorityChange}
+          onDeleteSubtask={handleDeleteSubtask}
+          onAddSubtaskComment={handleAddSubtaskComment}
+          onDeleteSubtaskComment={handleDeleteSubtaskComment}
+          currentUser={currentUser}
+          assignees={assignees}
+          canManageSubtasks={canManageSubtasks && !readOnly}
+          readOnly={readOnly}
+          isPersonalProject={task.teamId === null || !task.teamId}
+        />
       </div>
     </div>
   );

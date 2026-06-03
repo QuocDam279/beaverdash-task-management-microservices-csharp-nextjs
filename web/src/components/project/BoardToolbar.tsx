@@ -22,8 +22,8 @@ export interface BoardToolbarProps {
 }
 
 /**
- * BoardToolbar — Thanh công cụ lọc và tương tác trên bảng Kanban.
- * Tách biệt theo quy định CODING_CONVENTIONS.md nhằm giữ file dưới 200 dòng.
+ * BoardToolbar — Thanh công cụ lọc và tương tác trên bảng Kanban,
+ * sử dụng kiểu bộ lọc flyout và nút sắp xếp tuỳ chỉnh giống trang công việc cá nhân.
  */
 export function BoardToolbar({
   searchQuery,
@@ -39,18 +39,31 @@ export function BoardToolbar({
   onCreateTaskClick,
   readOnly = false,
   isPersonalProject = false,
-  sortBy = "manual",
+  sortBy = "dueDate",
   onSortChange = () => {},
 }: BoardToolbarProps) {
-  const hasActiveFilters =
-    !!searchQuery ||
-    (!isPersonalProject && !!selectedAssignee) ||
+  // Popover State
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [isSortOpen, setIsSortOpen] = React.useState(false);
+  const [activeSubMenu, setActiveSubMenu] = React.useState<string | null>(null);
+
+  const closePopovers = () => {
+    setIsFilterOpen(false);
+    setIsSortOpen(false);
+    setActiveSubMenu(null);
+  };
+
+  const hasAnyFilterActive =
     !!selectedPriority ||
     !!selectedDueDateFilter;
 
+  const hasActiveFilters =
+    !!searchQuery ||
+    (!isPersonalProject && !!selectedAssignee) ||
+    hasAnyFilterActive;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 select-none">
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative">
@@ -59,66 +72,202 @@ export function BoardToolbar({
             placeholder="Tìm kiếm nhanh..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-48 px-3 py-1.5 pl-8 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] placeholder:text-slate-400"
+            className="w-48 px-3 py-1.5 pl-8 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] placeholder:text-slate-400"
           />
-          <svg className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
         </div>
 
-        {/* Priority Filter */}
+        {/* 1. Filter Button */}
         <div className="relative">
-          <svg className="absolute left-2.5 top-[9px] h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21v8h-6l-1-1H5v6h-2z" />
-          </svg>
-          <select
-            value={selectedPriority || ""}
-            onChange={(e) => setSelectedPriority(e.target.value || null)}
-            className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+          <button
+            onClick={() => {
+              setIsFilterOpen(!isFilterOpen);
+              setIsSortOpen(false);
+              setActiveSubMenu(null);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white cursor-pointer transition-all ${
+              hasAnyFilterActive
+                ? "border-[#1868db] text-[#1868db] bg-blue-50/30"
+                : "border-slate-200 text-slate-700 hover:border-slate-400"
+            }`}
           >
-            <option value="">Tất cả độ ưu tiên</option>
-            <option value="Required">Bắt buộc</option>
-            <option value="Important">Quan trọng</option>
-            <option value="Extended">Mở rộng</option>
-          </select>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span>Bộ lọc</span>
+            {hasAnyFilterActive && (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1868db] ml-0.5 animate-pulse" />
+            )}
+          </button>
+
+          {isFilterOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={closePopovers} />
+              <div
+                className="absolute left-0 mt-1.5 w-48 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]"
+                onMouseLeave={() => setActiveSubMenu(null)}
+              >
+                {/* Độ ưu tiên */}
+                <div
+                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
+                  onMouseEnter={() => setActiveSubMenu("priority")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSubMenu(activeSubMenu === "priority" ? null : "priority");
+                  }}
+                >
+                  <span>Độ ưu tiên</span>
+                  <div className="flex items-center gap-1 text-slate-400 font-normal">
+                    <span className="text-[10px]">
+                      {!selectedPriority ? "Tất cả" : selectedPriority === "Required" ? "Bắt buộc" : selectedPriority === "Important" ? "Quan trọng" : "Mở rộng"}
+                    </span>
+                    <span className="text-[9px]">▶</span>
+                  </div>
+
+                  {activeSubMenu === "priority" && (
+                    <div
+                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {[
+                        { value: "", label: "Tất cả độ ưu tiên" },
+                        { value: "Required", label: "Bắt buộc" },
+                        { value: "Important", label: "Quan trọng" },
+                        { value: "Extended", label: "Mở rộng" },
+                      ].map((item) => (
+                        <div
+                          key={item.value}
+                          onClick={() => {
+                            setSelectedPriority(item.value || null);
+                            closePopovers();
+                          }}
+                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
+                            (selectedPriority || "") === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {(selectedPriority || "") === item.value && <span className="text-[#1868db]">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Hạn chót */}
+                <div
+                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
+                  onMouseEnter={() => setActiveSubMenu("dueDate")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSubMenu(activeSubMenu === "dueDate" ? null : "dueDate");
+                  }}
+                >
+                  <span>Hạn chót</span>
+                  <div className="flex items-center gap-1 text-slate-400 font-normal">
+                    <span className="text-[10px]">
+                      {!selectedDueDateFilter ? "Tất cả" : selectedDueDateFilter === "overdue" ? "Quá hạn" : "7 ngày tới"}
+                    </span>
+                    <span className="text-[9px]">▶</span>
+                  </div>
+
+                  {activeSubMenu === "dueDate" && (
+                    <div
+                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {[
+                        { value: "", label: "Tất cả hạn chót" },
+                        { value: "overdue", label: "Quá hạn" },
+                        { value: "upcoming7", label: "Sắp đến hạn (7 ngày)" },
+                      ].map((item) => (
+                        <div
+                          key={item.value}
+                          onClick={() => {
+                            setSelectedDueDateFilter(item.value || null);
+                            closePopovers();
+                          }}
+                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
+                            (selectedDueDateFilter || "") === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {(selectedDueDateFilter || "") === item.value && <span className="text-[#1868db]">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Xóa bộ lọc nhanh */}
+                {hasAnyFilterActive && (
+                  <>
+                    <div className="h-[1px] bg-slate-100 my-1" />
+                    <div
+                      onClick={() => {
+                        setSelectedPriority(null);
+                        setSelectedDueDateFilter(null);
+                        closePopovers();
+                      }}
+                      className="px-3 py-2 hover:bg-red-50 text-red-600 font-bold cursor-pointer text-left transition-colors"
+                    >
+                      Xóa bộ lọc
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Due Date Filter */}
+        {/* 2. Sort Button */}
         <div className="relative">
-          <svg className="absolute left-2.5 top-[9px] h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          <select
-            value={selectedDueDateFilter || ""}
-            onChange={(e) => setSelectedDueDateFilter(e.target.value || null)}
-            className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+          <button
+            onClick={() => {
+              setIsSortOpen(!isSortOpen);
+              setIsFilterOpen(false);
+              setActiveSubMenu(null);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white cursor-pointer transition-all ${
+              sortBy !== "dueDate"
+                ? "border-[#1868db] text-[#1868db] bg-blue-50/30"
+                : "border-slate-200 text-slate-700 hover:border-slate-400"
+            }`}
           >
-            <option value="">Tất cả hạn chót</option>
-            <option value="overdue">Quá hạn</option>
-            <option value="upcoming7">Sắp đến hạn (7 ngày)</option>
-          </select>
-        </div>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 18H3M21 12H3M21 6H3" />
+            </svg>
+            <span>Sắp xếp: {sortBy === "dueDate" ? "Hạn chót" : "Ưu tiên"}</span>
+          </button>
 
-        {/* Sort Selector */}
-        <div className="relative">
-          <svg className="absolute left-2.5 top-[9px] h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
-          </svg>
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer font-semibold"
-          >
-            <option value="manual">Sắp xếp: Thủ công</option>
-            <option value="dueDate">Sắp xếp: Hạn chót</option>
-            <option value="priority">Sắp xếp: Độ ưu tiên</option>
-          </select>
+          {isSortOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={closePopovers} />
+              <div className="absolute left-0 mt-1.5 w-44 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]">
+                {[
+                  { value: "dueDate", label: "Hạn chót" },
+                  { value: "priority", label: "Độ ưu tiên" },
+                ].map((item) => (
+                  <div
+                    key={item.value}
+                    onClick={() => {
+                      onSortChange(item.value);
+                      closePopovers();
+                    }}
+                    className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
+                      sortBy === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {sortBy === item.value && <span className="text-[#1868db]">✓</span>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
-
 
         {/* Divider */}
         {!isPersonalProject && (
@@ -150,7 +299,7 @@ export function BoardToolbar({
                 );
               })}
               
-              {/* Unassigned button (avatar trống) */}
+              {/* Unassigned button */}
               <button
                 onClick={() => setSelectedAssignee(selectedAssignee === "unassigned" ? null : "unassigned")}
                 title="Công việc hoặc subtask chưa phân công"
@@ -166,7 +315,6 @@ export function BoardToolbar({
             </div>
           </div>
         )}
-
 
         {/* Clear Filters Button */}
         {hasActiveFilters && (
@@ -187,7 +335,7 @@ export function BoardToolbar({
       {!readOnly && (
         <button
           onClick={onCreateTaskClick}
-          className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-1.5 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
+          className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-1.5 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs whitespace-nowrap shrink-0"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />

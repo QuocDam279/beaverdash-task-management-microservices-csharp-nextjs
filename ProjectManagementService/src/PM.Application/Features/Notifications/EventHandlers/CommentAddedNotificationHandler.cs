@@ -34,7 +34,7 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == notification.UserId, cancellationToken);
 
-        var actorDisplayName = actorUser?.DisplayName ?? "Unknown User";
+        var actorDisplayName = !string.IsNullOrWhiteSpace(actorUser?.DisplayName) ? actorUser.DisplayName : "Một đồng nghiệp";
         var actorAvatar = actorUser?.Avatar;
 
         string actionUrl = "/tasks";
@@ -54,7 +54,7 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
                 UserId = subTask.AssigneeUserId.Value,
                 ActorUserId = notification.UserId,
                 Type = "subtask_comment",
-                Content = $"Một đồng nghiệp vừa bình luận trên subtask '{subTask.Title}' được giao cho bạn.",
+                Content = $"{actorDisplayName} vừa bình luận trên công việc con '{subTask.Title}' được giao cho bạn.",
                 ActionUrl = actionUrl,
                 IsRead = false,
                 IsSentViaEmail = false,

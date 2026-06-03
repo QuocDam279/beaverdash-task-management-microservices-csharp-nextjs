@@ -11,12 +11,14 @@ import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface CalendarViewProps {
   tasks: TaskItem[];
-  setTasks: React.Dispatch<React.SetStateAction<TaskItem[]>>;
-  viewContext: "project" | "my-tasks" | "shared-project";
+  setTasks?: React.Dispatch<React.SetStateAction<TaskItem[]>>;
+  viewContext: "project" | "shared-project" | "my-tasks";
   projectId?: string;
   shareToken?: string;
   showProjectPrefix?: boolean;
   readOnly?: boolean;
+  onTaskClick?: (task: TaskItem) => void;
+  onTaskDrop?: (taskId: string, targetDate: Date) => void;
 }
 
 export default function CalendarView({
@@ -27,6 +29,8 @@ export default function CalendarView({
   shareToken,
   showProjectPrefix = false,
   readOnly = false,
+  onTaskClick,
+  onTaskDrop,
 }: CalendarViewProps) {
   const { user: currentUser } = useAuth();
   const { alert } = useAlertConfirm();
@@ -90,6 +94,10 @@ export default function CalendarView({
 
   const handleTaskDrop = async (taskId: string, targetDate: Date) => {
     if (readOnly) return;
+    if (onTaskDrop) {
+      onTaskDrop(taskId, targetDate);
+      return;
+    }
     try {
       const origTask = tasks.find((t) => t.id === taskId);
       if (!origTask) return;
@@ -103,9 +111,11 @@ export default function CalendarView({
 
       await api.patch(`/tasks/${taskId}`, { dueDate: newDueDate });
 
-      setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, dueDate: newDueDate } : t))
-      );
+      if (setTasks) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, dueDate: newDueDate } : t))
+        );
+      }
     } catch (err: any) {
       console.error("Failed to update task due date on drop:", err);
       alert(err.message || "Không thể cập nhật hạn hoàn thành.", "Thất bại", "danger");
@@ -205,8 +215,8 @@ export default function CalendarView({
         viewMode={viewMode}
         tasks={tasks}
         showProjectPrefix={showProjectPrefix}
-        onTaskClick={handleTaskClick}
-        onTaskDrop={handleTaskDrop}
+        onTaskClick={onTaskClick || handleTaskClick}
+        onTaskDrop={onTaskDrop || handleTaskDrop}
       />
 
       {selectedTask && (
@@ -223,7 +233,7 @@ export default function CalendarView({
                     ...t
                   }))
                 );
-                setTasks(allTasks);
+                if (setTasks) setTasks(allTasks);
               });
             } else if (viewContext === "project" && projectId) {
               api.get(`/projects/${projectId}/board`).then(board => {
@@ -233,13 +243,8 @@ export default function CalendarView({
                     ...t
                   }))
                 );
-                setTasks(allTasks);
+                if (setTasks) setTasks(allTasks);
               });
-            } else {
-              // Reload my-tasks tasks
-              api.get("/tasks").then(data => {
-                setTasks(data || []);
-              }).catch(() => {});
             }
           }}
           task={selectedTask}

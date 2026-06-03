@@ -222,6 +222,79 @@ body {
   box-shadow: 0 20px 50px 0 rgba(24, 104, 219, 0.15), 0 0 0 1px rgba(24, 104, 219, 0.2);
 }
 
+/* 3D Transform Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Smoothed transition for 3D tilts */
+.transition-tilt {
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+
+/* Scroll wheel animation for mouse indicator */
+@keyframes scroll-wheel {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.9);
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-scroll-wheel {
+  animation: scroll-wheel 1.8s ease-in-out infinite;
+}
+
+/* SVG Line drawing animation */
+@keyframes draw-line {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw-line {
+  stroke-dasharray: 100;
+  animation: draw-line 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Pulse glow for active status lights */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    box-shadow: 0 0 4px currentColor;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 16px currentColor, 0 0 8px currentColor;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+
+
 
 
 

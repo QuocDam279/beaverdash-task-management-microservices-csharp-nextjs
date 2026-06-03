@@ -23,6 +23,11 @@ interface TaskSidebarPropertiesProps {
   readOnly?: boolean;
 }
 
+const formatDateForInput = (dateStr: string | null) => {
+  if (!dateStr) return "";
+  return dateStr.substring(0, 10);
+};
+
 export function TaskSidebarProperties({
   task,
   columns,
@@ -39,10 +44,16 @@ export function TaskSidebarProperties({
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
   const canModifyProperties = !readOnly;
 
-  const formatDateForInput = (dateStr: string | null) => {
-    if (!dateStr) return "";
-    return dateStr.substring(0, 10);
-  };
+  const [localStartDate, setLocalStartDate] = React.useState(formatDateForInput(task.startDate));
+  const [localDueDate, setLocalDueDate] = React.useState(formatDateForInput(task.dueDate));
+
+  React.useEffect(() => {
+    setLocalStartDate(formatDateForInput(task.startDate));
+  }, [task.startDate]);
+
+  React.useEffect(() => {
+    setLocalDueDate(formatDateForInput(task.dueDate));
+  }, [task.dueDate]);
 
   return (
     <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-100 bg-[#fafbfc] overflow-y-auto p-6 space-y-5">
@@ -97,10 +108,20 @@ export function TaskSidebarProperties({
           </label>
           <input
             type="date"
-            value={formatDateForInput(task.startDate)}
+            value={localStartDate}
             min={task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined}
-            max={task.dueDate ? formatDateForInput(task.dueDate) : (task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined)}
-            onChange={(e) => onDateChange("startDate", e.target.value)}
+            max={localDueDate ? localDueDate : (task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined)}
+            onChange={(e) => setLocalStartDate(e.target.value)}
+            onBlur={() => {
+              if (localStartDate !== formatDateForInput(task.startDate)) {
+                onDateChange("startDate", localStartDate);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             disabled={!canModifyProperties}
             className={`w-full px-2 py-1.5 text-[11px] border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
               !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
@@ -114,10 +135,20 @@ export function TaskSidebarProperties({
           </label>
           <input
             type="date"
-            value={formatDateForInput(task.dueDate)}
-            min={task.startDate ? formatDateForInput(task.startDate) : (task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined)}
+            value={localDueDate}
+            min={localStartDate ? localStartDate : (task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined)}
             max={task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined}
-            onChange={(e) => onDateChange("dueDate", e.target.value)}
+            onChange={(e) => setLocalDueDate(e.target.value)}
+            onBlur={() => {
+              if (localDueDate !== formatDateForInput(task.dueDate)) {
+                onDateChange("dueDate", localDueDate);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             disabled={!canModifyProperties}
             className={`w-full px-2 py-1.5 text-[11px] border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
               !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"

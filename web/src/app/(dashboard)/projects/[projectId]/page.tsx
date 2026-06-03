@@ -87,7 +87,9 @@ export default function ProjectOverviewPage({ params }: PageProps) {
         {/* Box 1: Donut Chart - Trạng thái công việc */}
         <ProjectOverviewStatusChart
           projectId={projectId}
-          columnStatusCounts={data.columnStatusCounts || []}
+          todoSubTasksCount={data.todoSubTasksCount}
+          inProgressSubTasksCount={data.inProgressSubTasksCount}
+          doneSubTasksCount={data.doneSubTasksCount}
         />
 
         {/* Box 2: Timeline - Lịch sử hoạt động */}
@@ -96,9 +98,15 @@ export default function ProjectOverviewPage({ params }: PageProps) {
         {/* Box 3: Bar Chart - Mức độ ưu tiên */}
         <ProjectOverviewPriorityChart
           projectId={projectId}
-          requiredCount={data.requiredPriorityCount}
-          importantCount={data.importantPriorityCount}
-          extendedCount={data.extendedPriorityCount}
+          requiredSubTasksHighCount={data.requiredSubTasksHighCount}
+          requiredSubTasksMediumCount={data.requiredSubTasksMediumCount}
+          requiredSubTasksLowCount={data.requiredSubTasksLowCount}
+          importantSubTasksHighCount={data.importantSubTasksHighCount}
+          importantSubTasksMediumCount={data.importantSubTasksMediumCount}
+          importantSubTasksLowCount={data.importantSubTasksLowCount}
+          extendedSubTasksHighCount={data.extendedSubTasksHighCount}
+          extendedSubTasksMediumCount={data.extendedSubTasksMediumCount}
+          extendedSubTasksLowCount={data.extendedSubTasksLowCount}
         />
 
         {/* Box 4: Teamwork Workload Progress */}

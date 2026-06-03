@@ -48,13 +48,24 @@ public class SignalRNotificationService : INotificationService
                     return;
                 }
 
-                // Lấy nội dung và thông tin từ notificationData bằng reflection
-                var dataType = notificationData.GetType();
-                var content = dataType.GetProperty("Content")?.GetValue(notificationData)?.ToString() ?? "Bạn có thông báo mới.";
-                var type = dataType.GetProperty("Type")?.GetValue(notificationData)?.ToString() ?? "notification";
-                var actionUrl = dataType.GetProperty("ActionUrl")?.GetValue(notificationData)?.ToString() ?? "";
-                var actorDisplayName = dataType.GetProperty("ActorDisplayName")?.GetValue(notificationData)?.ToString() ?? "Một đồng nghiệp";
-                var notificationId = dataType.GetProperty("Id")?.GetValue(notificationData);
+                // Sử dụng JSON serialization để lấy dữ liệu từ notificationData an toàn, tránh lỗi reflection trên anonymous types khác assembly
+                var json = System.Text.Json.JsonSerializer.Serialize(notificationData);
+                using var jsonDoc = System.Text.Json.JsonDocument.Parse(json);
+                var root = jsonDoc.RootElement;
+
+                var content = root.TryGetProperty("Content", out var pContent) ? pContent.GetString() ?? "Bạn có thông báo mới." : "Bạn có thông báo mới.";
+                var type = root.TryGetProperty("Type", out var pType) ? pType.GetString() ?? "notification" : "notification";
+                var actionUrl = root.TryGetProperty("ActionUrl", out var pActionUrl) ? pActionUrl.GetString() ?? "" : "";
+                var actorDisplayName = root.TryGetProperty("ActorDisplayName", out var pActor) ? pActor.GetString() ?? "Một đồng nghiệp" : "Một đồng nghiệp";
+                
+                Guid? notificationId = null;
+                if (root.TryGetProperty("Id", out var pId) && pId.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    if (Guid.TryParse(pId.GetString(), out var parsedId))
+                    {
+                        notificationId = parsedId;
+                    }
+                }
 
                 // Tạo link đầy đủ tới frontend
                 var frontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "http://localhost:3000";
@@ -63,8 +74,8 @@ public class SignalRNotificationService : INotificationService
                 // Tạo tiêu đề email dựa trên loại thông báo
                 var subject = type switch
                 {
-                    "subtask_assigned" => "Bạn được giao một subtask mới - Beaverdash",
-                    "subtask_comment" => "Có bình luận mới trên subtask của bạn - Beaverdash",
+                    "subtask_assigned" => "Bạn được giao một công việc con mới - Beaverdash",
+                    "subtask_comment" => "Có bình luận mới trên công việc con của bạn - Beaverdash",
                     "team_invited" => "Bạn được mời vào nhóm mới - Beaverdash",
                     _ => "Thông báo mới từ Beaverdash"
                 };
@@ -93,10 +104,10 @@ public class SignalRNotificationService : INotificationService
                 await emailService.SendEmailAsync(user.Email, subject, emailBody, isHtml: true);
 
                 // Cập nhật trạng thái đã gửi email trong database
-                if (notificationId is Guid notifGuid)
+                if (notificationId.HasValue)
                 {
                     var notification = await dbContext.Notifications
-                        .FirstOrDefaultAsync(n => n.Id == notifGuid);
+                        .FirstOrDefaultAsync(n => n.Id == notificationId.Value);
 
                     if (notification != null)
                     {

@@ -6,12 +6,14 @@
  */
 
 import * as React from "react";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 export interface StagedAttachment {
   fileName: string;
   fileUrl: string;
   fileType: string;
   fileSizeBytes: number | null;
+  file?: File; // Store the original File object for uploading
 }
 
 interface TaskSubtaskCommentFormProps {
@@ -29,17 +31,40 @@ export function TaskSubtaskCommentForm({
   const [linkUrl, setLinkUrl] = React.useState("");
   const [linkTitle, setLinkTitle] = React.useState("");
   
+  const { alert } = useAlertConfirm();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const MAX_SIZE_MB = 10; // 10MB limit
+  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     
-    const newStaged: StagedAttachment[] = files.map((file) => ({
+    // Check for files exceeding the size limit
+    const oversizedFiles = files.filter((f) => f.size > MAX_SIZE_BYTES);
+    if (oversizedFiles.length > 0) {
+      alert(
+        `Một số tệp vượt quá giới hạn dung lượng ${MAX_SIZE_MB}MB:\n${oversizedFiles
+          .map((f) => `- ${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`)
+          .join("\n")}`,
+        "Lỗi dung lượng tệp",
+        "warning"
+      );
+    }
+    
+    const validFiles = files.filter((f) => f.size <= MAX_SIZE_BYTES);
+    if (validFiles.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const newStaged: StagedAttachment[] = validFiles.map((file) => ({
       fileName: file.name,
       fileUrl: URL.createObjectURL(file), // Generate safe local URL for previewing/downloading
       fileType: file.type || "application/octet-stream",
       fileSizeBytes: file.size,
+      file: file, // Store the File object
     }));
 
     setStagedAttachments((prev) => [...prev, ...newStaged]);

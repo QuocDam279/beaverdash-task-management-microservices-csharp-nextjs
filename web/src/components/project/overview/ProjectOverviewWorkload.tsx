@@ -60,7 +60,7 @@ export function ProjectOverviewWorkload({ projectId, shareToken, memberWorkloads
                   </div>
                 </div>
                 <span className="text-[#505258] font-bold shrink-0">
-                  {member.assignedTasksCount} việc ({member.workloadPercentage}%)
+                  {member.assignedTasksCount} việc con ({member.workloadPercentage}%)
                 </span>
               </div>
 

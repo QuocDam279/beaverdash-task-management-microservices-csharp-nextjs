@@ -36,6 +36,15 @@ export const getActionDetails = (
     }
   }
 
+  let oldData: any = null;
+  if (oldValue) {
+    try {
+      oldData = JSON.parse(oldValue);
+    } catch {
+      oldData = null;
+    }
+  }
+
   if (ent === "task") {
     if (act === "create" || act === "created") {
       actionText = "đã tạo mới đầu việc";
@@ -269,7 +278,7 @@ export const getActionDetails = (
   } else if (ent === "projectdocument") {
     if (act === "upload") {
       actionText = "đã tải lên tài liệu";
-      targetText = newValue ? `"${newValue}"` : "tài liệu";
+      targetText = data ? `"${data}"` : (newValue ? `"${newValue}"` : "tài liệu");
       iconBg = "bg-emerald-500";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -280,7 +289,7 @@ export const getActionDetails = (
       );
     } else if (act === "delete") {
       actionText = "đã xóa tài liệu";
-      targetText = oldValue ? `"${oldValue}"` : (newValue ? `"${newValue}"` : "tài liệu");
+      targetText = oldData ? `"${oldData}"` : (oldValue ? `"${oldValue}"` : (data ? `"${data}"` : (newValue ? `"${newValue}"` : "tài liệu")));
       iconBg = "bg-red-500";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -292,4 +301,140 @@ export const getActionDetails = (
   }
 
   return { actionText, targetText, iconBg, icon };
+};
+
+export const getActionColorClass = (actionType: string | null, entityType: string | null): string => {
+  const act = actionType?.toLowerCase() || "";
+  if (act.includes("complete") || act.includes("done") || act.includes("restore")) {
+    return "text-emerald-600 font-bold";
+  }
+  if (act.includes("delete") || act.includes("remove") || act.includes("trash")) {
+    return "text-red-500 font-bold";
+  }
+  if (act.includes("create") || act.includes("upload")) {
+    return "text-blue-600 font-bold";
+  }
+  return "text-[#ffab00] font-bold"; // amber for updates/moves/assigns
+};
+
+export const getSubtaskChangeDetail = (actionType: string, newValue: string): string => {
+  try {
+    const data = JSON.parse(newValue);
+    const act = actionType.toLowerCase();
+    if (act === "updated_deadline") {
+      const dateStr = data.due_date ? new Date(data.due_date).toLocaleDateString("vi-VN") : "Chưa đặt";
+      return `hạn chót: ${dateStr}`;
+    }
+    if (act === "complete" || act === "completed" || act === "done") {
+      return "hoàn thành";
+    }
+    if (act === "incomplete") {
+      return "mở lại";
+    }
+    if (act === "assign" || act === "assigned") {
+      return `giao cho ${data.assignee_name}`;
+    }
+    if (act === "create" || act === "created") {
+      return "tạo mới";
+    }
+    if (act === "updated_title") {
+      return `tên mới: "${data.title}"`;
+    }
+  } catch {}
+  return "";
+};
+
+export const groupActivities = (rawActivities: any[]): any[] => {
+  if (!rawActivities || rawActivities.length === 0) return [];
+
+  const grouped: any[] = [];
+  
+  for (let i = 0; i < rawActivities.length; i++) {
+    const current = rawActivities[i];
+    
+    // We only group subtask actions
+    const isSubtask = current.entityType?.toLowerCase() === "subtask";
+    if (!isSubtask) {
+      grouped.push({ ...current, isGroup: false });
+      continue;
+    }
+
+    let currentData: any = null;
+    try {
+      currentData = JSON.parse(current.newValue);
+    } catch {}
+    
+    const parentTaskId = currentData?.task_id || currentData?.parent_task_id;
+    const parentTaskTitle = currentData?.parent_task_title;
+    
+    if (!parentTaskId || !parentTaskTitle) {
+      grouped.push({ ...current, isGroup: false });
+      continue;
+    }
+
+    // Try to merge with subsequent items that match:
+    // same user, same actionType, same parentTaskId, within 1 minute
+    const groupItems: any[] = [{
+      id: current.id,
+      subtaskTitle: currentData.title || "Công việc con",
+      newValue: current.newValue,
+      oldValue: current.oldValue,
+      createdAt: current.createdAt
+    }];
+    
+    const currentMs = new Date(current.createdAt).getTime();
+
+    let j = i + 1;
+    while (j < rawActivities.length) {
+      const next = rawActivities[j];
+      const nextIsSubtask = next.entityType?.toLowerCase() === "subtask";
+      
+      if (nextIsSubtask && next.userId === current.userId && next.actionType === current.actionType) {
+        let nextData: any = null;
+        try {
+          nextData = JSON.parse(next.newValue);
+        } catch {}
+        
+        const nextParentId = nextData?.task_id || nextData?.parent_task_id;
+        if (nextParentId === parentTaskId) {
+          const nextMs = new Date(next.createdAt).getTime();
+          const diffMs = Math.abs(currentMs - nextMs);
+          if (diffMs <= 60000) { // 1 minute
+            groupItems.push({
+              id: next.id,
+              subtaskTitle: nextData.title || "Công việc con",
+              newValue: next.newValue,
+              oldValue: next.oldValue,
+              createdAt: next.createdAt
+            });
+            j++;
+            continue;
+          }
+        }
+      }
+      break;
+    }
+
+    if (groupItems.length > 1) {
+      grouped.push({
+        isGroup: true,
+        id: current.id, // Use the latest ID
+        userId: current.userId,
+        displayName: current.displayName,
+        avatar: current.avatar,
+        actionType: current.actionType,
+        entityType: "subtask",
+        parentTaskId,
+        parentTaskTitle,
+        createdAt: current.createdAt, // The latest timestamp
+        items: groupItems
+      });
+      // Skip the merged items
+      i = j - 1;
+    } else {
+      grouped.push({ ...current, isGroup: false });
+    }
+  }
+
+  return grouped;
 };

@@ -79,7 +79,7 @@ public class DeleteProjectDocumentCommandHandler : IRequestHandler<DeleteProject
             EntityType = "ProjectDocument",
             EntityId = doc.Id,
             ActionType = "Delete",
-            OldValue = doc.FileName,
+            OldValue = System.Text.Json.JsonSerializer.Serialize(doc.FileName),
             NewValue = null,
             CreatedAt = DateTime.UtcNow
         };

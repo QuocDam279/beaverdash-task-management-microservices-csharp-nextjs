@@ -43,6 +43,16 @@ public class SubTaskDto
     public List<CommentDto> Comments { get; set; } = new();
 }
 
+public class AttachmentDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = null!;
+    public string FileUrl { get; set; } = null!;
+    public string? FileType { get; set; }
+    public long? FileSizeBytes { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
 public class CommentDto
 {
     public Guid Id { get; set; }
@@ -53,6 +63,7 @@ public class CommentDto
     public string Content { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public List<AttachmentDto> Attachments { get; set; } = new();
 }
 
 public record GetTaskDetailsQuery(Guid TaskId) : IRequest<TaskDetailsDto?>;

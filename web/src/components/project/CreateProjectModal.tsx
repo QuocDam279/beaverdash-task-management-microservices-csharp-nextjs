@@ -32,6 +32,9 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
         const data = await api.get("/teams");
         const leaderTeams = (data || []).filter((t: any) => t.currentUserRole === "leader");
         setTeams(leaderTeams);
+        if (leaderTeams.length > 0) {
+          setTeamId(leaderTeams[0].id);
+        }
       } catch (err) {
         console.error("Failed to fetch teams for project creation:", err);
       }
@@ -46,6 +49,11 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    if (startDate && dueDate && new Date(startDate) > new Date(dueDate)) {
+      alert("Ngày bắt đầu không thể lớn hơn ngày kết thúc.", "Thông báo", "warning");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -146,19 +154,26 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
             {/* Thuộc nhóm */}
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
-                Thuộc nhóm làm việc
+                Thuộc nhóm làm việc <span className="text-red-500">*</span>
               </label>
-              <select
-                value={teamId}
-                disabled={isSubmitting}
-                onChange={(e) => setTeamId(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
-              >
-                <option value="">Không có nhóm (Dự án cá nhân)</option>
-                {teams.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
+              {teams.length > 0 ? (
+                <select
+                  value={teamId}
+                  required
+                  disabled={isSubmitting}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
+                >
+                  <option value="" disabled>-- Chọn nhóm làm việc --</option>
+                  {teams.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 p-2.5 rounded-[4px] font-bold leading-normal">
+                  ⚠️ Bạn cần là Trưởng nhóm (Leader) của ít nhất một nhóm để tạo dự án. Vui lòng tạo nhóm mới trước.
+                </div>
+              )}
             </div>
 
             {/* Ngày bắt đầu & Hạn chót */}
@@ -217,7 +232,7 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || teams.length === 0}
               className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-2 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting && (

@@ -111,12 +111,11 @@ export function GanttChartView({
         {/* Single Scroll Container */}
         <div 
           ref={rightScrollRef}
-          className="flex-1 overflow-auto scrollbar-thin relative bg-white"
+          className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin relative bg-white"
         >
           {/* HEADER AREA (sticky top) */}
           <div 
-            className="sticky top-0 z-30 h-10 border-b border-slate-200 bg-slate-50 flex shrink-0"
-            style={{ width: `${280 + daysInMonth * 36}px` }}
+            className="sticky top-0 z-30 h-10 border-b border-slate-200 bg-slate-50 flex shrink-0 w-full"
           >
             {/* Top-Left Header Cell (sticky left & top) */}
             <div className="w-[280px] sticky left-0 z-40 border-r border-slate-200 bg-slate-50 flex items-center px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 select-none">
@@ -127,8 +126,7 @@ export function GanttChartView({
             <div 
               className="flex-1 grid select-none"
               style={{ 
-                gridTemplateColumns: `repeat(${daysInMonth}, 36px)`, 
-                width: `${daysInMonth * 36}px` 
+                gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))`, 
               }}
             >
               {dayNumbers.map((day) => {
@@ -149,7 +147,7 @@ export function GanttChartView({
           </div>
 
           {/* BODY AREA (scrollable rows) */}
-          <div className="divide-y divide-slate-150 relative" style={{ width: `${280 + daysInMonth * 36}px` }}>
+          <div className="divide-y divide-slate-150 relative w-full">
             {/* Today Line (absolute positioned inside the body container) */}
             {(() => {
               const today = new Date();
@@ -159,7 +157,7 @@ export function GanttChartView({
                 return (
                   <div
                     className="absolute top-0 bottom-0 border-l-2 border-dashed border-red-500 z-10 pointer-events-none"
-                    style={{ left: `${280 + (todayDay - 1) * 36 + 18}px` }}
+                    style={{ left: `calc(280px + (((${todayDay} - 0.5) / ${daysInMonth}) * (100% - 280px)))` }}
                   />
                 );
               }
@@ -199,12 +197,12 @@ export function GanttChartView({
               return (
                 <div 
                   key={task.id} 
-                  className="h-14 flex group hover:bg-slate-50/50 transition-colors"
+                  className="h-14 flex group hover:bg-slate-50/50 transition-colors w-full"
                 >
                   {/* Sticky Left Task Cell */}
                   <div
                     onClick={() => setSelectedTask(task)}
-                    className="w-[280px] sticky left-0 z-20 border-r border-slate-200 bg-white group-hover:bg-slate-50/80 flex flex-col justify-center px-4 cursor-pointer transition-colors"
+                    className="w-[280px] sticky left-0 z-20 border-r border-slate-200 bg-white group-hover:bg-slate-50/80 flex flex-col justify-center px-4 cursor-pointer transition-colors shrink-0"
                   >
                     <span className="text-xs font-semibold text-[#292a2e] truncate" title={task.title}>
                       {task.title}
@@ -214,11 +212,10 @@ export function GanttChartView({
                   {/* Right Timeline Cell */}
                   <div 
                     onClick={() => setSelectedTask(task)}
-                    className="shrink-0 relative cursor-pointer flex items-center min-w-0"
-                    style={{ width: `${daysInMonth * 36}px` }}
+                    className="flex-1 relative cursor-pointer flex items-center min-w-0"
                   >
                     {/* Grid Lines */}
-                    <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${daysInMonth}, 36px)` }}>
+                    <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))` }}>
                       {dayNumbers.map((d) => <div key={d} className="border-r border-slate-100 last:border-r-0 h-full" />)}
                     </div>
 
@@ -226,7 +223,11 @@ export function GanttChartView({
                       overlapsCurrentMonth && sDateObj && dDateObj ? (
                         <div
                           className={`absolute h-7 rounded-md border shadow-xs bg-gradient-to-r flex flex-col justify-between overflow-hidden p-0.5 select-none ${getPriorityColor(task.priority)}`}
-                          style={{ left: `${(startDay - 1) * 36 + 3}px`, width: `${spanDays * 36 - 6}px`, minWidth: "30px" }}
+                          style={{ 
+                            left: `calc(((${startDay} - 1) / ${daysInMonth}) * 100% + 2px)`, 
+                            width: `calc((${spanDays} / ${daysInMonth}) * 100% - 4px)`, 
+                            minWidth: "16px" 
+                          }}
                           title={`${task.title} (${sDateObj.toLocaleDateString("vi-VN")} - ${dDateObj.toLocaleDateString("vi-VN")})`}
                         >
                           <span className="text-[9px] font-extrabold truncate px-1 mt-0.5">{percent}%</span>

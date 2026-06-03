@@ -47,7 +47,7 @@ export default function BoardPage({ params }: PageProps) {
       />
 
       {/* KANBAN BOARD */}
-      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-start scrollbar-thin">
+      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-stretch scrollbar-thin">
         {b.columns.map((column, index) => (
           <div key={column.id} className="w-80 shrink-0 flex flex-col">
             <BoardColumnView

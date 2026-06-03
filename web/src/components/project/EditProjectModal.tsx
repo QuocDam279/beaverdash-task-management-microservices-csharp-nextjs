@@ -40,6 +40,11 @@ export function EditProjectModal({ isOpen, onClose, project, onProjectUpdated }:
     e.preventDefault();
     if (!name.trim()) return;
 
+    if (startDate && dueDate && new Date(startDate) > new Date(dueDate)) {
+      alert("Ngày bắt đầu không thể lớn hơn ngày kết thúc.", "Thông báo", "warning");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 

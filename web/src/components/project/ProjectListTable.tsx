@@ -8,7 +8,7 @@
 import * as React from "react";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { Avatar } from "@/components/ui/Avatar";
-import { getTaskPriorityLabel } from "@/lib/utils";
+import { getTaskPriorityLabel, getSubtaskPriorityLabel } from "@/lib/utils";
 
 interface ProjectListTableProps {
   tasks: TaskItem[];
@@ -16,6 +16,9 @@ interface ProjectListTableProps {
   onTaskClick: (task: TaskItem) => void;
   isPersonalProject?: boolean;
   showProjectColumn?: boolean;
+  hideAssigneeColumn?: boolean;
+  showParentTaskColumn?: boolean;
+  hideSubTasksColumn?: boolean;
 }
 
 export function ProjectListTable({
@@ -24,6 +27,9 @@ export function ProjectListTable({
   onTaskClick,
   isPersonalProject = false,
   showProjectColumn = false,
+  hideAssigneeColumn = false,
+  showParentTaskColumn = false,
+  hideSubTasksColumn = false,
 }: ProjectListTableProps) {
   const getStatusName = (columnId: string): string => {
     return columns.find((c) => c.id === columnId)?.name || "Chưa rõ";
@@ -32,15 +38,20 @@ export function ProjectListTable({
   const renderPriorityBadge = (priority: string | null) => {
     if (!priority) return null;
     const p = priority.toLowerCase();
-    const label = getTaskPriorityLabel(priority);
+    let label = getTaskPriorityLabel(priority);
     let badgeClass = "bg-slate-50 text-slate-600 border-slate-200 font-medium";
-    if (p === "required") {
+
+    if (p === "required" || p === "high") {
+      label = p === "high" ? "Cao" : label;
       badgeClass = "bg-red-50 text-red-700 border-red-200 font-extrabold";
-    } else if (p === "important") {
+    } else if (p === "important" || p === "medium") {
+      label = p === "medium" ? "Trung bình" : label;
       badgeClass = "bg-blue-50 text-blue-700 border-blue-200 font-bold";
-    } else if (p === "extended") {
+    } else if (p === "extended" || p === "low") {
+      label = p === "low" ? "Thấp" : label;
       badgeClass = "bg-slate-50 text-slate-600 border-slate-200 font-medium";
     }
+
     return (
       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase border tracking-wide ${badgeClass}`}>
         {label}
@@ -51,8 +62,10 @@ export function ProjectListTable({
   const renderStatusBadge = (columnId: string, columnName?: string) => {
     const name = columnName || getStatusName(columnId);
     let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
-    if (name.includes("Hoàn thành") || name.toLowerCase().includes("done")) {
+    if (name === "Đã hoàn thành" || (name.includes("Hoàn thành") && !name.includes("Chưa")) || name.toLowerCase().includes("done")) {
       badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold";
+    } else if (name === "Chưa hoàn thành" || name.includes("Chưa")) {
+      badgeClass = "bg-amber-50 text-amber-700 border-amber-200 font-bold";
     } else if (name.includes("Đang") || name.toLowerCase().includes("progress")) {
       badgeClass = "bg-blue-50 text-blue-700 border-blue-200 font-bold";
     }
@@ -63,13 +76,13 @@ export function ProjectListTable({
     );
   };
 
-  const renderDate = (dateStr: string | null, isDueDate = false) => {
+  const renderDate = (dateStr: string | null, isDueDate = false, isCompleted = false) => {
     if (!dateStr) return null;
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const text = `${day}/${month}`;
-    if (isDueDate) {
+    if (isDueDate && !isCompleted) {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -118,33 +131,40 @@ export function ProjectListTable({
           Không có công việc nào thỏa mãn bộ lọc.
         </div>
       ) : (
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full text-left text-xs border-collapse table-fixed">
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
             <tr>
-              <th className="py-2.5 px-4 w-[35%] min-w-[200px]">
+              <th className="py-2.5 px-3 w-[28%] min-w-[150px] whitespace-nowrap">
                 Tiêu đề
               </th>
+              {showParentTaskColumn && (
+                <th className="py-2.5 px-3 w-[16%] min-w-[120px] whitespace-nowrap">
+                  Công việc cha
+                </th>
+              )}
               {showProjectColumn && (
-                <th className="py-2.5 px-4 w-[12%] min-w-[100px]">
+                <th className="py-2.5 px-3 w-[14%] min-w-[100px] whitespace-nowrap">
                   Dự án
                 </th>
               )}
-              {!isPersonalProject && (
-                <th className="py-2.5 px-4 w-[15%] min-w-[120px] text-center">
+              {!isPersonalProject && !hideAssigneeColumn && (
+                <th className="py-2.5 px-3 w-[14%] min-w-[110px] text-center whitespace-nowrap">
                   Người thực hiện
                 </th>
               )}
-              <th className="py-2.5 px-4 w-[15%] min-w-[120px] text-center">
+              <th className="py-2.5 px-3 w-[12%] min-w-[95px] text-center whitespace-nowrap">
                 Trạng thái
               </th>
-              <th className="py-2.5 px-4 w-[12%] min-w-[100px] text-center">
+              <th className="py-2.5 px-3 w-[10%] min-w-[80px] text-center whitespace-nowrap">
                 Ưu tiên
               </th>
-              <th className="py-2.5 px-4 w-[9%] min-w-[80px]">Bắt đầu</th>
-              <th className="py-2.5 px-4 w-[9%] min-w-[85px]">
+              <th className="py-2.5 px-3 w-[8%] min-w-[75px] whitespace-nowrap">Bắt đầu</th>
+              <th className="py-2.5 px-3 w-[8%] min-w-[80px] whitespace-nowrap">
                 Hạn chót
               </th>
-              <th className="py-2.5 px-4 w-[9%] min-w-[80px] text-center">Việc con</th>
+              {!hideSubTasksColumn && (
+                <th className="py-2.5 px-3 w-[8%] min-w-[75px] text-center whitespace-nowrap">Việc con</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -152,6 +172,10 @@ export function ProjectListTable({
               const subTasksCount = (t as any).subTasksCount || (t.subTasks ? t.subTasks.length : 0);
               const completedSubTasksCount = (t as any).completedSubTasksCount || (t.subTasks ? t.subTasks.filter(st => st.isCompleted).length : 0);
               const taskAssignees = getTaskAssignees(t);
+              const isTaskCompleted = 
+                (t as any).isCompleted === true || 
+                (t as any).columnIsDone === true || 
+                columns.find((c) => c.id === t.boardColumnId)?.isDone === true;
               
               return (
                 <tr
@@ -159,16 +183,21 @@ export function ProjectListTable({
                   onClick={() => onTaskClick(t)}
                   className="hover:bg-blue-50/20 transition-colors cursor-pointer"
                 >
-                  <td className="py-3 px-4 font-semibold text-[#292a2e] max-w-xs truncate">
+                  <td className="py-3 px-3 font-semibold text-[#292a2e] max-w-0 truncate" title={t.title}>
                     {t.title}
                   </td>
+                  {showParentTaskColumn && (
+                    <td className="py-3 px-3 text-slate-500 font-medium max-w-0 truncate" title={(t as any).parentTaskTitle || "-"}>
+                      {(t as any).parentTaskTitle || "-"}
+                    </td>
+                  )}
                   {showProjectColumn && (
-                    <td className="py-3 px-4 text-slate-500 font-bold max-w-xs truncate">
+                    <td className="py-3 px-3 text-slate-500 font-bold max-w-0 truncate" title={(t as any).projectName || "-"}>
                       {(t as any).projectName || "-"}
                     </td>
                   )}
-                  {!isPersonalProject && (
-                    <td className="py-3 px-4 text-center">
+                  {!isPersonalProject && !hideAssigneeColumn && (
+                    <td className="py-3 px-3 text-center">
                       <div className="flex -space-x-1.5 justify-center items-center">
                         {taskAssignees.length > 0 ? (
                           taskAssignees.map((user) => (
@@ -186,35 +215,37 @@ export function ProjectListTable({
                       </div>
                     </td>
                   )}
-                  <td className="py-3 px-4 text-center">{renderStatusBadge(t.boardColumnId, (t as any).columnName)}</td>
-                  <td className="py-3 px-4 text-center">{renderPriorityBadge(t.priority)}</td>
-                  <td className="py-3 px-4">{renderDate(t.startDate)}</td>
-                  <td className="py-3 px-4">{renderDate(t.dueDate, true)}</td>
-                  <td className="py-3 px-4 text-center">
-                    {subTasksCount > 0 && (
-                      <div className="flex items-center justify-center gap-1.5">
-                        <span className="font-bold text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm">
-                          {completedSubTasksCount}/{subTasksCount}
-                        </span>
-                        {(() => {
-                          const unassignedCount = t.subTasks
-                            ? t.subTasks.filter((st) => !st.assigneeUserId && !st.isCompleted).length
-                            : 0;
-                          if (unassignedCount > 0) {
-                            return (
-                              <span 
-                                className="text-amber-600 bg-amber-50 border border-amber-200 px-1 py-[1px] rounded text-[9px] font-bold flex items-center" 
-                                title={`Có ${unassignedCount} công việc con chưa phân công`}
-                              >
-                                ⚠️ {unassignedCount}
-                              </span>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </td>
+                  <td className="py-3 px-3 text-center whitespace-nowrap">{renderStatusBadge(t.boardColumnId, (t as any).columnName)}</td>
+                  <td className="py-3 px-3 text-center whitespace-nowrap">{renderPriorityBadge(t.priority)}</td>
+                  <td className="py-3 px-3 whitespace-nowrap">{renderDate(t.startDate)}</td>
+                  <td className="py-3 px-3 whitespace-nowrap">{renderDate(t.dueDate, true, isTaskCompleted)}</td>
+                  {!hideSubTasksColumn && (
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      {subTasksCount > 0 && (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="font-bold text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm">
+                            {completedSubTasksCount}/{subTasksCount}
+                          </span>
+                          {(() => {
+                            const unassignedCount = t.subTasks
+                              ? t.subTasks.filter((st) => !st.assigneeUserId && !st.isCompleted).length
+                              : 0;
+                            if (unassignedCount > 0) {
+                              return (
+                                <span 
+                                  className="text-amber-600 bg-amber-50 border border-amber-200 px-1 py-[1px] rounded text-[9px] font-bold flex items-center" 
+                                  title={`Có ${unassignedCount} công việc con chưa phân công`}
+                                >
+                                  ⚠️ {unassignedCount}
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </td>
+                  )}
 
                 </tr>
               );

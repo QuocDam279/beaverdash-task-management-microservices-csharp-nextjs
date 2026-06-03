@@ -44,7 +44,7 @@ const renderPriority = (priority: string | null) => {
   return null;
 };
 
-const renderDueDate = (dueDateStr: string | null) => {
+const renderDueDate = (dueDateStr: string | null, isDone: boolean = false) => {
   if (!dueDateStr) return null;
   const dueDate = new Date(dueDateStr);
   const now = new Date();
@@ -61,7 +61,9 @@ const renderDueDate = (dueDateStr: string | null) => {
   let badgeClass = "bg-slate-50 border-slate-200 text-slate-600";
   let text = `${formattedDate}`;
 
-  if (diffDays < 0) {
+  if (isDone) {
+    // Không hiển thị cảnh báo trễ khi công việc ở cột hoàn thành
+  } else if (diffDays < 0) {
     badgeClass = "bg-red-50 border-red-200 text-red-700 font-bold";
     text = `Trễ: ${formattedDate}`;
   } else if (diffDays === 0) {
@@ -149,7 +151,7 @@ export function BoardTaskCard({
 
         <div className="flex flex-wrap items-center gap-1.5">
           {renderPriority(task.priority)}
-          {renderDueDate(task.dueDate)}
+          {renderDueDate(task.dueDate, column.isDone)}
 
           {commentCount > 0 && (
             <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-1 py-0.5 rounded">

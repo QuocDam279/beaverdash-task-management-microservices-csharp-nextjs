@@ -21,3 +21,7 @@ export { BoardTaskCard } from "./BoardTaskCard";
 export { ProjectListView } from "./ProjectListView";
 export { ProjectListTable } from "./ProjectListTable";
 export { ShareProjectModal } from "./ShareProjectModal";
+export { TaskSubtaskDrawer } from "./TaskSubtaskDrawer";
+export { TaskSubtaskDrawerProperties } from "./TaskSubtaskDrawerProperties";
+export { TaskSubtaskDrawerTitle } from "./TaskSubtaskDrawerTitle";
+export { ListToolbar } from "./ListToolbar";
