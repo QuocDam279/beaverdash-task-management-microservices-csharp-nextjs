@@ -6,35 +6,33 @@ using Identity.Domain.Entities;
 using Identity.Application.Contracts;
 using MassTransit;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Application.Features.Users.Commands;
 
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, bool>
 {
-    private readonly IIdentityDbContext _dbContext;
+    private readonly IUserRepository _userRepository;
     private readonly IPublishEndpoint _publishEndpoint;
 
-    public UpdateUserCommandHandler(IIdentityDbContext dbContext, IPublishEndpoint publishEndpoint)
+    public UpdateUserCommandHandler(IUserRepository userRepository, IPublishEndpoint publishEndpoint)
     {
-        _dbContext = dbContext;
+        _userRepository = userRepository;
         _publishEndpoint = publishEndpoint;
     }
 
     public async Task<bool> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken);
 
         if (user == null)
             return false;
 
-        user.Email = request.Email;
+        user.Email = request.Email.ToLowerInvariant();
         user.DisplayName = request.DisplayName;
         user.Avatar = request.Avatar;
         user.UpdatedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         var userUpdatedEvent = new UserUpdatedEvent
         {

@@ -1,12 +1,8 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using EventBus.Messages.Events;
 using Identity.Application.Contracts;
 using Identity.Domain.Entities;
 using MassTransit;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using EventBus.Messages.Events;
 
 namespace Identity.Application.Features.Auth.Commands;
 
@@ -18,18 +14,18 @@ public record GoogleLoginUserDto(Guid Id, string Email, string DisplayName, stri
 
 public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, GoogleLoginResponse?>
 {
-    private readonly IIdentityDbContext _dbContext;
+    private readonly IUserRepository _userRepository;
     private readonly IGoogleTokenValidator _tokenValidator;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IPublishEndpoint _publishEndpoint;
 
     public GoogleLoginCommandHandler(
-        IIdentityDbContext dbContext,
+        IUserRepository userRepository,
         IGoogleTokenValidator tokenValidator,
         IJwtTokenGenerator jwtTokenGenerator,
         IPublishEndpoint publishEndpoint)
     {
-        _dbContext = dbContext;
+        _userRepository = userRepository;
         _tokenValidator = tokenValidator;
         _jwtTokenGenerator = jwtTokenGenerator;
         _publishEndpoint = publishEndpoint;
@@ -41,8 +37,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
         if (payload == null) return null;
 
         // Find user by GoogleId or Email
-        var user = await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.GoogleId == payload.GoogleId || u.Email == payload.Email, cancellationToken);
+        var user = await _userRepository.GetByGoogleIdOrEmailAsync(payload.GoogleId, payload.Email, cancellationToken);
 
         bool isNewUser = false;
 
@@ -52,14 +47,14 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
             {
                 Id = Guid.NewGuid(),
                 GoogleId = payload.GoogleId,
-                Email = payload.Email,
+                Email = payload.Email.ToLowerInvariant(),
                 DisplayName = payload.DisplayName,
                 Avatar = payload.Avatar,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _dbContext.Users.Add(user);
+            await _userRepository.AddAsync(user, cancellationToken);
             isNewUser = true;
         }
         else
@@ -88,7 +83,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
             }
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         // Publish UserCreatedEvent to RabbitMQ via MassTransit if it's a new user
         if (isNewUser)

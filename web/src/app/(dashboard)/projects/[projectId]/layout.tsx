@@ -9,19 +9,19 @@ import { EditProjectModal, ShareProjectModal } from "@/components/project";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { AIAssistantContainer } from "@/components/features/ai-assistant";
+import { useToast } from "@/components/providers/ToastProvider";
 
 interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ projectId: string }>;
 }
 
-
-
 export default function ProjectLayout({ children, params }: LayoutProps) {
   const { projectId } = React.use(params);
   const pathname = usePathname();
   const router = useRouter();
   const { user: currentUser } = useAuth();
+  const { success: showSuccessToast } = useToast();
 
   const [project, setProject] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -62,14 +62,13 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     try {
       setIsActionPending(true);
       await api.delete(`/projects/${projectId}`);
-      window.location.href = "/";
+      showSuccessToast("Dự án đã được xóa thành công.", "Thành công");
+      router.push("/tasks");
     } catch (err: any) {
       setIsActionPending(false);
       alert(err.message || "Không thể xóa dự án.", "Thất bại", "danger");
     }
   };
-
-
 
   const tabs: { name: string; href: string; exact: boolean; disabled?: boolean }[] = [
     { name: "Tổng quan", href: `/projects/${projectId}`, exact: true },
@@ -97,8 +96,8 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
 
   const userWorkload = project?.memberWorkloads?.find((w: any) => w.userId === currentUser?.id);
   const isLeaderOrOwner = project.teamId
-    ? (userWorkload?.role === "Trưởng nhóm")
-    : (project?.createdByUserId === currentUser?.id || userWorkload?.role === "Chủ sở hữu");
+    ? userWorkload?.role === "Trưởng nhóm"
+    : project?.createdByUserId === currentUser?.id || userWorkload?.role === "Chủ sở hữu";
 
   return (
     <div className="flex flex-col h-full w-full bg-white select-none">
@@ -122,7 +121,6 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
           
           {/* Actions */}
           <div className="flex items-center gap-2">
-
             {isLeaderOrOwner && (
               <>
                 <button
@@ -168,14 +166,14 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
         </div>
 
         {/* Project Description */}
-        {project.description && (
+        {project?.description && (
           <p className="text-xs text-[#505258] max-w-4xl leading-relaxed mb-4">
             {project.description}
           </p>
         )}
 
         {/* Project Dates */}
-        {(project.startDate || project.dueDate) && (
+        {(project?.startDate || project?.dueDate) && (
           <div className="flex flex-wrap items-center gap-4 text-xs text-[#505258] mb-4">
             {project.startDate && (
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/60 px-2 py-0.5 rounded-[4px]">
@@ -251,7 +249,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
         </div>
 
         {/* Regular routing views (Board, Calendar, Gantt, Overview, List), hidden when in assistant route */}
-        <div className={`flex-1 min-h-0 w-full overflow-auto bg-white custom-chat-scrollbar ${pathname.endsWith("/assistant") ? "hidden" : "block"}`}>
+        <div key={projectId} className={`flex-1 min-h-0 w-full overflow-auto bg-white custom-chat-scrollbar ${pathname.endsWith("/assistant") ? "hidden" : "block"}`}>
           {children}
         </div>
       </div>

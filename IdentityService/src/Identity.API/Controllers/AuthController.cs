@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Identity.Application.Features.Auth.Queries;
 using Identity.Application.Features.Auth.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -15,19 +14,6 @@ public class AuthController : ControllerBase
     public AuthController(ISender sender)
     {
         _sender = sender;
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginQuery query)
-    {
-        var token = await _sender.Send(query);
-
-        if (string.IsNullOrEmpty(token))
-        {
-            return Unauthorized(new { Error = "Invalid credentials." });
-        }
-
-        return Ok(new { Token = token });
     }
 
     [HttpPost("google")]

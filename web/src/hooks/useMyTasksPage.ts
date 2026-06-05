@@ -37,7 +37,7 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   const [error, setError] = React.useState<string | null>(null);
 
   // Overlay state
-  const [showAnnouncement, setShowAnnouncement] = React.useState(false);
+  const [showAnnouncement, setShowAnnouncement] = React.useState(true);
   const [notifications, setNotifications] = React.useState<any[]>([]);
   const [isNotifLoading, setIsNotifLoading] = React.useState(true);
 
@@ -59,12 +59,6 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
     notifications.filter((n: any) => !n.isRead), [notifications]);
 
   React.useEffect(() => {
-    if (!sessionStorage.getItem("beaverdash_announcement_shown")) {
-      setShowAnnouncement(true);
-    }
-  }, []);
-
-  React.useEffect(() => {
     if (!showAnnouncement) return;
     const fetchNotifs = async () => {
       try {
@@ -81,8 +75,7 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   }, [showAnnouncement]);
 
   const handleCloseAnnouncement = React.useCallback(() => {
-    setShowAnnouncement(false);
-    sessionStorage.setItem("beaverdash_announcement_shown", "true");
+    // Keep it always visible, this is a no-op
   }, []);
 
   const announcementStats = React.useMemo<AnnouncementStats>(() => {

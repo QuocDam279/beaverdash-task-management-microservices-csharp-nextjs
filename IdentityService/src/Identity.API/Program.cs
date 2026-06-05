@@ -23,7 +23,8 @@ builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", "/", h => {
+        var rabbitMqHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
+        cfg.Host(rabbitMqHost, "/", h => {
             h.Username(Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? "guest");
             h.Password(Environment.GetEnvironmentVariable("RABBITMQ_PASS") ?? "guest");
         });
@@ -31,7 +32,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-builder.Services.AddScoped<Identity.Application.Contracts.IGoogleTokenValidator, Identity.Infrastructure.Services.GoogleTokenValidator>();
+builder.Services.AddSingleton<Identity.Application.Contracts.IGoogleTokenValidator, Identity.Infrastructure.Services.GoogleTokenValidator>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
@@ -54,7 +55,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddScoped<Identity.Application.Contracts.IIdentityDbContext>(provider => provider.GetRequiredService<IdentityDbContext>());
+builder.Services.AddScoped<Identity.Application.Contracts.IUserRepository, Identity.Infrastructure.Data.UserRepository>();
 
 builder.Services.AddExceptionHandler<Identity.API.Middlewares.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

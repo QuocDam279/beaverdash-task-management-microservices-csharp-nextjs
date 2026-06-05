@@ -19,6 +19,7 @@ interface ProjectListTableProps {
   hideAssigneeColumn?: boolean;
   showParentTaskColumn?: boolean;
   hideSubTasksColumn?: boolean;
+  titleColumnName?: string;
 }
 
 export function ProjectListTable({
@@ -30,6 +31,7 @@ export function ProjectListTable({
   hideAssigneeColumn = false,
   showParentTaskColumn = false,
   hideSubTasksColumn = false,
+  titleColumnName = "Tiêu đề",
 }: ProjectListTableProps) {
   const getStatusName = (columnId: string): string => {
     return columns.find((c) => c.id === columnId)?.name || "Chưa rõ";
@@ -135,7 +137,7 @@ export function ProjectListTable({
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
             <tr>
               <th className="py-2.5 px-3 w-[28%] min-w-[150px] whitespace-nowrap">
-                Tiêu đề
+                {titleColumnName}
               </th>
               {showParentTaskColumn && (
                 <th className="py-2.5 px-3 w-[16%] min-w-[120px] whitespace-nowrap">

@@ -11,12 +11,12 @@ namespace Identity.Application.Features.Users.Commands;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Guid>
 {
-    private readonly IIdentityDbContext _dbContext;
+    private readonly IUserRepository _userRepository;
     private readonly IPublishEndpoint _publishEndpoint;
 
-    public CreateUserCommandHandler(IIdentityDbContext dbContext, IPublishEndpoint publishEndpoint)
+    public CreateUserCommandHandler(IUserRepository userRepository, IPublishEndpoint publishEndpoint)
     {
-        _dbContext = dbContext;
+        _userRepository = userRepository;
         _publishEndpoint = publishEndpoint;
     }
 
@@ -26,15 +26,15 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Guid>
         {
             Id = Guid.NewGuid(),
             GoogleId = request.GoogleId,
-            Email = request.Email,
+            Email = request.Email.ToLowerInvariant(),
             DisplayName = request.DisplayName,
             Avatar = request.Avatar,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userRepository.AddAsync(user, cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         var userCreatedEvent = new UserCreatedEvent
         {

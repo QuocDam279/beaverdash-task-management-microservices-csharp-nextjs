@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Identity.Infrastructure.Data;
 
-public class IdentityDbContext : DbContext, Identity.Application.Contracts.IIdentityDbContext
+public class IdentityDbContext : DbContext
 {
     public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options)
     {

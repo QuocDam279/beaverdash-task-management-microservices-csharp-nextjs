@@ -66,6 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem("beaverdash_token", newToken);
       localStorage.setItem("beaverdash_user", JSON.stringify(newUser));
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("beaverdash_announcement_shown");
+        sessionStorage.removeItem("beaverdash_intro_played");
+      }
       setToken(newToken);
       setUser(newUser);
       routerRef.current.push("/tasks");
@@ -78,6 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.removeItem("beaverdash_token");
       localStorage.removeItem("beaverdash_user");
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("beaverdash_announcement_shown");
+        sessionStorage.removeItem("beaverdash_intro_played");
+      }
       setToken(null);
       setUser(null);
       routerRef.current.push("/login");

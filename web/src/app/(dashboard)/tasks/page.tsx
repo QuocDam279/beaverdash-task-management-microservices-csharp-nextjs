@@ -8,7 +8,6 @@ import { TaskDetailModal, CalendarView } from "@/components/project";
 import {
   MyTasksStatsPanel,
   MyTasksFilterToolbar,
-  MyTasksAnnouncementOverlay,
 } from "@/components/features/my-tasks";
 
 /**
@@ -89,8 +88,9 @@ export default function MyTasksPage() {
           showProjectColumn={true}
           isPersonalProject={false}
           hideAssigneeColumn={true}
-          showParentTaskColumn={true}
+          showParentTaskColumn={false}
           hideSubTasksColumn={true}
+          titleColumnName="Công việc"
         />
       )}
 
@@ -113,14 +113,6 @@ export default function MyTasksPage() {
         />
       )}
 
-      {/* 6. Announcement Overlay Board */}
-      <MyTasksAnnouncementOverlay
-        isOpen={state.showAnnouncement}
-        onClose={state.handleCloseAnnouncement}
-        tasks={state.tasks}
-        currentUser={currentUser}
-        isTasksLoading={state.isLoading}
-      />
     </div>
   );
 }

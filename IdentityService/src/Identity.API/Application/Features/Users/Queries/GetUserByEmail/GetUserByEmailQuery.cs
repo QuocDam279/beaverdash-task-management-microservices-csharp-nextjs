@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Identity.Application.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,20 +12,18 @@ public record GetUserByEmailQuery(string Email) : IRequest<UserDto?>;
 
 public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, UserDto?>
 {
-    private readonly IIdentityDbContext _dbContext;
+    private readonly IUserRepository _userRepository;
 
-    public GetUserByEmailQueryHandler(IIdentityDbContext dbContext)
+    public GetUserByEmailQueryHandler(IUserRepository userRepository)
     {
-        _dbContext = dbContext;
+        _userRepository = userRepository;
     }
 
     public async Task<UserDto?> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.Email)) return null;
 
-        var user = await _dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user == null) return null;
 

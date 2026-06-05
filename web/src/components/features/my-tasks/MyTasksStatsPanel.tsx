@@ -2,7 +2,7 @@
 
 /**
  * @component MyTasksStatsPanel
- * @description Thống kê tiến độ công việc và danh sách công việc cần lưu ý (quá hạn, sắp đến hạn 3 ngày) của người dùng.
+ * @description Thống kê tiến độ công việc và danh sách công việc cần lưu ý (quá hạn và hoàn thành trong ngày) của người dùng.
  */
 
 import * as React from "react";
@@ -16,15 +16,13 @@ interface MyTasksStatsPanelProps {
 export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps) {
   const statsAndAttention = React.useMemo(() => {
     const now = new Date();
-    
-    const threeDaysFromNow = new Date(now);
-    threeDaysFromNow.setDate(now.getDate() + 3);
-    threeDaysFromNow.setHours(23, 59, 59, 999);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
     let completed = 0;
     let uncompleted = 0;
     const overdueList: any[] = [];
-    const upcomingList: any[] = [];
+    const todayList: any[] = [];
 
     tasks.forEach((t: any) => {
       if (t.isCompleted) {
@@ -34,10 +32,10 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
         
         if (t.dueDate) {
           const dueDate = new Date(t.dueDate);
-          if (dueDate < now) {
+          if (dueDate < startOfToday) {
             overdueList.push(t);
-          } else if (dueDate <= threeDaysFromNow) {
-            upcomingList.push(t);
+          } else if (dueDate <= endOfToday) {
+            todayList.push(t);
           }
         }
       }
@@ -52,7 +50,7 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
       uncompleted,
       percent,
       overdueList,
-      upcomingList,
+      todayList,
     };
   }, [tasks]);
 
@@ -135,17 +133,17 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
       <div className="border border-slate-200 rounded-lg p-5 bg-slate-50/40 flex flex-col h-72 shadow-2xs">
         <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-1.5 shrink-0">
           <span>Công việc cần chú ý</span>
-          {(statsAndAttention.overdueList.length > 0 || statsAndAttention.upcomingList.length > 0) && (
+          {(statsAndAttention.overdueList.length > 0 || statsAndAttention.todayList.length > 0) && (
             <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
           )}
         </h3>
 
         <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 scrollbar-hover-only">
-          {statsAndAttention.overdueList.length === 0 && statsAndAttention.upcomingList.length === 0 ? (
+          {statsAndAttention.overdueList.length === 0 && statsAndAttention.todayList.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-2 text-xs text-slate-500">
               <span className="text-xl mb-1">🎉</span>
               <span className="font-semibold text-emerald-600">Tuyệt vời!</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">Không có việc nào quá hạn hoặc sắp đến hạn trong 3 ngày.</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">Không có việc nào quá hạn hoặc cần hoàn thành trong ngày.</span>
             </div>
           ) : (
             <>
@@ -172,8 +170,8 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
                 </div>
               ))}
 
-              {/* Upcoming Items */}
-              {statsAndAttention.upcomingList.map((item) => (
+              {/* Today Items */}
+              {statsAndAttention.todayList.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => onTaskClick(item)}
@@ -184,11 +182,11 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
                     <span className="text-[10px] text-amber-700/80 truncate">Công việc: {item.parentTaskTitle} | Dự án: {item.projectName}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded">Gần hạn</span>
+                    <span className="bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded">Hạn hôm nay</span>
                     <span className="text-amber-700 font-bold text-[10px]">
                       {(() => {
                         const date = new Date(item.dueDate);
-                        return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                       })()}
                     </span>
                   </div>

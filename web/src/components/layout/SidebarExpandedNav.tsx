@@ -220,7 +220,7 @@ export function SidebarExpandedNav({
                 <ProjectTooltip key={p.id} text={p.name}>
                   <Link
                     href={`/projects/${p.id}`}
-                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all min-w-0 ${
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] text-xs font-semibold min-w-0 ${
                       isActiveProject
                         ? "bg-white border border-slate-300 text-[#1868db] font-bold shadow-sm"
                         : "text-[#505258] hover:bg-slate-200/50 hover:text-[#1868db]"
