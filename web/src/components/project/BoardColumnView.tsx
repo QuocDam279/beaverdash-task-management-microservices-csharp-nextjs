@@ -5,6 +5,7 @@ import { TaskItem, BoardColumn } from "@/types/task";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { BoardTaskCard } from "./BoardTaskCard";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface BoardColumnViewProps {
   column: BoardColumn;
@@ -22,6 +23,8 @@ interface BoardColumnViewProps {
   assignees?: any[];
   readOnly?: boolean;
   isPersonalProject?: boolean;
+  projectStartDate?: string | null;
+  projectDueDate?: string | null;
 }
 
 export function BoardColumnView({
@@ -40,8 +43,11 @@ export function BoardColumnView({
   assignees = [],
   readOnly = false,
   isPersonalProject = false,
+  projectStartDate = null,
+  projectDueDate = null,
 }: BoardColumnViewProps) {
   const { user: currentUser } = useAuth();
+  const { alert } = useAlertConfirm();
   const [newTitle, setNewTitle] = React.useState("");
   const [priority, setPriority] = React.useState("");
   const [startDate, setStartDate] = React.useState("");
@@ -76,6 +82,7 @@ export function BoardColumnView({
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+
     try {
       await api.post("/tasks", {
         boardColumnId: column.id,
@@ -90,8 +97,9 @@ export function BoardColumnView({
       setDueDate("");
       setIsAdding(false);
       onRefresh();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create task:", err);
+      alert(err.message || "Đã xảy ra lỗi khi tạo công việc.", "Thất bại", "danger");
     }
   };
 
@@ -307,7 +315,8 @@ export function BoardColumnView({
                   <input
                     type="date"
                     value={startDate}
-                    max={dueDate || undefined}
+                    min={projectStartDate ? projectStartDate.substring(0, 10) : undefined}
+                    max={dueDate ? dueDate : (projectDueDate ? projectDueDate.substring(0, 10) : undefined)}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full px-2 py-1 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
                   />
@@ -317,7 +326,8 @@ export function BoardColumnView({
                   <input
                     type="date"
                     value={dueDate}
-                    min={startDate || undefined}
+                    min={startDate ? startDate : (projectStartDate ? projectStartDate.substring(0, 10) : undefined)}
+                    max={projectDueDate ? projectDueDate.substring(0, 10) : undefined}
                     onChange={(e) => setDueDate(e.target.value)}
                     className="w-full px-2 py-1 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
                   />

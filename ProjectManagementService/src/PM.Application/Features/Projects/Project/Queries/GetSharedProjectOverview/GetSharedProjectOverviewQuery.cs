@@ -37,14 +37,13 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
             .Select(c => new { c.Id, c.Name, c.Position, c.IsDone })
             .ToListAsync(cancellationToken);
 
-        var columnIds = columns.Select(c => c.Id).ToList();
         var doneColumnIds = columns.Where(c => c.IsDone).Select(c => c.Id).ToList();
 
         // Fetch all tasks in these columns (excluding deleted)
         var tasks = await _dbContext.TaskItems
             .AsNoTracking()
             .Include(t => t.SubTasks)
-            .Where(t => columnIds.Contains(t.BoardColumnId) && t.DeletedAt == null)
+            .Where(t => t.BoardColumn != null && t.BoardColumn.ProjectId == project.Id && t.DeletedAt == null)
             .ToListAsync(cancellationToken);
 
         var now = DateTime.UtcNow;
@@ -52,61 +51,22 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
         var sevenDaysFromNow = now.AddDays(7);
 
         // Compute metrics
-        int totalTasks = tasks.Count;
-        int completedCount = tasks.Count(t => doneColumnIds.Contains(t.BoardColumnId) && (t.CompletedAt ?? t.UpdatedAt) >= sevenDaysAgo);
-        int newCount = tasks.Count(t => t.CreatedAt >= sevenDaysAgo);
-        int upcomingDueCount = tasks.Count(t => !doneColumnIds.Contains(t.BoardColumnId) && t.DueDate != null && t.DueDate >= now && t.DueDate <= sevenDaysFromNow);
+        var completedTasks = tasks.Where(t => doneColumnIds.Contains(t.BoardColumnId) && (t.CompletedAt ?? t.UpdatedAt) >= sevenDaysAgo).ToList();
+        var newTasks = tasks.Where(t => t.CreatedAt >= sevenDaysAgo).ToList();
+        var upcomingDueTasks = tasks.Where(t => !doneColumnIds.Contains(t.BoardColumnId) && t.DueDate != null && t.DueDate >= now && t.DueDate <= sevenDaysFromNow).ToList();
 
-        // Status counts based on column names/positions
-        int todoCount = 0;
-        int inProgressCount = 0;
-        int inReviewCount = 0;
-        int doneCount = 0;
+        int completedCount = completedTasks.Count;
+        int newCount = newTasks.Count;
+        int upcomingDueCount = upcomingDueTasks.Count;
 
-        foreach (var col in columns)
-        {
-            var colNameLower = col.Name.ToLower();
-            var colTasksCount = tasks.Count(t => t.BoardColumnId == col.Id);
+        int completedTasksSubTasksTotal = completedTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
+        int completedTasksSubTasksDone = completedTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
 
-            if (col.IsDone)
-            {
-                doneCount += colTasksCount;
-            }
-            else if (colNameLower.Contains("todo") || colNameLower.Contains("cần làm") || colNameLower.Contains("to do"))
-            {
-                todoCount += colTasksCount;
-            }
-            else if (colNameLower.Contains("progress") || colNameLower.Contains("đang làm") || colNameLower.Contains("in progress"))
-            {
-                inProgressCount += colTasksCount;
-            }
-            else if (colNameLower.Contains("review") || colNameLower.Contains("đang duyệt") || colNameLower.Contains("in review"))
-            {
-                inReviewCount += colTasksCount;
-            }
-            else
-            {
-                // Fallback: Map by Position
-                if (col.Position == 1) todoCount += colTasksCount;
-                else if (col.Position == 2) inProgressCount += colTasksCount;
-                else if (col.Position == 3) inReviewCount += colTasksCount;
-                else doneCount += colTasksCount;
-            }
-        }
+        int newTasksSubTasksTotal = newTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
+        int newTasksSubTasksDone = newTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
 
-        var columnStatusCounts = columns.Select(col => new ColumnStatusCountDto
-        {
-            ColumnId = col.Id,
-            ColumnName = col.Name,
-            TaskCount = tasks.Count(t => t.BoardColumnId == col.Id),
-            IsDone = col.IsDone,
-            Position = col.Position
-        }).OrderBy(c => c.Position).ToList();
-
-        // Priority counts
-        int requiredCount = tasks.Count(t => t.Priority == TaskPriority.Required);
-        int importantCount = tasks.Count(t => t.Priority == TaskPriority.Important);
-        int extendedCount = tasks.Count(t => t.Priority == TaskPriority.Extended);
+        int upcomingDueTasksSubTasksTotal = upcomingDueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
+        int upcomingDueTasksSubTasksDone = upcomingDueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
 
         // Subtask Status Counts & Priority Breakdown inside Parent Priorities
         int todoSubTasksCount = 0;
@@ -168,51 +128,31 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
         var memberWorkloads = new List<MemberWorkloadDto>();
         int totalSubTasks = tasks.SelectMany(t => t.SubTasks).Count(st => st.DeletedAt == null);
 
-        if (project.TeamId.HasValue)
+        if (!project.TeamId.HasValue)
         {
-            var teamMembers = await _dbContext.TeamMembers
-                .AsNoTracking()
-                .Include(tm => tm.User)
-                .Where(tm => tm.TeamId == project.TeamId.Value)
-                .ToListAsync(cancellationToken);
-
-            foreach (var tm in teamMembers)
-            {
-                int assignedCount = tasks.SelectMany(t => t.SubTasks).Count(st => st.AssigneeUserId == tm.UserId && st.DeletedAt == null);
-                int workloadPct = totalSubTasks > 0 ? (int)Math.Round((double)assignedCount / totalSubTasks * 100) : 0;
-
-                memberWorkloads.Add(new MemberWorkloadDto
-                {
-                    UserId = tm.UserId,
-                    DisplayName = tm.User?.DisplayName ?? "Unknown Member",
-                    Avatar = tm.User?.Avatar,
-                    Role = tm.Role == "Owner" || tm.Role == "leader" ? "Trưởng nhóm" : "Thành viên",
-                    AssignedTasksCount = assignedCount,
-                    WorkloadPercentage = workloadPct
-                });
-            }
+            throw new InvalidOperationException("Dự án không hợp lệ.");
         }
-        else
+
+        var teamMembers = await _dbContext.TeamMembers
+            .AsNoTracking()
+            .Include(tm => tm.User)
+            .Where(tm => tm.TeamId == project.TeamId.Value)
+            .ToListAsync(cancellationToken);
+
+        foreach (var tm in teamMembers)
         {
-            var owner = await _dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == project.CreatedByUserId, cancellationToken);
+            int assignedCount = tasks.SelectMany(t => t.SubTasks).Count(st => st.AssigneeUserId == tm.UserId && st.DeletedAt == null);
+            int workloadPct = totalSubTasks > 0 ? (int)Math.Round((double)assignedCount / totalSubTasks * 100) : 0;
 
-            if (owner != null)
+            memberWorkloads.Add(new MemberWorkloadDto
             {
-                int assignedCount = tasks.SelectMany(t => t.SubTasks).Count(st => st.AssigneeUserId == owner.Id && st.DeletedAt == null);
-                int workloadPct = totalSubTasks > 0 ? (int)Math.Round((double)assignedCount / totalSubTasks * 100) : 0;
-
-                memberWorkloads.Add(new MemberWorkloadDto
-                {
-                    UserId = owner.Id,
-                    DisplayName = owner.DisplayName,
-                    Avatar = owner.Avatar,
-                    Role = "Chủ sở hữu",
-                    AssignedTasksCount = assignedCount,
-                    WorkloadPercentage = workloadPct
-                });
-            }
+                UserId = tm.UserId,
+                DisplayName = tm.User?.DisplayName ?? "Unknown Member",
+                Avatar = tm.User?.Avatar,
+                Role = tm.Role == "Owner" || tm.Role == "leader" ? "Trưởng nhóm" : "Thành viên",
+                AssignedTasksCount = assignedCount,
+                WorkloadPercentage = workloadPct
+            });
         }
 
         memberWorkloads = memberWorkloads.OrderByDescending(w => w.AssignedTasksCount).ToList();
@@ -222,7 +162,6 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
             Id = project.Id,
             Name = project.Name,
             Description = project.Description,
-            Status = project.Status.ToVietnameseString(),
             StartDate = project.StartDate,
             DueDate = project.DueDate,
             TeamId = project.TeamId,
@@ -231,21 +170,16 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
             IsPublic = project.IsPublic,
             ShareToken = project.ShareToken,
 
-            TotalTasksCount = totalTasks,
             CompletedTasksCount = completedCount,
             NewTasksCount = newCount,
             UpcomingDueTasksCount = upcomingDueCount,
 
-            TodoTasksCount = todoCount,
-            InProgressTasksCount = inProgressCount,
-            InReviewTasksCount = inReviewCount,
-            DoneTasksCount = doneCount,
-
-            ColumnStatusCounts = columnStatusCounts,
-
-            RequiredPriorityCount = requiredCount,
-            ImportantPriorityCount = importantCount,
-            ExtendedPriorityCount = extendedCount,
+            CompletedTasksSubTasksTotal = completedTasksSubTasksTotal,
+            CompletedTasksSubTasksDone = completedTasksSubTasksDone,
+            NewTasksSubTasksTotal = newTasksSubTasksTotal,
+            NewTasksSubTasksDone = newTasksSubTasksDone,
+            UpcomingDueTasksSubTasksTotal = upcomingDueTasksSubTasksTotal,
+            UpcomingDueTasksSubTasksDone = upcomingDueTasksSubTasksDone,
 
             TodoSubTasksCount = todoSubTasksCount,
             InProgressSubTasksCount = inProgressSubTasksCount,

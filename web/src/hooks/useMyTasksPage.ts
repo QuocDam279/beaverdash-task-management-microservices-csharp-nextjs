@@ -1,8 +1,9 @@
 import * as React from "react";
 import { api } from "@/lib/api";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
-import type { TaskItem, BoardColumn } from "@/types/task";
+import type { TaskItem, BoardColumn, Notification } from "@/types/task";
 import type { User } from "@/types/auth";
+import type { TeamMemberDto, TeamMemberInfo } from "@/types/api";
 
 export interface AnnouncementStats {
   total: number;
@@ -17,18 +18,27 @@ export interface UniqueProject {
   name: string;
 }
 
-const getPriorityWeight = (p: string | null): number => {
-  if (!p) return 0;
-  switch (p) {
-    case "Required": case "Critical": case "High": return 3;
-    case "Important": case "Medium": return 2;
-    case "Extended": case "Low": return 1;
-    default: return 0;
-  }
-};
+export interface BackendStats {
+  totalTasksCount: number;
+  completedTasksCount: number;
+  uncompletedTasksCount: number;
+  overdueTasks: TaskItem[];
+  todayTasks: TaskItem[];
+}
+
+export interface PaginationInfo {
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+const DEFAULT_PAGE_SIZE = 10;
+const CALENDAR_PAGE_SIZE = 1000;
 
 /**
  * Hook quản lý trạng thái và dữ liệu của trang My Tasks.
+ * Mọi logic lọc, sắp xếp và phân trang đều được ủy quyền cho Backend.
  */
 export function useMyTasksPage(currentUser: User | null | undefined) {
   const { alert } = useAlertConfirm();
@@ -36,13 +46,26 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
+  const [totalCount, setTotalCount] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(0);
+
+  // Backend Stats
+  const [backendStats, setBackendStats] = React.useState<BackendStats | null>(null);
+
+  // View Mode (list or calendar) — drives pageSize
+  const [viewMode, setViewMode] = React.useState<"list" | "calendar">("list");
+
   // Overlay state
   const [showAnnouncement, setShowAnnouncement] = React.useState(true);
-  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isNotifLoading, setIsNotifLoading] = React.useState(true);
 
   // Filters State
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState("");
   const [selectedProject, setSelectedProject] = React.useState("all");
   const [selectedStatus, setSelectedStatus] = React.useState("all");
   const [selectedPriority, setSelectedPriority] = React.useState("all");
@@ -53,10 +76,21 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
   const [clickedSubtaskId, setClickedSubtaskId] = React.useState<string | null>(null);
   const [modalColumns, setModalColumns] = React.useState<BoardColumn[]>([]);
-  const [modalAssignees, setModalAssignees] = React.useState<any[]>([]);
+  const [modalAssignees, setModalAssignees] = React.useState<TeamMemberInfo[]>([]);
+
+  // Unique projects (derived from all tasks fetched across pages via stats)
+  const [uniqueProjects, setUniqueProjects] = React.useState<UniqueProject[]>([]);
 
   const unreadNotifications = React.useMemo(() => 
-    notifications.filter((n: any) => !n.isRead), [notifications]);
+    notifications.filter((n: Notification) => !n.isRead), [notifications]);
+
+  // Debounce search query to avoid excessive API calls while typing
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   React.useEffect(() => {
     if (!showAnnouncement) return;
@@ -79,84 +113,113 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   }, []);
 
   const announcementStats = React.useMemo<AnnouncementStats>(() => {
-    const now = new Date();
-    const threeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-    let completed = 0, overdue = 0, upcoming = 0;
+    if (backendStats) {
+      return {
+        total: backendStats.totalTasksCount,
+        completed: backendStats.completedTasksCount,
+        uncompleted: backendStats.uncompletedTasksCount,
+        overdueCount: backendStats.overdueTasks?.length || 0,
+        upcomingCount: backendStats.todayTasks?.length || 0,
+      };
+    }
+    return { total: 0, completed: 0, uncompleted: 0, overdueCount: 0, upcomingCount: 0 };
+  }, [backendStats]);
 
-    tasks.forEach((t: any) => {
-      if (t.isCompleted) completed++;
-      else if (t.dueDate) {
-        const d = new Date(t.dueDate);
-        if (d < now) overdue++;
-        else if (d <= threeDays) upcoming++;
-      }
-    });
-    return { total: tasks.length, completed, uncompleted: tasks.length - completed, overdueCount: overdue, upcomingCount: upcoming };
-  }, [tasks]);
+  // Compute the effective pageSize based on viewMode
+  const effectivePageSize = viewMode === "calendar" ? CALENDAR_PAGE_SIZE : pageSize;
 
-  const fetchTasks = React.useCallback(async () => {
+  const fetchTasks = React.useCallback(async (page?: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await api.get("/tasks");
-      setTasks((data || []).map((t: any) => ({
-        ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
-      })));
-    } catch (err: any) {
+
+      const targetPage = page ?? currentPage;
+
+      const params = new URLSearchParams();
+      params.set("pageNumber", String(targetPage));
+      params.set("pageSize", String(effectivePageSize));
+      params.set("sortBy", sortBy);
+
+      if (debouncedSearchQuery.trim()) {
+        params.set("searchQuery", debouncedSearchQuery.trim());
+      }
+      if (selectedProject !== "all") {
+        params.set("projectId", selectedProject);
+      }
+      if (selectedPriority !== "all") {
+        params.set("priority", selectedPriority);
+      }
+      if (selectedStatus !== "all") {
+        params.set("status", selectedStatus);
+      }
+      if (selectedDueDateFilter !== "all") {
+        params.set("dueDateFilter", selectedDueDateFilter);
+      }
+
+      const data = await api.get(`/tasks?${params.toString()}`);
+
+      if (data) {
+        const items = (data.items || []).map((t: TaskItem) => ({
+          ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
+        }));
+        setTasks(items);
+        setTotalCount(data.totalCount || 0);
+        setTotalPages(data.totalPages || 0);
+        setCurrentPage(data.pageNumber || 1);
+
+        // Set backend stats
+        setBackendStats({
+          totalTasksCount: data.totalTasksCount ?? 0,
+          completedTasksCount: data.completedTasksCount ?? 0,
+          uncompletedTasksCount: data.uncompletedTasksCount ?? 0,
+          overdueTasks: (data.overdueTasks || []).map((t: TaskItem) => ({
+            ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
+          })),
+          todayTasks: (data.todayTasks || []).map((t: TaskItem) => ({
+            ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
+          })),
+        });
+
+        // Extract unique projects from the items + overdue + today tasks for filter dropdown
+        const allTasks = [...items, ...(data.overdueTasks || []), ...(data.todayTasks || [])];
+        const projs = new Map<string, string>();
+        allTasks.forEach((t: TaskItem) => {
+          if (t.projectId && t.projectName) projs.set(t.projectId, t.projectName);
+        });
+        setUniqueProjects(Array.from(projs.entries()).map(([id, name]) => ({ id, name })));
+      }
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Không thể tải danh sách công việc.");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Không thể tải danh sách công việc.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentPage, effectivePageSize, debouncedSearchQuery, selectedProject, selectedPriority, selectedStatus, selectedDueDateFilter, sortBy]);
 
+  // Re-fetch when any filter/sort/page changes
   React.useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
-  const uniqueProjects = React.useMemo<UniqueProject[]>(() => {
-    const projs = new Map<string, string>();
-    tasks.forEach((t: any) => {
-      if (t.projectId && t.projectName) projs.set(t.projectId, t.projectName);
-    });
-    return Array.from(projs.entries()).map(([id, name]) => ({ id, name }));
-  }, [tasks]);
+  // Reset to page 1 when filters or sort or search change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedProject, selectedPriority, selectedStatus, selectedDueDateFilter, sortBy, effectivePageSize]);
 
-  const filteredTasks = React.useMemo(() => {
-    const now = new Date();
-    const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    return tasks.filter((t: any) => {
-      const matchSearch = !searchQuery.trim() || 
-        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.parentTaskTitle && t.parentTaskTitle.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchProj = selectedProject === "all" || t.projectId === selectedProject;
-      const matchPrio = selectedPriority === "all" || t.priority === selectedPriority;
-      const matchStatus = selectedStatus === "all" || (selectedStatus === "completed" ? t.isCompleted : !t.isCompleted);
-      
-      let matchDue = true;
-      if (selectedDueDateFilter === "overdue") matchDue = !!t.dueDate && !t.isCompleted && new Date(t.dueDate) < now;
-      else if (selectedDueDateFilter === "upcoming7") matchDue = !!t.dueDate && !t.isCompleted && new Date(t.dueDate) >= now && new Date(t.dueDate) <= sevenDays;
-
-      return matchSearch && matchProj && matchPrio && matchStatus && matchDue;
-    });
-  }, [tasks, searchQuery, selectedProject, selectedPriority, selectedStatus, selectedDueDateFilter]);
-
-  const sortedTasks = React.useMemo(() => {
-    const list = [...filteredTasks];
-    if (sortBy === "dueDate") {
-      list.sort((a, b) => a.dueDate && b.dueDate ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime() : a.dueDate ? -1 : 1);
-    } else if (sortBy === "priority") {
-      list.sort((a, b) => getPriorityWeight(b.priority) - getPriorityWeight(a.priority));
-    } else if (sortBy === "project") {
-      list.sort((a: any, b: any) => (a.projectName || "").localeCompare(b.projectName || ""));
-    }
-    return list;
-  }, [filteredTasks, sortBy]);
+  // Since backend handles filtering/sorting, tasks from API are already filtered and sorted
+  const filteredTasks = tasks;
+  const sortedTasks = tasks;
 
   const hasActiveFilters = !!searchQuery || selectedProject !== "all" || selectedPriority !== "all" || selectedStatus !== "all" || selectedDueDateFilter !== "all";
 
   const handleResetFilters = React.useCallback(() => {
     setSearchQuery(""); setSelectedProject("all"); setSelectedPriority("all"); setSelectedStatus("all"); setSelectedDueDateFilter("all"); setSortBy("dueDate");
   }, []);
+
+  const goToPage = React.useCallback((page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  }, [totalPages]);
 
   const handleTaskClick = React.useCallback(async (task: TaskItem) => {
     const parentId = (task as any).parentTaskId;
@@ -173,7 +236,7 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
         const overview = await api.get(`/projects/${projectId}/overview`);
         if (overview?.teamId) {
           const team = await api.get(`/teams/${overview.teamId}`);
-          setModalAssignees(team?.members?.map((m: any) => ({
+          setModalAssignees(team?.members?.map((m: TeamMemberDto) => ({
             id: m.userId, displayName: m.displayName, avatar: m.avatar, email: m.email, role: m.role
           })) || []);
         } else if (currentUser) {
@@ -213,11 +276,17 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
       setTasks((prev) =>
         prev.map((t) => (t.id === subTaskId ? { ...t, dueDate: newDueDate } : t))
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update subtask due date on drop:", err);
-      alert(err.message || "Không thể cập nhật hạn hoàn thành.", "Thất bại", "danger");
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể cập nhật hạn hoàn thành.", "Thất bại", "danger");
     }
   }, [tasks, currentUser, alert]);
+
+  const handleViewModeChange = React.useCallback((mode: "list" | "calendar") => {
+    setViewMode(mode);
+    setCurrentPage(1);
+  }, []);
 
   return {
     tasks, isLoading, error, fetchTasks,
@@ -228,6 +297,12 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
     selectedTask, setSelectedTask, clickedSubtaskId, setClickedSubtaskId,
     modalColumns, setModalColumns, modalAssignees, setModalAssignees,
     uniqueProjects, filteredTasks, sortedTasks, hasActiveFilters,
-    handleResetFilters, handleTaskClick, handleUpdateTask, handleSubtaskDrop, setTasks
+    handleResetFilters, handleTaskClick, handleUpdateTask, handleSubtaskDrop, setTasks,
+    // Pagination
+    currentPage, totalCount, totalPages, pageSize, goToPage,
+    // Backend Stats
+    backendStats,
+    // View mode
+    viewMode, handleViewModeChange,
   };
 }

@@ -41,18 +41,15 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
         if (project == null)
             throw new KeyNotFoundException("Dự án không tồn tại.");
 
-        // 2. Kiểm tra quyền của User
-        if (project.TeamId.HasValue)
-        {
-            var isMember = await _dbContext.TeamMembers
-                .AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền upload tài liệu cho dự án này.");
-        }
-        else if (project.CreatedByUserId != currentUserId)
+        if (!project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền upload tài liệu cho dự án này.");
         }
+
+        var isMember = await _dbContext.TeamMembers
+            .AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền upload tài liệu cho dự án này.");
 
         if (request.File == null || request.File.Length == 0)
             throw new ArgumentException("Tệp tải lên không hợp lệ hoặc bị trống.");
@@ -70,7 +67,7 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
             Directory.CreateDirectory(uploadsFolder);
         }
 
-        string uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(request.File.FileName)}";
+        string uniqueFileName = $"{Guid.CreateVersion7()}_{Path.GetFileName(request.File.FileName)}";
         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -83,7 +80,7 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
 
         var document = new ProjectDocument
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             ProjectId = request.ProjectId,
             FileName = request.File.FileName,
             FileUrl = relativeUrl,
@@ -95,19 +92,12 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
 
         _dbContext.ProjectDocuments.Add(document);
 
-        var log = new ActivityLog
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = request.ProjectId,
-            UserId = currentUserId,
-            EntityType = "ProjectDocument",
-            EntityId = document.Id,
-            ActionType = "Upload",
-            OldValue = null,
-            NewValue = System.Text.Json.JsonSerializer.Serialize(document.FileName),
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.ActivityLogs.Add(log);
+        document.AddDomainEvent(new PM.Domain.Events.ProjectDocumentUploadedEvent(
+            request.ProjectId,
+            document.Id,
+            document.FileName,
+            currentUserId
+        ));
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

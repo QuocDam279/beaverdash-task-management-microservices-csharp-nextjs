@@ -46,9 +46,10 @@ export function useTrashTasks() {
       setError(null);
       const data = await api.get("/tasks/trash");
       setTrashTasks(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to load trash tasks:", err);
-      setError(err.message || "Không thể tải danh sách thùng rác.");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Không thể tải danh sách thùng rác.");
     } finally {
       setIsLoading(false);
     }
@@ -116,8 +117,9 @@ export function useTrashTasks() {
       setActionMessage("Đang khôi phục công việc...");
       await api.post(`/tasks/${id}/restore`, {});
       await fetchTrashTasks();
-    } catch (err: any) {
-      alert(err.message || "Không thể khôi phục công việc.", "Thất bại", "danger");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể khôi phục công việc.", "Thất bại", "danger");
     } finally {
       setIsActionPending(false);
     }
@@ -139,8 +141,9 @@ export function useTrashTasks() {
       setActionMessage("Đang xóa vĩnh viễn công việc...");
       await api.delete(`/tasks/${id}/permanent`);
       await fetchTrashTasks();
-    } catch (err: any) {
-      alert(err.message || "Không thể xóa vĩnh viễn công việc.", "Thất bại", "danger");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể xóa vĩnh viễn công việc.", "Thất bại", "danger");
     } finally {
       setIsActionPending(false);
     }
@@ -164,8 +167,9 @@ export function useTrashTasks() {
       await api.post("/tasks/batch-restore", { taskIds: selectedIds });
       setSelectedIds([]);
       await fetchTrashTasks();
-    } catch (err: any) {
-      alert(err.message || "Không thể khôi phục các công việc đã chọn.", "Thất bại", "danger");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể khôi phục các công việc đã chọn.", "Thất bại", "danger");
     } finally {
       setIsActionPending(false);
     }
@@ -189,8 +193,9 @@ export function useTrashTasks() {
       await api.post("/tasks/batch-permanent-delete", { taskIds: selectedIds });
       setSelectedIds([]);
       await fetchTrashTasks();
-    } catch (err: any) {
-      alert(err.message || "Không thể xóa vĩnh viễn các công việc đã chọn.", "Thất bại", "danger");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể xóa vĩnh viễn các công việc đã chọn.", "Thất bại", "danger");
     } finally {
       setIsActionPending(false);
     }
@@ -213,8 +218,9 @@ export function useTrashTasks() {
       await api.post("/tasks/empty-trash", {});
       setSelectedIds([]);
       await fetchTrashTasks();
-    } catch (err: any) {
-      alert(err.message || "Không thể dọn trống thùng rác.", "Thất bại", "danger");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể dọn trống thùng rác.", "Thất bại", "danger");
     } finally {
       setIsActionPending(false);
     }

@@ -32,17 +32,19 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Guid>
         if (subTask == null)
             throw new InvalidOperationException("SubTask không tồn tại.");
 
-        if (subTask.Task!.BoardColumn!.Project!.TeamId.HasValue)
+        if (!subTask.Task!.BoardColumn!.Project!.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == subTask.Task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền bình luận trong Project này.");
+            throw new UnauthorizedAccessException("Bạn không có quyền bình luận trong Project này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == subTask.Task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền bình luận trong Project này.");
         
         // 2. Tạo Comment thuần text (bỏ qua Attachment)
         var comment = new Comment
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             SubTaskId = request.SubTaskId,
             UserId = currentUserId,
             Content = request.Content,
@@ -52,7 +54,15 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Guid>
 
         // Kích hoạt Domain Event ngầm
         comment.AddDomainEvent(new PM.Domain.Events.CommentAddedEvent(
-            comment.SubTaskId, comment.Id, comment.UserId, comment.Content
+            subTask.Task!.BoardColumn!.Project!.Id,
+            subTask.Task.Id,
+            subTask.Task.Title,
+            comment.SubTaskId,
+            subTask.Title,
+            subTask.AssigneeUserId,
+            comment.Id,
+            comment.UserId,
+            comment.Content
         ));
 
         _dbContext.Comments.Add(comment);

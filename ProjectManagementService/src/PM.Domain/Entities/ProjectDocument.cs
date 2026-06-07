@@ -1,8 +1,9 @@
+using PM.Domain.Common;
 using System;
 
 namespace PM.Domain.Entities;
 
-public class ProjectDocument
+public class ProjectDocument : BaseEntity
 {
     public Guid Id { get; set; }
 

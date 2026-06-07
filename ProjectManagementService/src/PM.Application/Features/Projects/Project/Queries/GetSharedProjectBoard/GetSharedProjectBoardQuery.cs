@@ -22,25 +22,21 @@ public class GetSharedProjectBoardQueryHandler : IRequestHandler<GetSharedProjec
 
     public async Task<ProjectBoardDto?> Handle(GetSharedProjectBoardQuery request, CancellationToken cancellationToken)
     {
-        var project = await _dbContext.Projects
+        // 1. Lấy thông tin cơ bản của Project qua ShareToken
+        var projectInfo = await _dbContext.Projects
             .AsNoTracking()
-            .Include(p => p.BoardColumns.OrderBy(c => c.Position))
-                .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
-            .Include(p => p.BoardColumns.OrderBy(c => c.Position))
-                .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
-                    .ThenInclude(t => t.SubTasks)
-                        .ThenInclude(st => st.AssigneeUser)
+            .Select(p => new { p.Id, p.Name, p.Description, p.ShareToken, p.IsPublic })
             .FirstOrDefaultAsync(p => p.ShareToken == request.ShareToken && p.IsPublic, cancellationToken);
 
-        if (project == null)
+        if (projectInfo == null)
             return null;
 
-        return new ProjectBoardDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            Description = project.Description,
-            BoardColumns = project.BoardColumns.Select(c => new BoardColumnDto
+        // 2. Thực hiện truy vấn Board Columns và Task Items trực tiếp qua Database Projection Select
+        var columns = await _dbContext.BoardColumns
+            .AsNoTracking()
+            .Where(c => c.ProjectId == projectInfo.Id)
+            .OrderBy(c => c.Position)
+            .Select(c => new BoardColumnDto
             {
                 Id = c.Id,
                 ProjectId = c.ProjectId,
@@ -48,32 +44,42 @@ public class GetSharedProjectBoardQueryHandler : IRequestHandler<GetSharedProjec
                 Position = c.Position,
                 WipLimit = c.WipLimit,
                 IsDone = c.IsDone,
-                TaskItems = c.TaskItems.Where(t => t.DeletedAt == null).Select(t => new TaskItemDto
-                {
-                    Id = t.Id,
-                    BoardColumnId = t.BoardColumnId,
-                    Title = t.Title,
-                    Priority = t.Priority?.ToString(),
-                    SortOrder = t.SortOrder,
-                    Description = t.Description,
-                    StartDate = t.StartDate,
-                    DueDate = t.DueDate,
-                    SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
-                    CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null),
-                    CommentsCount = t.SubTasks.Where(st => st.DeletedAt == null).SelectMany(st => st.Comments).Count(),
-                    SubTasks = t.SubTasks.Where(st => st.DeletedAt == null).Select(st => new SubTaskBoardDto
+                TaskItems = c.TaskItems
+                    .Where(t => t.DeletedAt == null)
+                    .OrderBy(t => t.SortOrder)
+                    .Select(t => new TaskItemDto
                     {
-                        Id = st.Id,
-                        TaskId = st.TaskId,
-                        Title = st.Title,
-                        IsCompleted = st.IsCompleted,
-                        AssigneeUserId = st.AssigneeUserId,
-                        AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
-                        AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,
-                        Priority = st.Priority != null ? st.Priority.ToString() : null
+                        Id = t.Id,
+                        BoardColumnId = t.BoardColumnId,
+                        Title = t.Title,
+                        Priority = t.Priority != null ? t.Priority.ToString() : null,
+                        SortOrder = t.SortOrder,
+                        Description = t.Description,
+                        StartDate = t.StartDate,
+                        DueDate = t.DueDate,
+                        SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
+                        CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null),
+                        CommentsCount = t.SubTasks.Where(st => st.DeletedAt == null).SelectMany(st => st.Comments).Count(),
+                        SubTasks = t.SubTasks.Where(st => st.DeletedAt == null).Select(st => new SubTaskBoardDto
+                        {
+                            Id = st.Id,
+                            TaskId = st.TaskId,
+                            Title = st.Title,
+                            IsCompleted = st.IsCompleted,
+                            AssigneeUserId = st.AssigneeUserId,
+                            AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
+                            AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,
+                            Priority = st.Priority != null ? st.Priority.ToString() : null
+                        }).ToList()
                     }).ToList()
-                }).ToList()
-            }).ToList()
+            }).ToListAsync(cancellationToken);
+
+        return new ProjectBoardDto
+        {
+            Id = projectInfo.Id,
+            Name = projectInfo.Name,
+            Description = projectInfo.Description,
+            BoardColumns = columns
         };
     }
 }

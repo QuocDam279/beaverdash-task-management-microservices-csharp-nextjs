@@ -54,24 +54,21 @@ public class GetProjectDocumentsQueryHandler : IRequestHandler<GetProjectDocumen
             if (currentUserId == null)
                 throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
-            if (project.TeamId.HasValue)
-            {
-                var isMember = await _dbContext.TeamMembers
-                    .AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-                if (!isMember)
-                    throw new UnauthorizedAccessException("Bạn không có quyền truy cập dự án này.");
-            }
-            else if (project.CreatedByUserId != currentUserId)
+            if (!project.TeamId.HasValue)
             {
                 throw new UnauthorizedAccessException("Bạn không có quyền truy cập dự án này.");
             }
+
+            var isMember = await _dbContext.TeamMembers
+                .AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (!isMember)
+                throw new UnauthorizedAccessException("Bạn không có quyền truy cập dự án này.");
         }
 
         // 3. Lấy danh sách tài liệu
         var docs = await _dbContext.ProjectDocuments
             .AsNoTracking()
             .Where(pd => pd.ProjectId == request.ProjectId)
-            .Include(pd => pd.UploadedByUser)
             .OrderByDescending(pd => pd.CreatedAt)
             .Select(pd => new ProjectDocumentDto
             {

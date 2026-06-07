@@ -21,31 +21,20 @@ public class TaskMovedEventHandler : INotificationHandler<TaskMovedEvent>
 
     public async Task Handle(TaskMovedEvent notification, CancellationToken cancellationToken)
     {
-        var task = await _dbContext.TaskItems
-            .Include(t => t.BoardColumn)
-            .FirstOrDefaultAsync(t => t.Id == notification.TaskId, cancellationToken);
-
-        if (task == null || task.BoardColumn == null)
-            return;
-
-        // Fetch old and new column names
-        var oldColumn = await _dbContext.BoardColumns.AsNoTracking().FirstOrDefaultAsync(c => c.Id == notification.OldColumnId, cancellationToken);
-        var newColumn = await _dbContext.BoardColumns.AsNoTracking().FirstOrDefaultAsync(c => c.Id == notification.NewColumnId, cancellationToken);
-
         // Định dạng cột cũ và cột mới thành JSON để lưu vào NewValue
         var newValueObj = new 
         {
-            task_title = task.Title,
+            task_title = notification.TaskTitle,
             old_column_id = notification.OldColumnId,
-            old_column_name = oldColumn?.Name ?? "Không rõ",
+            old_column_name = notification.OldColumnName,
             new_column_id = notification.NewColumnId,
-            new_column_name = newColumn?.Name ?? "Không rõ"
+            new_column_name = notification.NewColumnName
         };
 
         var activityLog = new ActivityLog
         {
-            Id = Guid.NewGuid(),
-            ProjectId = task.BoardColumn.ProjectId,
+            Id = Guid.CreateVersion7(),
+            ProjectId = notification.ProjectId,
             UserId = notification.UserId,
             EntityType = "task",
             EntityId = notification.TaskId,

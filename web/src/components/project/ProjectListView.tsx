@@ -21,6 +21,8 @@ interface ProjectListViewProps {
   assignees: any[];
   readOnly?: boolean;
   isPersonalProject?: boolean;
+  projectStartDate?: string | null;
+  projectDueDate?: string | null;
 }
 
 export function ProjectListView({
@@ -32,6 +34,8 @@ export function ProjectListView({
   assignees,
   readOnly = false,
   isPersonalProject = false,
+  projectStartDate = null,
+  projectDueDate = null,
 }: ProjectListViewProps) {
   const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -188,6 +192,8 @@ export function ProjectListView({
         columns={columns}
         assignees={assignees}
         onTaskCreated={onRefresh}
+        projectStartDate={projectStartDate}
+        projectDueDate={projectDueDate}
       />
     </div>
   );

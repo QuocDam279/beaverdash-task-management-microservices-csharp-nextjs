@@ -24,7 +24,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Guid>
     {
         var user = new User
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             GoogleId = request.GoogleId,
             Email = request.Email.ToLowerInvariant(),
             DisplayName = request.DisplayName,

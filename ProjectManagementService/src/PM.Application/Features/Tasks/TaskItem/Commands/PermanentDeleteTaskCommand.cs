@@ -31,42 +31,33 @@ public class PermanentDeleteTaskCommandHandler : IRequestHandler<PermanentDelete
         var task = await _dbContext.TaskItems
             .IgnoreQueryFilters()
             .Include(t => t.BoardColumn)
-                .ThenInclude(c => c.Project)
+                .ThenInclude(c => c!.Project)
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
             return false;
 
-        // Authorization check (only leader can permanently delete in a team project)
-        if (task.BoardColumn.Project.TeamId.HasValue)
-        {
-            var requestingMember = await _dbContext.TeamMembers
-                .FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-
-            bool isLeader = requestingMember != null && (requestingMember.Role == "leader" || requestingMember.Role == "Owner");
-
-            if (!isLeader)
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền xóa vĩnh viễn công việc.");
-            }
-        }
-        else if (task.BoardColumn.Project.CreatedByUserId != currentUserId)
+        if (task.BoardColumn == null || task.BoardColumn.Project == null || !task.BoardColumn.Project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền xóa vĩnh viễn công việc này.");
         }
 
-        var activityLog = new ActivityLog
+        var requestingMember = await _dbContext.TeamMembers
+            .FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+
+        bool isLeader = requestingMember != null && (requestingMember.Role == "leader" || requestingMember.Role == "Owner");
+
+        if (!isLeader)
         {
-            Id = Guid.NewGuid(),
-            ProjectId = task.BoardColumn.ProjectId,
-            UserId = currentUserId,
-            EntityType = "task",
-            EntityId = task.Id,
-            ActionType = "permanently_deleted",
-            NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title }),
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.ActivityLogs.Add(activityLog);
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền xóa vĩnh viễn công việc.");
+        }
+
+        task.AddDomainEvent(new PM.Domain.Events.TaskPermanentlyDeletedEvent(
+            task.BoardColumn!.ProjectId,
+            task.Id,
+            task.Title,
+            currentUserId
+        ));
 
         _dbContext.TaskItems.Remove(task);
         await _dbContext.SaveChangesAsync(cancellationToken);

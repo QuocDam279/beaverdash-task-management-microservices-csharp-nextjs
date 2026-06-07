@@ -31,24 +31,21 @@ public class RestoreTaskCommandHandler : IRequestHandler<RestoreTaskCommand, boo
         var task = await _dbContext.TaskItems
             .IgnoreQueryFilters()
             .Include(t => t.BoardColumn)
-                .ThenInclude(c => c.Project)
+                .ThenInclude(c => c!.Project)
             .Include(t => t.SubTasks)
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
             return false;
 
-        // Authorization check
-        if (task.BoardColumn.Project.TeamId.HasValue)
-        {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền khôi phục công việc này.");
-        }
-        else if (task.BoardColumn.Project.CreatedByUserId != currentUserId)
+        if (task.BoardColumn == null || task.BoardColumn.Project == null || !task.BoardColumn.Project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền khôi phục công việc này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền khôi phục công việc này.");
 
         task.DeletedAt = null;
 
@@ -58,18 +55,12 @@ public class RestoreTaskCommandHandler : IRequestHandler<RestoreTaskCommand, boo
             subTask.DeletedAt = null;
         }
 
-        var activityLog = new ActivityLog
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = task.BoardColumn.ProjectId,
-            UserId = currentUserId,
-            EntityType = "task",
-            EntityId = task.Id,
-            ActionType = "restored",
-            NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title }),
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.ActivityLogs.Add(activityLog);
+        task.AddDomainEvent(new PM.Domain.Events.TaskRestoredEvent(
+            task.BoardColumn!.ProjectId,
+            task.Id,
+            task.Title,
+            currentUserId
+        ));
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;

@@ -4,7 +4,7 @@ import * as React from "react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { TaskItem, BoardColumn } from "@/types/task";
-import { getTaskPriorityLabel } from "@/lib/utils";
+import { getTaskPriorityLabel, toUtcLocalDate } from "@/lib/utils";
 
 interface BoardTaskCardProps {
   task: TaskItem;
@@ -46,7 +46,8 @@ const renderPriority = (priority: string | null) => {
 
 const renderDueDate = (dueDateStr: string | null, isDone: boolean = false) => {
   if (!dueDateStr) return null;
-  const dueDate = new Date(dueDateStr);
+  const dueDate = toUtcLocalDate(dueDateStr);
+  if (!dueDate) return null;
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());

@@ -50,7 +50,7 @@ public class AddAttachmentCommandHandler : IRequestHandler<AddAttachmentCommand,
         }
 
         // Tạo tên file unique để tránh trùng lặp
-        string uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(request.File.FileName)}";
+        string uniqueFileName = $"{Guid.CreateVersion7()}_{Path.GetFileName(request.File.FileName)}";
         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
         // Lưu file xuống ổ cứng
@@ -64,7 +64,7 @@ public class AddAttachmentCommandHandler : IRequestHandler<AddAttachmentCommand,
 
         var attachment = new Attachment
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             CommentId = request.CommentId,
             FileName = request.File.FileName,
             FileUrl = relativeUrl,

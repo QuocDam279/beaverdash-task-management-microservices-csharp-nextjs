@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using PM.Domain.Enums;
 using PM.Domain.Entities;
 using System;
 using System.Threading;
@@ -12,16 +11,13 @@ public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand,
 {
     private readonly PM.Application.Contracts.IPMDbContext _dbContext;
     private readonly PM.Application.Contracts.ICurrentUserService _currentUserService;
-    private readonly PM.Application.Contracts.IAIAssistantServiceClient _aiAssistantClient;
 
     public UpdateProjectCommandHandler(
         PM.Application.Contracts.IPMDbContext dbContext,
-        PM.Application.Contracts.ICurrentUserService currentUserService,
-        PM.Application.Contracts.IAIAssistantServiceClient aiAssistantClient)
+        PM.Application.Contracts.ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
-        _aiAssistantClient = aiAssistantClient;
     }
 
     public async Task<UpdateProjectResult> Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
@@ -35,46 +31,36 @@ public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand,
             return new UpdateProjectResult { Success = false };
 
         // Authorization check
-        if (project.TeamId.HasValue)
+        if (!project.TeamId.HasValue)
         {
-            var requestingMember = await _dbContext.TeamMembers
-                .FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-
-            if (requestingMember == null || requestingMember.Role != "leader")
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền sửa thông tin dự án này.");
-            }
+            throw new UnauthorizedAccessException("Dự án không hợp lệ.");
         }
-        else
+
+        var requestingMember = await _dbContext.TeamMembers
+            .FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+
+        if (requestingMember == null || requestingMember.Role != "leader")
         {
-            if (project.CreatedByUserId != currentUserId)
-            {
-                throw new UnauthorizedAccessException("Bạn không có quyền sửa thông tin dự án này.");
-            }
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền sửa thông tin dự án này.");
         }
 
         // Capture old project properties for logging
         string oldName = project.Name;
         string? oldDescription = project.Description;
+        bool oldIsPublic = project.IsPublic;
 
         // Apply changes
         if (request.Name != null)
         {
-            if (project.TeamId.HasValue)
+            if (!project.TeamId.HasValue)
             {
-                var isDuplicate = await _dbContext.Projects.AnyAsync(p => p.Id != project.Id && p.TeamId == project.TeamId.Value && p.Name.ToLower() == request.Name.ToLower(), cancellationToken);
-                if (isDuplicate)
-                {
-                    throw new InvalidOperationException("Tên dự án đã tồn tại trong nhóm này. Vui lòng chọn tên khác.");
-                }
+                throw new InvalidOperationException("Dự án không hợp lệ.");
             }
-            else
+
+            var isDuplicate = await _dbContext.Projects.AnyAsync(p => p.Id != project.Id && p.TeamId == project.TeamId.Value && p.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+            if (isDuplicate)
             {
-                var isDuplicate = await _dbContext.Projects.AnyAsync(p => p.Id != project.Id && p.TeamId == null && p.CreatedByUserId == currentUserId && p.Name.ToLower() == request.Name.ToLower(), cancellationToken);
-                if (isDuplicate)
-                {
-                    throw new InvalidOperationException("Tên dự án cá nhân đã tồn tại. Vui lòng chọn tên khác.");
-                }
+                throw new InvalidOperationException("Tên dự án đã tồn tại trong nhóm này. Vui lòng chọn tên khác.");
             }
             project.Name = request.Name;
         }
@@ -96,9 +82,6 @@ public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand,
             throw new InvalidOperationException("Ngày bắt đầu không thể lớn hơn ngày kết thúc.");
         }
 
-        if (request.Status.HasValue)
-            project.Status = request.Status.Value;
-
         if (request.Progress.HasValue)
             project.Progress = request.Progress.Value;
 
@@ -114,86 +97,52 @@ public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand,
 
         if (request.IsPublic.HasValue)
         {
-            var oldIsPublic = project.IsPublic;
             project.IsPublic = request.IsPublic.Value;
             if (project.IsPublic)
             {
                 if (string.IsNullOrEmpty(project.ShareToken))
                 {
-                    project.ShareToken = Guid.NewGuid().ToString("N");
+                    project.ShareToken = Guid.CreateVersion7().ToString("N");
                 }
             }
             else
             {
                 project.ShareToken = null;
             }
-
-            if (oldIsPublic != project.IsPublic)
-            {
-                _dbContext.ActivityLogs.Add(new ActivityLog
-                {
-                    Id = Guid.NewGuid(),
-                    ProjectId = project.Id,
-                    UserId = currentUserId,
-                    EntityType = "project",
-                    EntityId = project.Id,
-                    ActionType = project.IsPublic ? "public_shared" : "private_restricted",
-                    NewValue = System.Text.Json.JsonSerializer.Serialize(new { isPublic = project.IsPublic }),
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
         }
 
-        // Log project changes
-        if (request.Name != null && request.Name != oldName)
+        // Track changes
+        var changedFields = new System.Collections.Generic.List<PM.Domain.Common.FieldChange>();
+
+        if (request.Name != null && project.Name != oldName)
         {
-            _dbContext.ActivityLogs.Add(new ActivityLog
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = project.Id,
-                UserId = currentUserId,
-                EntityType = "project",
-                EntityId = project.Id,
-                ActionType = "updated_name",
-                NewValue = System.Text.Json.JsonSerializer.Serialize(new { name = request.Name, old_name = oldName }),
-                CreatedAt = DateTime.UtcNow
-            });
+            changedFields.Add(new PM.Domain.Common.FieldChange("Name", oldName, project.Name));
         }
 
-        if (request.Description != null && request.Description != oldDescription)
+        if (request.Description != null && project.Description != oldDescription)
         {
-            _dbContext.ActivityLogs.Add(new ActivityLog
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = project.Id,
-                UserId = currentUserId,
-                EntityType = "project",
-                EntityId = project.Id,
-                ActionType = "updated_description",
-                NewValue = System.Text.Json.JsonSerializer.Serialize(new { name = project.Name }),
-                CreatedAt = DateTime.UtcNow
-            });
+            changedFields.Add(new PM.Domain.Common.FieldChange("Description", oldDescription, project.Description));
+        }
+
+        if (request.IsPublic.HasValue && project.IsPublic != oldIsPublic)
+        {
+            changedFields.Add(new PM.Domain.Common.FieldChange("IsPublic", oldIsPublic.ToString(), project.IsPublic.ToString()));
+        }
+
+        if (changedFields.Count > 0)
+        {
+            project.AddDomainEvent(new PM.Domain.Events.ProjectUpdatedEvent(
+                project.Id,
+                project.Name,
+                project.Description,
+                currentUserId,
+                changedFields
+            ));
         }
 
         project.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-
-        // Sync with AI Assistant Service
-        try
-        {
-            await _aiAssistantClient.SyncProjectAsync(
-                project.Id, 
-                project.Name, 
-                project.Description, 
-                project.Status.ToVietnameseString()
-            );
-        }
-        catch (Exception ex)
-        {
-            // Fail silently or log
-            Console.WriteLine($"Sync with AIAssistant failed: {ex.Message}");
-        }
 
         return new UpdateProjectResult
         {

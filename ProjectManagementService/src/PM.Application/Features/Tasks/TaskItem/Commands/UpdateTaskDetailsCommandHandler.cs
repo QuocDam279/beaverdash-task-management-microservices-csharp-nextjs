@@ -25,7 +25,7 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
     {
         var task = await _dbContext.TaskItems
             .Include(t => t.BoardColumn)
-                .ThenInclude(c => c.Project)
+                .ThenInclude(c => c!.Project)
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
@@ -33,15 +33,16 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
 
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
-        bool isLeader = false;
-        if (task.BoardColumn.Project.TeamId.HasValue)
+        if (task.BoardColumn == null || task.BoardColumn.Project == null || !task.BoardColumn.Project.TeamId.HasValue)
         {
-            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (requestingMember == null)
-                throw new UnauthorizedAccessException("Bạn không có quyền cập nhật Task này.");
-            
-            isLeader = requestingMember.Role == "leader";
+            throw new UnauthorizedAccessException("Bạn không có quyền cập nhật Task này.");
         }
+
+        var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (requestingMember == null)
+            throw new UnauthorizedAccessException("Bạn không có quyền cập nhật Task này.");
+        
+        bool isLeader = requestingMember.Role == "leader";
 
 
 
@@ -73,11 +74,11 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
         {
             if (project.StartDate.HasValue)
             {
-                if (newStartDate.HasValue && newStartDate.Value < project.StartDate.Value)
+                if (newStartDate.HasValue && newStartDate.Value.Date < project.StartDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Ngày bắt đầu của Task không được nhỏ hơn ngày bắt đầu của dự án ({project.StartDate.Value:yyyy-MM-dd}).");
                 }
-                if (newDueDate.HasValue && newDueDate.Value < project.StartDate.Value)
+                if (newDueDate.HasValue && newDueDate.Value.Date < project.StartDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Hạn hoàn thành của Task không được nhỏ hơn ngày bắt đầu của dự án ({project.StartDate.Value:yyyy-MM-dd}).");
                 }
@@ -85,11 +86,11 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
 
             if (project.DueDate.HasValue)
             {
-                if (newStartDate.HasValue && newStartDate.Value > project.DueDate.Value)
+                if (newStartDate.HasValue && newStartDate.Value.Date > project.DueDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Ngày bắt đầu của Task không được lớn hơn hạn hoàn thành của dự án ({project.DueDate.Value:yyyy-MM-dd}).");
                 }
-                if (newDueDate.HasValue && newDueDate.Value > project.DueDate.Value)
+                if (newDueDate.HasValue && newDueDate.Value.Date > project.DueDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Hạn hoàn thành của Task không được lớn hơn hạn hoàn thành của dự án ({project.DueDate.Value:yyyy-MM-dd}).");
                 }
@@ -133,84 +134,51 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
             task.Priority = Enum.TryParse<TaskPriority>(request.Priority, true, out var p) ? p : null;
         }
 
-        // Log changes
+        // Track changes
+        var changedFields = new System.Collections.Generic.List<PM.Domain.Common.FieldChange>();
+
         if (request.Title != null && request.Title != oldTitle)
         {
-            _dbContext.ActivityLogs.Add(new ActivityLog
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = task.BoardColumn.ProjectId,
-                UserId = currentUserId,
-                EntityType = "task",
-                EntityId = task.Id,
-                ActionType = "updated_title",
-                NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = request.Title, old_title = oldTitle }),
-                CreatedAt = DateTime.UtcNow
-            });
+            changedFields.Add(new PM.Domain.Common.FieldChange("Title", oldTitle, request.Title));
         }
+
         if (request.Description != null)
         {
             var newDesc = string.IsNullOrEmpty(request.Description) ? null : request.Description;
             if (newDesc != oldDescription)
             {
-                _dbContext.ActivityLogs.Add(new ActivityLog
-                {
-                    Id = Guid.NewGuid(),
-                    ProjectId = task.BoardColumn.ProjectId,
-                    UserId = currentUserId,
-                    EntityType = "task",
-                    EntityId = task.Id,
-                    ActionType = "updated_description",
-                    NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title }),
-                    CreatedAt = DateTime.UtcNow
-                });
+                changedFields.Add(new PM.Domain.Common.FieldChange("Description", oldDescription, newDesc));
             }
         }
+
         if (request.DueDate.HasValue && request.DueDate.Value != oldDueDate)
         {
-            _dbContext.ActivityLogs.Add(new ActivityLog
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = task.BoardColumn.ProjectId,
-                UserId = currentUserId,
-                EntityType = "task",
-                EntityId = task.Id,
-                ActionType = "updated_due_date",
-                NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title, due_date = request.DueDate.Value }),
-                CreatedAt = DateTime.UtcNow
-            });
+            changedFields.Add(new PM.Domain.Common.FieldChange("DueDate", oldDueDate?.ToString("o"), request.DueDate.Value.ToString("o")));
         }
+
         if (request.StartDate.HasValue && request.StartDate.Value != oldStartDate)
         {
-            _dbContext.ActivityLogs.Add(new ActivityLog
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = task.BoardColumn.ProjectId,
-                UserId = currentUserId,
-                EntityType = "task",
-                EntityId = task.Id,
-                ActionType = "updated_start_date",
-                NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title, start_date = request.StartDate.Value }),
-                CreatedAt = DateTime.UtcNow
-            });
+            changedFields.Add(new PM.Domain.Common.FieldChange("StartDate", oldStartDate?.ToString("o"), request.StartDate.Value.ToString("o")));
         }
+
         if (!string.IsNullOrEmpty(request.Priority))
         {
             var newPriority = Enum.TryParse<TaskPriority>(request.Priority, true, out var p) ? p : (TaskPriority?)null;
             if (newPriority != oldPriority)
             {
-                _dbContext.ActivityLogs.Add(new ActivityLog
-                {
-                    Id = Guid.NewGuid(),
-                    ProjectId = task.BoardColumn.ProjectId,
-                    UserId = currentUserId,
-                    EntityType = "task",
-                    EntityId = task.Id,
-                    ActionType = "updated_priority",
-                    NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title, priority = request.Priority, old_priority = oldPriority?.ToString() }),
-                    CreatedAt = DateTime.UtcNow
-                });
+                changedFields.Add(new PM.Domain.Common.FieldChange("Priority", oldPriority?.ToString(), newPriority?.ToString()));
             }
+        }
+
+        if (changedFields.Count > 0)
+        {
+            task.AddDomainEvent(new PM.Domain.Events.TaskUpdatedEvent(
+                task.BoardColumn!.ProjectId,
+                task.Id,
+                task.Title,
+                currentUserId,
+                changedFields
+            ));
         }
 
 

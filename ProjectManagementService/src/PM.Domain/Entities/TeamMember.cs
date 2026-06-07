@@ -1,6 +1,8 @@
+using PM.Domain.Common;
+
 namespace PM.Domain.Entities;
 
-public class TeamMember
+public class TeamMember : BaseEntity
 {
     public Guid TeamId { get; set; }
     public Team? Team { get; set; }

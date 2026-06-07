@@ -23,7 +23,7 @@ public class UserUpdatedConsumer : IConsumer<UserUpdatedEvent>
         
         if (user != null)
         {
-            user.Email = message.Email;
+            user.Email = message.Email.ToLowerInvariant();
             user.DisplayName = message.DisplayName;
             user.Avatar = message.Avatar;
 

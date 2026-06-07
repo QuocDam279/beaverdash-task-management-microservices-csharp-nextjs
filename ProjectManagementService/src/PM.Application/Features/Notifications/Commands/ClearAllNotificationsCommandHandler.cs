@@ -23,15 +23,9 @@ public class ClearAllNotificationsCommandHandler : IRequestHandler<ClearAllNotif
     {
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
-        var userNotifications = await _dbContext.Notifications
+        await _dbContext.Notifications
             .Where(n => n.UserId == currentUserId)
-            .ToListAsync(cancellationToken);
-
-        if (userNotifications.Any())
-        {
-            _dbContext.Notifications.RemoveRange(userNotifications);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
+            .ExecuteDeleteAsync(cancellationToken);
 
         return true;
     }

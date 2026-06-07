@@ -54,4 +54,15 @@ export function getSubtaskPriorityLabel(priority: string | null | undefined): st
   return priority;
 }
 
+/**
+ * Chuyển đổi một chuỗi ngày ISO (UTC) thành đối tượng Date địa phương 
+ * khớp chính xác với phần ngày tháng năm của UTC (tránh bị lệch múi giờ).
+ */
+export function toUtcLocalDate(dateString: string | null | undefined): Date | null {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return null;
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
 

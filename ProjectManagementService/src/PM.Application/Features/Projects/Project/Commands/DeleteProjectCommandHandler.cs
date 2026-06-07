@@ -29,30 +29,25 @@ public class DeleteProjectCommandHandler : IRequestHandler<DeleteProjectCommand,
             return false;
 
         // Authorization check
-        if (project.TeamId.HasValue)
+        if (!project.TeamId.HasValue)
         {
-            var requestingMember = await _dbContext.TeamMembers
-                .FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-
-            if (requestingMember == null || requestingMember.Role != "leader")
-            {
-                throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền xóa dự án này.");
-            }
+            throw new UnauthorizedAccessException("Dự án không hợp lệ.");
         }
-        else
+
+        var requestingMember = await _dbContext.TeamMembers
+            .FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+
+        if (requestingMember == null || requestingMember.Role != "leader")
         {
-            if (project.CreatedByUserId != currentUserId)
-            {
-                throw new UnauthorizedAccessException("Bạn không có quyền xóa dự án này.");
-            }
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền xóa dự án này.");
         }
 
         // Check if project has any tasks that are not in a completed column (IsDone == false)
         var hasUncompletedTasks = await _dbContext.TaskItems
-            .AnyAsync(t => _dbContext.BoardColumns
-                .Where(bc => bc.ProjectId == request.ProjectId && !bc.IsDone)
-                .Select(bc => bc.Id)
-                .Contains(t.BoardColumnId) && t.DeletedAt == null, cancellationToken);
+            .AnyAsync(t => t.BoardColumn != null && 
+                           t.BoardColumn.ProjectId == request.ProjectId && 
+                           !t.BoardColumn.IsDone && 
+                           t.DeletedAt == null, cancellationToken);
 
         if (hasUncompletedTasks)
         {

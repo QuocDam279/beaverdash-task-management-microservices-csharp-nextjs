@@ -26,6 +26,8 @@ export default function ProjectListPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
+  const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
+  const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
   const isInitialLoad = React.useRef(true);
 
   const fetchListTasks = React.useCallback(async () => {
@@ -61,6 +63,8 @@ export default function ProjectListPage({ params }: PageProps) {
 
       if (overview) {
         setIsPersonalProject(overview.teamId === null || !overview.teamId);
+        setProjectStartDate(overview.startDate || null);
+        setProjectDueDate(overview.dueDate || null);
         if (overview.teamId) {
           const team = await api.get(`/teams/${overview.teamId}`);
           if (team?.members) {
@@ -119,6 +123,8 @@ export default function ProjectListPage({ params }: PageProps) {
         onRefresh={fetchListTasks}
         assignees={assignees}
         isPersonalProject={isPersonalProject}
+        projectStartDate={projectStartDate}
+        projectDueDate={projectDueDate}
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import type { SearchResultDto } from "@/types/api";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { ProfileDropdown } from "./ProfileDropdown";
 
@@ -22,7 +23,7 @@ export function TopHeader({ currentUser }: TopHeaderProps) {
   const [user, setUser] = React.useState(currentUser);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [searchResults, setSearchResults] = React.useState<any[]>([]);
+  const [searchResults, setSearchResults] = React.useState<SearchResultDto[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -43,7 +44,7 @@ export function TopHeader({ currentUser }: TopHeaderProps) {
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const results: any = await api.get(`/search?q=${encodeURIComponent(searchQuery)}`);
+        const results: SearchResultDto[] = await api.get(`/search?q=${encodeURIComponent(searchQuery)}`);
         setSearchResults(results || []);
         setShowDropdown(true);
       } catch (err) {

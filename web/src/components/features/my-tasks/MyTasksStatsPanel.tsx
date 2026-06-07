@@ -11,20 +11,42 @@ import { TaskItem } from "@/types/task";
 interface MyTasksStatsPanelProps {
   tasks: TaskItem[];
   onTaskClick: (task: TaskItem) => void;
+  stats?: {
+    totalTasksCount: number;
+    completedTasksCount: number;
+    uncompletedTasksCount: number;
+    overdueTasks: TaskItem[];
+    todayTasks: TaskItem[];
+  } | null;
 }
 
-export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps) {
+export function MyTasksStatsPanel({ tasks, onTaskClick, stats }: MyTasksStatsPanelProps) {
   const statsAndAttention = React.useMemo(() => {
+    if (stats) {
+      const total = stats.totalTasksCount;
+      const completed = stats.completedTasksCount;
+      const uncompleted = stats.uncompletedTasksCount;
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return {
+        total,
+        completed,
+        uncompleted,
+        percent,
+        overdueList: stats.overdueTasks || [],
+        todayList: stats.todayTasks || [],
+      };
+    }
+
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
     let completed = 0;
     let uncompleted = 0;
-    const overdueList: any[] = [];
-    const todayList: any[] = [];
+    const overdueList: TaskItem[] = [];
+    const todayList: TaskItem[] = [];
 
-    tasks.forEach((t: any) => {
+    tasks.forEach((t: TaskItem) => {
       if (t.isCompleted) {
         completed++;
       } else {
@@ -52,7 +74,7 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
       overdueList,
       todayList,
     };
-  }, [tasks]);
+  }, [tasks, stats]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0">
@@ -162,7 +184,7 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
                     <span className="bg-red-100 text-red-800 border border-red-200 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded">Quá hạn</span>
                     <span className="text-red-700 font-bold text-[10px]">
                       {(() => {
-                        const date = new Date(item.dueDate);
+                        const date = new Date(item.dueDate || "");
                         return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
                       })()}
                     </span>
@@ -185,7 +207,7 @@ export function MyTasksStatsPanel({ tasks, onTaskClick }: MyTasksStatsPanelProps
                     <span className="bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded">Hạn hôm nay</span>
                     <span className="text-amber-700 font-bold text-[10px]">
                       {(() => {
-                        const date = new Date(item.dueDate);
+                        const date = new Date(item.dueDate || "");
                         return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                       })()}
                     </span>

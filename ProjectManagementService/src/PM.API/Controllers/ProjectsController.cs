@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PM.Application.Features.Projects.Project.Commands;
-using PM.Domain.Enums;
 using System;
 using System.Threading.Tasks;
 
@@ -59,20 +58,6 @@ public class ProjectsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("{id}/activities")]
-    public async Task<IActionResult> CreateActivity(Guid id, [FromBody] CreateActivityDto request)
-    {
-        var command = new PM.Application.Features.Projects.Project.Commands.CreateActivityCommand(
-            id,
-            request.EntityType,
-            request.EntityId,
-            request.ActionType,
-            request.OldValue,
-            request.NewValue
-        );
-        await _mediator.Send(command);
-        return StatusCode(201);
-    }
 
     [HttpGet("{id}/overview")]
     public async Task<IActionResult> GetProjectOverview(Guid id)
@@ -89,25 +74,11 @@ public class ProjectsController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto request)
     {
-        ProjectStatus? statusEnum = null;
-        if (!string.IsNullOrEmpty(request.Status))
-        {
-            if (Enum.TryParse<ProjectStatus>(request.Status, true, out var parsedStatus))
-            {
-                statusEnum = parsedStatus;
-            }
-            else
-            {
-                return BadRequest(new { Message = $"Trạng thái '{request.Status}' không hợp lệ." });
-            }
-        }
-
         var command = new UpdateProjectCommand
         {
             ProjectId = id,
             Name = request.Name,
             Description = request.Description,
-            Status = statusEnum,
             Progress = request.Progress,
             StartDate = request.StartDate,
             DueDate = request.DueDate,
@@ -166,9 +137,3 @@ public class ProjectsController : ControllerBase
     }
 }
 
-public record CreateActivityDto(
-    string? EntityType,
-    Guid? EntityId,
-    string? ActionType,
-    string? OldValue,
-    string? NewValue);

@@ -25,23 +25,21 @@ public class DeleteTaskCommandHandler : IRequestHandler<DeleteTaskCommand, bool>
 
         var task = await _dbContext.TaskItems
             .Include(t => t.BoardColumn)
-                .ThenInclude(c => c.Project)
+                .ThenInclude(c => c!.Project)
             .Include(t => t.SubTasks)
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
             return false;
 
-        if (task.BoardColumn.Project.TeamId.HasValue)
-        {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền xóa Task này.");
-        }
-        else if (task.BoardColumn.Project.CreatedByUserId != currentUserId)
+        if (task.BoardColumn == null || task.BoardColumn.Project == null || !task.BoardColumn.Project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền xóa Task này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa Task này.");
 
         var now = DateTime.UtcNow;
         task.DeletedAt = now;
@@ -52,18 +50,12 @@ public class DeleteTaskCommandHandler : IRequestHandler<DeleteTaskCommand, bool>
             subTask.DeletedAt = now;
         }
 
-        var activityLog = new ActivityLog
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = task.BoardColumn.ProjectId,
-            UserId = currentUserId,
-            EntityType = "task",
-            EntityId = task.Id,
-            ActionType = "deleted",
-            NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = task.Title }),
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.ActivityLogs.Add(activityLog);
+        task.AddDomainEvent(new PM.Domain.Events.TaskDeletedEvent(
+            task.BoardColumn!.ProjectId,
+            task.Id,
+            task.Title,
+            currentUserId
+        ));
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;

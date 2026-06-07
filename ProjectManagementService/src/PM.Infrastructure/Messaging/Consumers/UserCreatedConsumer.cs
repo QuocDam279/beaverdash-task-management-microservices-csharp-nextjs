@@ -30,7 +30,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
             var user = new User
             {
                 Id = message.Id,
-                Email = message.Email,
+                Email = message.Email.ToLowerInvariant(),
                 DisplayName = message.DisplayName,
                 Avatar = message.Avatar
             };

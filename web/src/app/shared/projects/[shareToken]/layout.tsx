@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { toUtcLocalDate } from "@/lib/utils";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -129,7 +130,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
                 </svg>
                 <span>Bắt đầu:</span>
                 <span className="font-semibold text-slate-700">
-                  {new Date(project.startDate).toLocaleDateString("vi-VN")}
+                  {toUtcLocalDate(project.startDate)?.toLocaleDateString("vi-VN")}
                 </span>
               </div>
             )}
@@ -141,7 +142,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
                 </svg>
                 <span>Hạn chót:</span>
                 <span className="font-semibold text-slate-700">
-                  {new Date(project.dueDate).toLocaleDateString("vi-VN")}
+                  {toUtcLocalDate(project.dueDate)?.toLocaleDateString("vi-VN")}
                 </span>
               </div>
             )}

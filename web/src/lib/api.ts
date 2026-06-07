@@ -12,6 +12,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
   }
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
+    cache: "no-store",
     ...options,
     headers,
   });

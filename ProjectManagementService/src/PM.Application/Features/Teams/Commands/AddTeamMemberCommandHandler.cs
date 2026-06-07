@@ -14,19 +14,13 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
-    private readonly IAIAssistantServiceClient _aiAssistantClient;
-    private readonly INotificationService _notificationService;
 
     public AddTeamMemberCommandHandler(
         IPMDbContext dbContext,
-        ICurrentUserService currentUserService,
-        IAIAssistantServiceClient aiAssistantClient,
-        INotificationService notificationService)
+        ICurrentUserService currentUserService)
     {
         _currentUserService = currentUserService;
         _dbContext = dbContext;
-        _aiAssistantClient = aiAssistantClient;
-        _notificationService = notificationService;
     }
 
     public async Task<bool> Handle(AddTeamMemberCommand request, CancellationToken cancellationToken)
@@ -65,70 +59,33 @@ public class AddTeamMemberCommandHandler : IRequestHandler<AddTeamMemberCommand,
             JoinedAt = DateTime.UtcNow
         };
 
-        _dbContext.TeamMembers.Add(newMember);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        // Tạo thông báo cá nhân cho thành viên được mời
-        try
-        {
-            var notification = new Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = request.UserId,
-                ActorUserId = currentUserId,
-                Type = "team_invited",
-                Content = $"Bạn đã được thêm vào nhóm '{team.Name}'.",
-                ActionUrl = $"/teams/{team.Id}",
-                IsRead = false,
-                IsSentViaEmail = false,
-                CreatedAt = DateTime.UtcNow
-            };
-            _dbContext.Notifications.Add(notification);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            var actorUser = await _dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
-
-            // Phát thông báo qua SignalR
-            await _notificationService.SendNotificationToUserAsync(
-                notification.UserId.ToString(),
-                new
-                {
-                    Id = notification.Id,
-                    Type = notification.Type,
-                    Content = notification.Content,
-                    ActionUrl = notification.ActionUrl,
-                    CreatedAt = notification.CreatedAt,
-                    ActorUserId = notification.ActorUserId,
-                    ActorDisplayName = actorUser?.DisplayName ?? "Unknown User",
-                    ActorAvatar = actorUser?.Avatar
-                }
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error creating/sending team invitation notification: {ex.Message}");
-        }
-
-        // 5. Đồng bộ thành viên dự án sang AIAssistant Service
-        // Lấy tất cả dự án thuộc team này
-        var projectIds = await _dbContext.Set<PM.Domain.Entities.Project>()
+        // Lấy thông tin phụ trợ cho Domain Event trước khi lưu
+        var projectIds = await _dbContext.Projects
             .Where(p => p.TeamId == request.TeamId)
             .Select(p => p.Id)
             .ToListAsync(cancellationToken);
 
-        // Lấy danh sách thành viên mới nhất của team (bao gồm người vừa thêm)
         var memberIds = await _dbContext.TeamMembers
             .Where(tm => tm.TeamId == request.TeamId)
             .Select(tm => tm.UserId)
             .ToListAsync(cancellationToken);
 
-        // Đồng bộ cho từng dự án
-        foreach (var projectId in projectIds)
+        if (!memberIds.Contains(request.UserId))
         {
-            await _aiAssistantClient.SyncProjectMembersAsync(projectId, memberIds);
+            memberIds.Add(request.UserId);
         }
+
+        newMember.AddDomainEvent(new PM.Domain.Events.TeamMemberAddedEvent(
+            request.TeamId,
+            team.Name,
+            currentUserId,
+            request.UserId,
+            projectIds,
+            memberIds
+        ));
+
+        _dbContext.TeamMembers.Add(newMember);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

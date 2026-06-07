@@ -29,16 +29,18 @@ public class CreateBoardColumnCommandHandler : IRequestHandler<CreateBoardColumn
         if (project == null)
             throw new InvalidOperationException("Project không tồn tại.");
 
-        if (project.TeamId.HasValue)
+        if (!project.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền thêm cột vào Project này.");
+            throw new UnauthorizedAccessException("Bạn không có quyền thêm cột vào Project này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền thêm cột vào Project này.");
 
         var boardColumn = new BoardColumn
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             ProjectId = request.ProjectId,
             Name = request.Name,
             Position = request.Position,

@@ -1,8 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { BoardColumnView, TaskDetailModal, CreateTaskModal, WipLimitModal, DeleteColumnModal, BoardToolbar } from "@/components/project";
+import { BoardColumnView, BoardToolbar } from "@/components/project";
 import { useBoard } from "@/hooks/useBoard";
+import dynamic from "next/dynamic";
+
+const TaskDetailModal = dynamic(() =>
+  import("@/components/project/TaskDetailModal").then((m) => m.TaskDetailModal),
+  { ssr: false }
+);
+const CreateTaskModal = dynamic(() =>
+  import("@/components/project/CreateTaskModal").then((m) => m.CreateTaskModal),
+  { ssr: false }
+);
+const WipLimitModal = dynamic(() =>
+  import("@/components/project/WipLimitModal").then((m) => m.WipLimitModal),
+  { ssr: false }
+);
+const DeleteColumnModal = dynamic(() =>
+  import("@/components/project/DeleteColumnModal").then((m) => m.DeleteColumnModal),
+  { ssr: false }
+);
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -65,6 +83,8 @@ export default function BoardPage({ params }: PageProps) {
               onSetColumnDone={b.handleSetColumnDone}
               assignees={b.assignees}
               isPersonalProject={b.isPersonalProject}
+              projectStartDate={b.projectStartDate}
+              projectDueDate={b.projectDueDate}
             />
           </div>
         ))}

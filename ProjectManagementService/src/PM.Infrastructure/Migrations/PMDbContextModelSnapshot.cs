@@ -63,9 +63,11 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasIndex("UserId");
+
+                    b.HasIndex("ProjectId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_activity_log_project_id_created_at");
 
                     b.ToTable("activity_log", (string)null);
                 });
@@ -150,7 +152,8 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId", "Position")
+                        .HasDatabaseName("ix_board_columns_project_id_position");
 
                     b.ToTable("board_columns", (string)null);
                 });
@@ -243,9 +246,55 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("ActorUserId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_notifications_user_id_created_at");
 
                     b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_on_utc");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_on_utc");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("retry_count");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedOnUtc")
+                        .HasDatabaseName("ix_outbox_messages_unprocessed")
+                        .HasFilter("processed_on_utc IS NULL");
+
+                    b.ToTable("outbox_messages", (string)null);
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Project", b =>
@@ -295,13 +344,6 @@ namespace PM.Infrastructure.Migrations
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar")
-                        .HasDefaultValue("NotStarted")
-                        .HasColumnName("status");
 
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uuid")
@@ -486,9 +528,10 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BoardColumnId");
-
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("BoardColumnId", "SortOrder")
+                        .HasDatabaseName("ix_tasks_board_column_id_sort_order");
 
                     b.ToTable("tasks", (string)null);
                 });

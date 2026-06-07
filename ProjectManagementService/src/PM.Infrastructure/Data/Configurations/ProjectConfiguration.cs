@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PM.Domain.Entities;
-using PM.Domain.Enums;
 
 namespace PM.Infrastructure.Data.Configurations;
 
@@ -30,12 +29,6 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.Description)
             .HasColumnName("description")
             .HasColumnType("text");
-
-        builder.Property(p => p.Status)
-            .HasColumnName("status")
-            .HasColumnType("varchar")
-            .HasConversion<string>()
-            .HasDefaultValue(ProjectStatus.NotStarted);
 
         builder.Property(p => p.Progress)
             .HasColumnName("progress")

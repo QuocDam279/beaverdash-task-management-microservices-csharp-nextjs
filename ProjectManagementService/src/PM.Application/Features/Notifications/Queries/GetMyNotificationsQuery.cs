@@ -42,7 +42,6 @@ public class GetMyNotificationsQueryHandler : IRequestHandler<GetMyNotifications
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException();
         var notifications = await _dbContext.Notifications
             .AsNoTracking()
-            .Include(n => n.ActorUser) // Join bảng User để lấy thông tin người gửi
             .Where(n => n.UserId == currentUserId) // Lọc thông báo của mình
             .OrderByDescending(n => n.CreatedAt) // Sắp xếp giảm dần (mới nhất lên trên)
             .Take(50) // Giới hạn lấy tối đa 50 cái

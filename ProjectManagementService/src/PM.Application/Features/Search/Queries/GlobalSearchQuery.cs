@@ -49,13 +49,6 @@ public class GlobalSearchQueryHandler : IRequestHandler<GlobalSearchQuery, List<
             .Select(tm => tm.TeamId)
             .ToListAsync(cancellationToken);
 
-        // 2. Lấy danh sách Project ID mà user có quyền truy cập
-        var accessibleProjectIds = await _dbContext.Projects
-            .AsNoTracking()
-            .Where(p => (p.TeamId.HasValue && userTeamIds.Contains(p.TeamId.Value)) || (!p.TeamId.HasValue && p.CreatedByUserId == currentUserId))
-            .Select(p => p.Id)
-            .ToListAsync(cancellationToken);
-
         // --- TÌM KIẾM TEAMS ---
         var teams = await _dbContext.Teams
             .AsNoTracking()
@@ -74,7 +67,7 @@ public class GlobalSearchQueryHandler : IRequestHandler<GlobalSearchQuery, List<
         // --- TÌM KIẾM PROJECTS ---
         var projects = await _dbContext.Projects
             .AsNoTracking()
-            .Where(p => accessibleProjectIds.Contains(p.Id) && p.Name.ToLower().Contains(q))
+            .Where(p => p.TeamId.HasValue && userTeamIds.Contains(p.TeamId.Value) && p.Name.ToLower().Contains(q))
             .Take(10)
             .Select(p => new SearchResultDto(
                 p.Id,
@@ -89,9 +82,10 @@ public class GlobalSearchQueryHandler : IRequestHandler<GlobalSearchQuery, List<
         // --- TÌM KIẾM PARENT TASKS ---
         var tasks = await _dbContext.TaskItems
             .AsNoTracking()
-            .Include(t => t.BoardColumn)
-                .ThenInclude(bc => bc!.Project)
-            .Where(t => t.BoardColumn != null && accessibleProjectIds.Contains(t.BoardColumn.ProjectId) && t.Title.ToLower().Contains(q))
+            .Where(t => t.BoardColumn != null && 
+                        t.BoardColumn!.Project!.TeamId.HasValue && 
+                        userTeamIds.Contains(t.BoardColumn!.Project!.TeamId.Value) && 
+                        t.Title.ToLower().Contains(q))
             .Take(15)
             .Select(t => new SearchResultDto(
                 t.Id,
@@ -106,10 +100,11 @@ public class GlobalSearchQueryHandler : IRequestHandler<GlobalSearchQuery, List<
         // --- TÌM KIẾM SUBTASKS ---
         var subtasks = await _dbContext.SubTasks
             .AsNoTracking()
-            .Include(s => s.Task)
-                .ThenInclude(t => t!.BoardColumn)
-                    .ThenInclude(bc => bc!.Project)
-            .Where(s => s.Task != null && s.Task.BoardColumn != null && accessibleProjectIds.Contains(s.Task.BoardColumn.ProjectId) && s.Title.ToLower().Contains(q))
+            .Where(s => s.Task != null && 
+                        s.Task!.BoardColumn != null && 
+                        s.Task!.BoardColumn!.Project!.TeamId.HasValue && 
+                        userTeamIds.Contains(s.Task!.BoardColumn!.Project!.TeamId.Value) && 
+                        s.Title.ToLower().Contains(q))
             .Take(15)
             .Select(s => new SearchResultDto(
                 s.Id,

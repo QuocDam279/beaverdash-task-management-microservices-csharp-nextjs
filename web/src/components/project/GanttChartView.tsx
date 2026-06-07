@@ -11,6 +11,7 @@ import * as React from "react";
 import { TaskDetailModal } from "./TaskDetailModal";
 
 import { TaskItem, BoardColumn } from "@/types/task";
+import { toUtcLocalDate } from "@/lib/utils";
 
 interface GanttChartViewProps {
   tasks: TaskItem[];
@@ -179,13 +180,13 @@ export function GanttChartView({
                 const effectiveStart = rawStart || rawDue!;
                 const effectiveDue = rawDue || rawStart!;
                 
-                sDateObj = new Date(effectiveStart);
-                dDateObj = new Date(effectiveDue);
+                sDateObj = toUtcLocalDate(effectiveStart);
+                dDateObj = toUtcLocalDate(effectiveDue);
                 
                 const sMonth = new Date(year, month, 1);
                 const eMonth = new Date(year, month + 1, 0);
                 
-                if (sDateObj <= eMonth && dDateObj >= sMonth) {
+                if (sDateObj && dDateObj && sDateObj <= eMonth && dDateObj >= sMonth) {
                   overlapsCurrentMonth = true;
                   startDay = sDateObj < sMonth ? 1 : sDateObj.getDate();
                   spanDays = (dDateObj > eMonth ? daysInMonth : dDateObj.getDate()) - startDay + 1;

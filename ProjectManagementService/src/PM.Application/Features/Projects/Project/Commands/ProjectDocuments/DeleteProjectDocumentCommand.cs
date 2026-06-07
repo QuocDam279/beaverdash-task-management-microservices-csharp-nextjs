@@ -71,19 +71,12 @@ public class DeleteProjectDocumentCommandHandler : IRequestHandler<DeleteProject
         }
 
         // 4. Xóa record trong DB
-        var log = new ActivityLog
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = request.ProjectId,
-            UserId = currentUserId,
-            EntityType = "ProjectDocument",
-            EntityId = doc.Id,
-            ActionType = "Delete",
-            OldValue = System.Text.Json.JsonSerializer.Serialize(doc.FileName),
-            NewValue = null,
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.ActivityLogs.Add(log);
+        doc.AddDomainEvent(new PM.Domain.Events.ProjectDocumentDeletedEvent(
+            request.ProjectId,
+            doc.Id,
+            doc.FileName,
+            currentUserId
+        ));
 
         _dbContext.ProjectDocuments.Remove(doc);
         await _dbContext.SaveChangesAsync(cancellationToken);

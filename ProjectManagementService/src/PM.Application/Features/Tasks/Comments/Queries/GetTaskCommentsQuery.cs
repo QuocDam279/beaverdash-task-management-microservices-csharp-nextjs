@@ -62,12 +62,14 @@ public class GetTaskCommentsQueryHandler : IRequestHandler<GetTaskCommentsQuery,
         if (subTask == null)
             return new List<CommentDto>();
 
-        if (subTask.Task!.BoardColumn!.Project!.TeamId.HasValue)
+        if (!subTask.Task!.BoardColumn!.Project!.TeamId.HasValue)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == subTask.Task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền xem bình luận trong Project này.");
+            throw new UnauthorizedAccessException("Bạn không có quyền xem bình luận trong Project này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == subTask.Task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền xem bình luận trong Project này.");
         // Truy vấn danh sách comments, sắp xếp từ cũ nhất đến mới nhất theo thứ tự thời gian
         var comments = await _dbContext.Comments
             .AsNoTracking()

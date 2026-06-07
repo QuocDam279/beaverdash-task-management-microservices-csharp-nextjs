@@ -20,27 +20,18 @@ public class CommentAddedEventHandler : INotificationHandler<CommentAddedEvent>
 
     public async Task Handle(CommentAddedEvent notification, CancellationToken cancellationToken)
     {
-        // Để insert ActivityLog, chúng ta cần ProjectId. Ta sẽ truy ngược từ SubTaskId -> Task -> BoardColumn -> ProjectId
-        var subtask = await _dbContext.SubTasks
-            .Include(s => s.Task)
-                .ThenInclude(t => t!.BoardColumn)
-            .FirstOrDefaultAsync(s => s.Id == notification.TaskId, cancellationToken);
-
-        if (subtask == null || subtask.Task == null || subtask.Task.BoardColumn == null)
-            return;
-
         var newValueObj = new 
         { 
             content = notification.Content,
-            subtask_title = subtask.Title,
-            task_title = subtask.Task.Title,
-            task_id = subtask.Task.Id
+            subtask_title = notification.SubTaskTitle,
+            task_title = notification.TaskTitle,
+            task_id = notification.TaskId
         };
 
         var activityLog = new ActivityLog
         {
-            Id = Guid.NewGuid(),
-            ProjectId = subtask.Task.BoardColumn.ProjectId,
+            Id = Guid.CreateVersion7(),
+            ProjectId = notification.ProjectId,
             UserId = notification.UserId,
             EntityType = "comment",
             EntityId = notification.CommentId,
@@ -50,10 +41,6 @@ public class CommentAddedEventHandler : INotificationHandler<CommentAddedEvent>
         };
 
         _dbContext.ActivityLogs.Add(activityLog);
-        
-        // Vì event này được trigger TRƯỚC khi DbContext gọi base.SaveChangesAsync(), 
-        // bản ghi ActivityLog này sẽ được lưu cùng lúc với Comment trong 1 Transaction.
-        // Tuy nhiên, gọi _dbContext.SaveChangesAsync() ở đây vẫn hoàn toàn an toàn (vì chúng ta đã ClearDomainEvents ở DBContext để chống lặp vô tận).
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

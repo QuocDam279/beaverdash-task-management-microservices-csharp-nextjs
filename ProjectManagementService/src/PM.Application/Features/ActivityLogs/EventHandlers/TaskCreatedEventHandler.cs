@@ -20,19 +20,12 @@ public class TaskCreatedEventHandler : INotificationHandler<TaskCreatedEvent>
 
     public async Task Handle(TaskCreatedEvent notification, CancellationToken cancellationToken)
     {
-        var task = await _dbContext.TaskItems
-            .Include(t => t.BoardColumn)
-            .FirstOrDefaultAsync(t => t.Id == notification.TaskId, cancellationToken);
-
-        if (task == null || task.BoardColumn == null)
-            return;
-
         var newValueObj = new { title = notification.Title };
 
         var activityLog = new ActivityLog
         {
-            Id = Guid.NewGuid(),
-            ProjectId = task.BoardColumn.ProjectId,
+            Id = Guid.CreateVersion7(),
+            ProjectId = notification.ProjectId,
             UserId = notification.UserId, // Người tạo task
             EntityType = "task",
             EntityId = notification.TaskId,

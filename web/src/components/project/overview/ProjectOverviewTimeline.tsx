@@ -11,7 +11,12 @@ import {
   getActionColorClass, 
   getSubtaskChangeDetail 
 } from "@/lib/timelineHelper";
-import { ActivityHistoryModal } from "./ActivityHistoryModal";
+import dynamic from "next/dynamic";
+
+const ActivityHistoryModal = dynamic(() =>
+  import("./ActivityHistoryModal").then((m) => m.ActivityHistoryModal),
+  { ssr: false }
+);
 
 interface ProjectOverviewTimelineProps {
   projectId?: string;

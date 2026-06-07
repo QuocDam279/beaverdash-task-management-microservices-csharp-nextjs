@@ -37,12 +37,6 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Fade mask overlay utility */
-.fade-bottom-mask {
-  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
-}
-
 /* Custom chat scrollbar (thin, hidden by default, visible on hover/scroll) */
 .custom-chat-scrollbar::-webkit-scrollbar {
   width: 5px;
@@ -72,86 +66,11 @@ body {
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
-/* Premium Breathing Glow and Periodic Jumps for AI Assistant Logo */
-@keyframes logo-glow-and-bounce {
-  /* Breathing scale & glow (0% to 70% of the 5s cycle) */
-  0%, 70%, 100% {
-    transform: translateY(0) scale(1);
-    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
-    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
-  }
-  35% {
-    transform: translateY(0) scale(1.05);
-    filter: drop-shadow(0 0 10px rgba(24, 104, 219, 0.75));
-    box-shadow: 0 0 22px rgba(24, 104, 219, 0.6);
-  }
-  /* Jump 1 */
-  74% {
-    transform: translateY(-10px) scale(1.06);
-    filter: drop-shadow(0 0 12px rgba(24, 104, 219, 0.85));
-    box-shadow: 0 6px 26px rgba(24, 104, 219, 0.5);
-  }
-  78% {
-    transform: translateY(0) scale(1);
-    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
-    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
-  }
-  /* Jump 2 */
-  82% {
-    transform: translateY(-6px) scale(1.04);
-    filter: drop-shadow(0 0 10px rgba(24, 104, 219, 0.8));
-    box-shadow: 0 4px 22px rgba(24, 104, 219, 0.45);
-  }
-  86% {
-    transform: translateY(0) scale(1);
-    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
-    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
-  }
-  /* Jump 3 */
-  90% {
-    transform: translateY(-3px) scale(1.02);
-    filter: drop-shadow(0 0 8px rgba(24, 104, 219, 0.7));
-    box-shadow: 0 2px 18px rgba(24, 104, 219, 0.4);
-  }
-  94% {
-    transform: translateY(0) scale(1);
-    filter: drop-shadow(0 0 4px rgba(24, 104, 219, 0.4));
-    box-shadow: 0 0 12px rgba(24, 104, 219, 0.3);
-  }
-}
-
-.logo-glow-button {
-  animation: logo-glow-and-bounce 5s infinite ease-in-out;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logo-glow-button:hover {
-  animation: none;
-  box-shadow: 0 0 28px rgba(24, 104, 219, 0.8);
-  filter: drop-shadow(0 0 12px rgba(24, 104, 219, 0.9));
-  transform: scale(1.12);
-}
-
-/* Kanban Cards Floating Animations */
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-@keyframes float-medium {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
 @keyframes float-fast {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
 
-.animate-float-slow {
-  animation: float-slow 7s ease-in-out infinite;
-}
-.animate-float-medium {
-  animation: float-medium 5.5s ease-in-out infinite;
-}
 .animate-float-fast {
   animation: float-fast 4s ease-in-out infinite;
 }
@@ -166,19 +85,12 @@ body {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(-80px, 60px) scale(1.3); }
 }
-@keyframes drift-three {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(50px, 50px) scale(0.9); }
-}
 
 .animate-drift-one {
   animation: drift-one 22s ease-in-out infinite;
 }
 .animate-drift-two {
   animation: drift-two 28s ease-in-out infinite;
-}
-.animate-drift-three {
-  animation: drift-three 18s ease-in-out infinite;
 }
 
 /* Staggered Entrance Animations */
@@ -198,30 +110,6 @@ body {
   opacity: 0;
 }
 
-/* Glassmorphism Styles */
-.glassmorphism {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glassmorphism-card {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
-}
-
-.glassmorphism-card-active {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 50px 0 rgba(24, 104, 219, 0.15), 0 0 0 1px rgba(24, 104, 219, 0.2);
-}
-
 /* 3D Transform Utilities */
 .perspective-1000 {
   perspective: 1000px;
@@ -231,145 +119,7 @@ body {
   transform-style: preserve-3d;
 }
 
-.backface-hidden {
-  backface-visibility: hidden;
-}
-
 /* Smoothed transition for 3D tilts */
 .transition-tilt {
   transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
-}
-
-/* Scroll wheel animation for mouse indicator */
-@keyframes scroll-wheel {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.9);
-  }
-  20% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.9);
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.animate-scroll-wheel {
-  animation: scroll-wheel 1.8s ease-in-out infinite;
-}
-
-/* SVG Line drawing animation */
-@keyframes draw-line {
-  0% {
-    stroke-dashoffset: 100;
-  }
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-.animate-draw-line {
-  stroke-dasharray: 100;
-  animation: draw-line 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* Pulse glow for active status lights */
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.6;
-    box-shadow: 0 0 4px currentColor;
-  }
-  50% {
-    opacity: 1;
-    box-shadow: 0 0 16px currentColor, 0 0 8px currentColor;
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s infinite ease-in-out;
-}
-
-/* Beaver Mascot Floating Animation */
-@keyframes beaver-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-6px) rotate(1deg); }
-  75% { transform: translateY(-3px) rotate(-1deg); }
-}
-
-.animate-beaver-float {
-  animation: beaver-float 4s ease-in-out infinite;
-}
-
-/* Typewriter blinking cursor */
-@keyframes blink-cursor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.animate-blink-cursor {
-  animation: blink-cursor 0.8s step-end infinite;
-}
-
-/* Beaver Mascot Curved/Looping Fly-In Animation */
-@keyframes beaver-looping-fly-in {
-  0% {
-    transform: translate(-50%, -50%) translate(80vw, -80vh) scale(0.5) rotate(-35deg);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  30% {
-    transform: translate(-50%, -50%) translate(-35vw, -45vh) scale(0.75) rotate(20deg);
-  }
-  55% {
-    transform: translate(-50%, -50%) translate(25vw, -10vh) scale(0.95) rotate(-15deg);
-  }
-  75% {
-    transform: translate(-50%, -50%) translate(-10vw, 15vh) scale(1.1) rotate(10deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) translate(0, 0) scale(1.2) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-.animate-beaver-looping-fly-in {
-  animation: beaver-looping-fly-in 2.5s cubic-bezier(0.25, 1, 0.4, 1) forwards;
-}
-
-/* Smooth Mascot Minimizing transition */
-.transition-beaver-minimize {
-  transition: top 1.2s cubic-bezier(0.25, 1, 0.3, 1),
-              left 1.2s cubic-bezier(0.25, 1, 0.3, 1),
-              transform 1.2s cubic-bezier(0.25, 1, 0.3, 1),
-              opacity 0.6s ease;
-}
-
-/* Flying Star Twinkle Effect */
-@keyframes beaver-star-twinkle {
-  0% {
-    opacity: 0;
-    transform: scale(0) rotate(0deg);
-  }
-  20% {
-    opacity: 1;
-    transform: scale(1.2) rotate(72deg);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(0.9) rotate(144deg) translateY(10px);
-  }
-  80% {
-    opacity: 0.3;
-    transform: scale(0.5) rotate(250deg) translateY(30px);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0) rotate(360deg) translateY(50px);
-  }
 }

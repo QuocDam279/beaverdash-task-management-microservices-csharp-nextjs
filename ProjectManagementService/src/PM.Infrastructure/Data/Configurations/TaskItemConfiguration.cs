@@ -42,5 +42,8 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .OnDelete(DeleteBehavior.Restrict);
             
         builder.HasQueryFilter(x => x.DeletedAt == null);
+
+        builder.HasIndex(t => new { t.BoardColumnId, t.SortOrder })
+            .HasDatabaseName("ix_tasks_board_column_id_sort_order");
     }
 }

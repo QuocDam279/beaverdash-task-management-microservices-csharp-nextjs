@@ -65,5 +65,9 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .WithMany()
             .HasForeignKey(n => n.ActorUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(n => new { n.UserId, n.CreatedAt })
+            .HasDatabaseName("ix_notifications_user_id_created_at")
+            .IsDescending(false, true);
     }
 }

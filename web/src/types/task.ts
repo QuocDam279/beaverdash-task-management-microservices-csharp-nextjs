@@ -43,6 +43,14 @@ export interface TaskItem {
   updatedAt: string; // ISO Date String
   teamId?: string | null;
   subTasks?: SubTask[];
+
+  // Extra fields from API responses (e.g. GetMyTasks)
+  isCompleted?: boolean;
+  projectId?: string;
+  projectName?: string;
+  parentTaskId?: string;
+  parentTaskTitle?: string;
+  columnName?: string;
 }
 
 /**

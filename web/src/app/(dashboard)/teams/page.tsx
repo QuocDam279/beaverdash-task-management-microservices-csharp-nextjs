@@ -6,7 +6,12 @@ import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { api } from "@/lib/api";
 import { Team } from "@/types/team";
-import { CreateTeamModal } from "@/components/team";
+import dynamic from "next/dynamic";
+
+const CreateTeamModal = dynamic(() =>
+  import("@/components/team/CreateTeamModal"),
+  { ssr: false }
+);
 
 export default function TeamsPage() {
   const router = useRouter();

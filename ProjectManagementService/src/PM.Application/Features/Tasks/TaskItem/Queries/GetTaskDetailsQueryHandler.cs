@@ -103,18 +103,19 @@ public class GetTaskDetailsQueryHandler : IRequestHandler<GetTaskDetailsQuery, T
         taskDto.TeamId = project.TeamId;
 
         // Authorization check
-        if (project.TeamId.HasValue && !project.IsPublic)
+        if (!project.IsPublic)
         {
+            if (!project.TeamId.HasValue)
+            {
+                throw new UnauthorizedAccessException("Bạn không có quyền xem Task này.");
+            }
+
             var isMember = await _dbContext.TeamMembers.AnyAsync(
                 tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, 
                 cancellationToken
             );
             if (!isMember)
                 throw new UnauthorizedAccessException("Bạn không có quyền xem Task này.");
-        }
-        else if (!project.TeamId.HasValue && !project.IsPublic && project.CreatedByUserId != currentUserId)
-        {
-            throw new UnauthorizedAccessException("Bạn không có quyền xem Task này.");
         }
 
         return taskDto;

@@ -55,6 +55,18 @@ export function TaskSidebarProperties({
     setLocalDueDate(formatDateForInput(task.dueDate));
   }, [task.dueDate]);
 
+  const handleStartDateBlur = () => {
+    if (localStartDate !== formatDateForInput(task.startDate)) {
+      onDateChange("startDate", localStartDate);
+    }
+  };
+
+  const handleDueDateBlur = () => {
+    if (localDueDate !== formatDateForInput(task.dueDate)) {
+      onDateChange("dueDate", localDueDate);
+    }
+  };
+
   return (
     <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-100 bg-[#fafbfc] overflow-y-auto p-6 space-y-5">
       {/* Status Field */}
@@ -112,11 +124,7 @@ export function TaskSidebarProperties({
             min={task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined}
             max={localDueDate ? localDueDate : (task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined)}
             onChange={(e) => setLocalStartDate(e.target.value)}
-            onBlur={() => {
-              if (localStartDate !== formatDateForInput(task.startDate)) {
-                onDateChange("startDate", localStartDate);
-              }
-            }}
+            onBlur={handleStartDateBlur}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.currentTarget.blur();
@@ -139,11 +147,7 @@ export function TaskSidebarProperties({
             min={localStartDate ? localStartDate : (task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined)}
             max={task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined}
             onChange={(e) => setLocalDueDate(e.target.value)}
-            onBlur={() => {
-              if (localDueDate !== formatDateForInput(task.dueDate)) {
-                onDateChange("dueDate", localDueDate);
-              }
-            }}
+            onBlur={handleDueDateBlur}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.currentTarget.blur();

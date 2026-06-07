@@ -22,10 +22,17 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
 
   const fetchNotifications = React.useCallback(async () => {
     try {
-      const data: any[] = await api.get("/notifications");
+      const data: Array<{
+        id: string; type: string | null; content: string | null; actionUrl: string | null;
+        isRead: boolean; createdAt: string; actorUserId: string;
+        actorDisplayName: string; actorAvatar: string | null;
+      }> = await api.get("/notifications");
       const mappedData: Notification[] = (data || []).map((n) => ({
         ...n,
-        actorUser: n.actorUser || (n.actorDisplayName ? {
+        userId: "",
+        isSentViaEmail: false,
+        emailSentAt: null,
+        actorUser: (n as any).actorUser || (n.actorDisplayName ? {
           id: n.actorUserId,
           displayName: n.actorDisplayName,
           avatar: n.actorAvatar,
@@ -50,6 +57,7 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
     if (!token) return;
 
     let connection: HubConnection | null = null;
+    let isStopped = false;
 
     const startConnection = async () => {
       try {
@@ -61,8 +69,11 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
           .withAutomaticReconnect()
           .build();
 
-        connection.on("ReceiveNotification", (notificationData: any) => {
-          toast(notificationData.content, "Thông báo mới", "info");
+        connection.on("ReceiveNotification", (notificationData: {
+          id: string; type: string | null; content: string | null; actionUrl: string | null;
+          createdAt: string; actorUserId: string; actorDisplayName: string; actorAvatar: string | null;
+        }) => {
+          toast(notificationData.content || "", "Thông báo mới", "info");
 
           setNotifications((prev) => {
             if (prev.some((n) => n.id === notificationData.id)) {
@@ -94,7 +105,13 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
 
         await connection.start();
         console.log("Connected to SignalR Notification Hub.");
+
+        if (isStopped) {
+          await connection.stop();
+          console.log("SignalR connection stopped cleanly after delayed start.");
+        }
       } catch (err) {
+        if (isStopped) return;
         const errMsg = err instanceof Error ? err.message : String(err);
         if (errMsg.includes("stopped during negotiation")) {
           console.warn("SignalR connection stopped during negotiation (unmount).");
@@ -107,10 +124,13 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
     startConnection();
 
     return () => {
+      isStopped = true;
       if (connection) {
-        connection.stop()
-          .then(() => console.log("SignalR connection stopped."))
-          .catch((err) => console.error("Error stopping SignalR connection:", err));
+        if (connection.state === "Connected") {
+          connection.stop()
+            .then(() => console.log("SignalR connection stopped."))
+            .catch((err) => console.error("Error stopping SignalR connection:", err));
+        }
       }
     };
   }, [token, toast]);

@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/Card";
+import { toUtcLocalDate } from "@/lib/utils";
 import { Project } from "@/types/project";
 
 /** Props for TeamProjectsGrid */
@@ -65,7 +66,7 @@ export default function TeamProjectsGrid({ projects }: TeamProjectsGridProps) {
                       Bắt đầu:{" "}
                       <span className="text-slate-600 font-bold">
                         {project.startDate
-                          ? new Date(project.startDate).toLocaleDateString("vi-VN")
+                          ? toUtcLocalDate(project.startDate)?.toLocaleDateString("vi-VN")
                           : "-"}
                       </span>
                     </div>
@@ -73,7 +74,7 @@ export default function TeamProjectsGrid({ projects }: TeamProjectsGridProps) {
                       Hạn chót:{" "}
                       <span className="text-slate-600 font-bold">
                         {project.dueDate
-                          ? new Date(project.dueDate).toLocaleDateString("vi-VN")
+                          ? toUtcLocalDate(project.dueDate)?.toLocaleDateString("vi-VN")
                           : "-"}
                       </span>
                     </div>

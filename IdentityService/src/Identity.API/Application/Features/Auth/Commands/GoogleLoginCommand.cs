@@ -45,7 +45,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
         {
             user = new User
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.CreateVersion7(),
                 GoogleId = payload.GoogleId,
                 Email = payload.Email.ToLowerInvariant(),
                 DisplayName = payload.DisplayName,

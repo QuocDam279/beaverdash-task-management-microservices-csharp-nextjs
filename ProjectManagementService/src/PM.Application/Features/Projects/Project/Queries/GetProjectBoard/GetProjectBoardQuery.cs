@@ -25,36 +25,34 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
     {
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
-        var project = await _dbContext.Projects
+        // 1. Lấy thông tin cơ bản của Project để check quyền
+        var projectInfo = await _dbContext.Projects
             .AsNoTracking()
-            .Include(p => p.BoardColumns.OrderBy(c => c.Position))
-                .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
-            .Include(p => p.BoardColumns.OrderBy(c => c.Position))
-                .ThenInclude(c => c.TaskItems.OrderBy(t => t.SortOrder))
-                    .ThenInclude(t => t.SubTasks)
-                        .ThenInclude(st => st.AssigneeUser)
+            .Select(p => new { p.Id, p.Name, p.Description, p.TeamId, p.IsPublic })
             .FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
 
-        if (project == null)
+        if (projectInfo == null)
             return null;
 
-        if (project.TeamId.HasValue && !project.IsPublic)
+        // 2. Kiểm tra phân quyền: dự án bắt buộc phải thuộc nhóm (nếu không công khai)
+        if (!projectInfo.IsPublic)
         {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+            if (!projectInfo.TeamId.HasValue)
+            {
+                throw new UnauthorizedAccessException("Bạn không có quyền xem Project này.");
+            }
+
+            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == projectInfo.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
             if (!isMember)
                 throw new UnauthorizedAccessException("Bạn không có quyền xem Project này.");
         }
-        else if (!project.TeamId.HasValue && !project.IsPublic && project.CreatedByUserId != currentUserId)
-        {
-            throw new UnauthorizedAccessException("Bạn không có quyền xem Project này.");
-        }
 
-        return new ProjectBoardDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            Description = project.Description,
-            BoardColumns = project.BoardColumns.Select(c => new BoardColumnDto
+        // 3. Thực hiện truy vấn Board Columns và Task Items trực tiếp qua Database Projection Select
+        var columns = await _dbContext.BoardColumns
+            .AsNoTracking()
+            .Where(c => c.ProjectId == request.ProjectId)
+            .OrderBy(c => c.Position)
+            .Select(c => new BoardColumnDto
             {
                 Id = c.Id,
                 ProjectId = c.ProjectId,
@@ -62,32 +60,41 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                 Position = c.Position,
                 WipLimit = c.WipLimit,
                 IsDone = c.IsDone,
-                TaskItems = c.TaskItems.Select(t => new TaskItemDto
-                {
-                    Id = t.Id,
-                    BoardColumnId = t.BoardColumnId,
-                    Title = t.Title,
-                    Priority = t.Priority?.ToString(),
-                    SortOrder = t.SortOrder,
-                    Description = t.Description,
-                    StartDate = t.StartDate,
-                    DueDate = t.DueDate,
-                    SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
-                    CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null),
-                    CommentsCount = t.SubTasks.Where(st => st.DeletedAt == null).SelectMany(st => st.Comments).Count(),
-                    SubTasks = t.SubTasks.Where(st => st.DeletedAt == null).Select(st => new SubTaskBoardDto
+                TaskItems = c.TaskItems
+                    .OrderBy(t => t.SortOrder)
+                    .Select(t => new TaskItemDto
                     {
-                        Id = st.Id,
-                        TaskId = st.TaskId,
-                        Title = st.Title,
-                        IsCompleted = st.IsCompleted,
-                        AssigneeUserId = st.AssigneeUserId,
-                        AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
-                        AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,
-                        Priority = st.Priority != null ? st.Priority.ToString() : null
+                        Id = t.Id,
+                        BoardColumnId = t.BoardColumnId,
+                        Title = t.Title,
+                        Priority = t.Priority != null ? t.Priority.ToString() : null,
+                        SortOrder = t.SortOrder,
+                        Description = t.Description,
+                        StartDate = t.StartDate,
+                        DueDate = t.DueDate,
+                        SubTasksCount = t.SubTasks.Count(st => st.DeletedAt == null),
+                        CompletedSubTasksCount = t.SubTasks.Count(st => st.IsCompleted && st.DeletedAt == null),
+                        CommentsCount = t.SubTasks.Where(st => st.DeletedAt == null).SelectMany(st => st.Comments).Count(),
+                        SubTasks = t.SubTasks.Where(st => st.DeletedAt == null).Select(st => new SubTaskBoardDto
+                        {
+                            Id = st.Id,
+                            TaskId = st.TaskId,
+                            Title = st.Title,
+                            IsCompleted = st.IsCompleted,
+                            AssigneeUserId = st.AssigneeUserId,
+                            AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
+                            AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,
+                            Priority = st.Priority != null ? st.Priority.ToString() : null
+                        }).ToList()
                     }).ToList()
-                }).ToList()
-            }).ToList()
+            }).ToListAsync(cancellationToken);
+
+        return new ProjectBoardDto
+        {
+            Id = projectInfo.Id,
+            Name = projectInfo.Name,
+            Description = projectInfo.Description,
+            BoardColumns = columns
         };
     }
 }

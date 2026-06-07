@@ -59,5 +59,9 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(a => new { a.ProjectId, a.CreatedAt })
+            .HasDatabaseName("ix_activity_log_project_id_created_at")
+            .IsDescending(false, true);
     }
 }

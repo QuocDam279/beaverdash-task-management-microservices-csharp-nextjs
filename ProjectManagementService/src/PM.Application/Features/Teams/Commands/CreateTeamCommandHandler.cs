@@ -29,7 +29,7 @@ public class CreateTeamCommandHandler : IRequestHandler<CreateTeamCommand, Guid>
             throw new InvalidOperationException("Tên nhóm đã tồn tại. Vui lòng chọn tên khác.");
         }
 
-        var teamId = Guid.NewGuid();
+        var teamId = Guid.CreateVersion7();
         // 1. Khởi tạo Team
         var team = new Team
         {

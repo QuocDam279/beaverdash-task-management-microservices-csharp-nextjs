@@ -33,33 +33,25 @@ public class DeleteSubTaskCommandHandler : IRequestHandler<DeleteSubTaskCommand,
             return false;
 
         var project = subTask.Task!.BoardColumn!.Project!;
-        if (project.TeamId.HasValue)
-        {
-            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (requestingMember == null)
-                throw new UnauthorizedAccessException("Bạn không có quyền xóa SubTask này.");
-
-
-        }
-        else if (project.CreatedByUserId != currentUserId)
+        if (!project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền xóa SubTask này.");
         }
 
+        var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (requestingMember == null)
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa SubTask này.");
+
         subTask.DeletedAt = DateTime.UtcNow;
 
-        var activityLog = new ActivityLog
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = project.Id,
-            UserId = currentUserId,
-            EntityType = "subtask",
-            EntityId = subTask.Id,
-            ActionType = "deleted",
-            NewValue = System.Text.Json.JsonSerializer.Serialize(new { title = subTask.Title, parent_task_title = subTask.Task.Title, task_id = subTask.Task.Id }),
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.ActivityLogs.Add(activityLog);
+        subTask.AddDomainEvent(new PM.Domain.Events.SubTaskDeletedEvent(
+            project.Id,
+            subTask.Id,
+            subTask.Task.Id,
+            subTask.Task.Title,
+            subTask.Title,
+            currentUserId
+        ));
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;

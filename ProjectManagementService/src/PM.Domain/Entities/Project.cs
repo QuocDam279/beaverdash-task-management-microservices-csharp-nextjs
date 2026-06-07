@@ -1,8 +1,8 @@
-using PM.Domain.Enums;
+using PM.Domain.Common;
 
 namespace PM.Domain.Entities;
 
-public class Project
+public class Project : BaseEntity
 {
     public Guid Id { get; set; }
     
@@ -11,7 +11,6 @@ public class Project
 
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
-    public ProjectStatus Status { get; set; }
     public int Progress { get; set; }
     
     public DateTime? StartDate { get; set; }

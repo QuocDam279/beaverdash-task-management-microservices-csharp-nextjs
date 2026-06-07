@@ -4,6 +4,7 @@ import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { TaskItem, BoardColumn } from "@/types/task";
+import type { BoardColumnDto, BoardTaskItemDto, SubTaskBoardDto, TeamMemberInfo, TeamMemberDto } from "@/types/api";
 import { api } from "@/lib/api";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
@@ -14,7 +15,7 @@ export function useBoard(projectId: string) {
   const [columns, setColumns] = React.useState<BoardColumn[]>([]);
   const [tasks, setTasks] = React.useState<TaskItem[]>([]);
   const [selectedTaskState, setSelectedTaskState] = React.useState<TaskItem | null>(null);
-  const [assignees, setAssignees] = React.useState<any[]>([]);
+  const [assignees, setAssignees] = React.useState<TeamMemberInfo[]>([]);
   const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
   const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
@@ -51,12 +52,12 @@ export function useBoard(projectId: string) {
         const cols = board.boardColumns || [];
         setColumns(cols);
         
-        const allTasks: TaskItem[] = cols.flatMap((col: any) =>
-          (col.taskItems || []).map((t: any) => ({
+        const allTasks: TaskItem[] = cols.flatMap((col: BoardColumnDto) =>
+          (col.taskItems || []).map((t: BoardTaskItemDto) => ({
             ...t,
             projectStartDate: overview?.startDate || board?.startDate || null,
             projectDueDate: overview?.dueDate || board?.dueDate || null,
-            subTasks: (t.subTasks || []).map((st: any) => ({
+            subTasks: (t.subTasks || []).map((st: SubTaskBoardDto) => ({
               ...st,
               assigneeUser: st.assigneeUserId ? {
                 id: st.assigneeUserId,
@@ -72,7 +73,7 @@ export function useBoard(projectId: string) {
       if (overview?.teamId) {
         const team = await api.get(`/teams/${overview.teamId}`);
         if (team?.members) {
-          setAssignees(team.members.map((m: any) => ({
+          setAssignees(team.members.map((m: TeamMemberDto) => ({
             id: m.userId,
             displayName: m.displayName,
             avatar: m.avatar,
@@ -83,9 +84,10 @@ export function useBoard(projectId: string) {
       } else if (currentUser) {
         setAssignees([currentUser]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to load project board:", err);
-      setError(err.message || "Đã xảy ra lỗi khi tải dữ liệu bảng.");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Đã xảy ra lỗi khi tải dữ liệu bảng.");
     } finally {
       setIsLoading(false);
     }
@@ -192,7 +194,7 @@ export function useBoard(projectId: string) {
         return;
       }
       const task = tasks.find((t) => t.id === taskIdParam);
-      if (task && (!selectedTaskState || (selectedTaskState.id || (selectedTaskState as any).Id) !== taskIdParam)) {
+      if (task && (!selectedTaskState || selectedTaskState.id !== taskIdParam)) {
         if (fetchingTaskIdRef.current === taskIdParam) {
           console.log("sync effect skipped: already fetching this task ID");
           return;
@@ -359,9 +361,10 @@ export function useBoard(projectId: string) {
         newSortOrder: newSortOrder,
       });
       fetchBoardData();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to move task:", err);
-      alert(err.message || "Không thể di chuyển công việc. Có thể cột đích đã đạt giới hạn WIP.", "Thất bại", "danger");
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể di chuyển công việc. Có thể cột đích đã đạt giới hạn WIP.", "Thất bại", "danger");
     }
   };
 

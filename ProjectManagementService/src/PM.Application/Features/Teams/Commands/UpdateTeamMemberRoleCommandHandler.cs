@@ -37,9 +37,15 @@ public class UpdateTeamMemberRoleCommandHandler : IRequestHandler<UpdateTeamMemb
             throw new InvalidOperationException("Thành viên không tồn tại trong team này.");
 
         // 3. (Tùy chọn) Chặn tự giáng chức mình nếu là leader duy nhất - Ở mức cơ bản thì bỏ qua
-        
+        if (string.IsNullOrWhiteSpace(request.NewRole))
+            throw new ArgumentException("Role mới không được để trống.");
+
+        var normalizedRole = request.NewRole.Trim().ToLower();
+        if (normalizedRole != "leader" && normalizedRole != "member")
+            throw new ArgumentException("Role không hợp lệ. Chỉ chấp nhận 'leader' hoặc 'member'.");
+
         // 4. Cập nhật Role
-        targetMember.Role = request.NewRole.ToLower(); // "leader" hoặc "member"
+        targetMember.Role = normalizedRole; // "leader" hoặc "member"
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

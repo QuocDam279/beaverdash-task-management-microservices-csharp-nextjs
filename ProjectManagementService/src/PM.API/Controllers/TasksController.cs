@@ -19,9 +19,27 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMyTasks()
+    public async Task<IActionResult> GetMyTasks(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchQuery = null,
+        [FromQuery] Guid? projectId = null,
+        [FromQuery] string? priority = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? dueDateFilter = null,
+        [FromQuery] string? sortBy = null)
     {
-        var query = new GetMyTasksQuery();
+        var query = new GetMyTasksQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            SearchQuery = searchQuery,
+            ProjectId = projectId,
+            Priority = priority,
+            Status = status,
+            DueDateFilter = dueDateFilter,
+            SortBy = sortBy
+        };
         var result = await _mediator.Send(query);
         return Ok(result);
     }

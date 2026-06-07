@@ -23,7 +23,8 @@ builder.Services.AddMassTransit(x =>
     
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", "/", h => {
+        var rabbitMqHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
+        cfg.Host(rabbitMqHost, "/", h => {
             h.Username(Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? "guest");
             h.Password(Environment.GetEnvironmentVariable("RABBITMQ_PASS") ?? "guest");
         });
@@ -59,6 +60,8 @@ builder.Services.AddScoped<PM.Application.Contracts.IEmailService, PM.Infrastruc
 builder.Services.AddScoped<PM.Application.Contracts.ICurrentUserService, PM.API.Services.CurrentUserService>();
 
 builder.Services.AddScoped<PM.Application.Contracts.IPMDbContext>(provider => provider.GetRequiredService<PMDbContext>());
+
+builder.Services.AddHostedService<PM.Infrastructure.Services.OutboxBackgroundService>();
 
 builder.Services.AddExceptionHandler<PM.API.Middlewares.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

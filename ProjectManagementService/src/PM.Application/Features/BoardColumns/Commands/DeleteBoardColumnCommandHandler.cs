@@ -34,16 +34,14 @@ public class DeleteBoardColumnCommandHandler : IRequestHandler<DeleteBoardColumn
         if (project == null)
             return false;
 
-        if (project.TeamId.HasValue)
-        {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền xóa cột của Project này.");
-        }
-        else if (project.CreatedByUserId != currentUserId)
+        if (!project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền xóa cột của Project này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa cột của Project này.");
 
         // Get all active tasks in this column
         var tasksInColumn = await _dbContext.TaskItems

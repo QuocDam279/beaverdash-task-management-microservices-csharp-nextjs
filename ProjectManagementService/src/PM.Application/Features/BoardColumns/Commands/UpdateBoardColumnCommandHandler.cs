@@ -34,16 +34,14 @@ public class UpdateBoardColumnCommandHandler : IRequestHandler<UpdateBoardColumn
         if (project == null)
             return false;
 
-        if (project.TeamId.HasValue)
-        {
-            var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("Bạn không có quyền sửa cột của Project này.");
-        }
-        else if (project.CreatedByUserId != currentUserId)
+        if (!project.TeamId.HasValue)
         {
             throw new UnauthorizedAccessException("Bạn không có quyền sửa cột của Project này.");
         }
+
+        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (!isMember)
+            throw new UnauthorizedAccessException("Bạn không có quyền sửa cột của Project này.");
 
         boardColumn.Name = request.Name;
         boardColumn.Position = request.Position;

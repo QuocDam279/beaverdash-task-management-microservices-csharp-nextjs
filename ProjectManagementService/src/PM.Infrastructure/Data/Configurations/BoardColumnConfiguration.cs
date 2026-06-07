@@ -52,5 +52,8 @@ public class BoardColumnConfiguration : IEntityTypeConfiguration<BoardColumn>
             .WithMany(p => p.BoardColumns)
             .HasForeignKey(bc => bc.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(bc => new { bc.ProjectId, bc.Position })
+            .HasDatabaseName("ix_board_columns_project_id_position");
     }
 }

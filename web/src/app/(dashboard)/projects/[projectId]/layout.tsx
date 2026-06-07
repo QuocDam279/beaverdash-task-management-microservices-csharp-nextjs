@@ -10,6 +10,7 @@ import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { AIAssistantContainer } from "@/components/features/ai-assistant";
 import { useToast } from "@/components/providers/ToastProvider";
+import { toUtcLocalDate } from "@/lib/utils";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -62,6 +63,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     try {
       setIsActionPending(true);
       await api.delete(`/projects/${projectId}`);
+      window.dispatchEvent(new Event("projects-updated"));
       showSuccessToast("Dự án đã được xóa thành công.", "Thành công");
       router.push("/tasks");
     } catch (err: any) {
@@ -185,7 +187,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
                 </svg>
                 <span>Bắt đầu:</span>
                 <span className="font-semibold text-slate-700">
-                  {new Date(project.startDate).toLocaleDateString("vi-VN")}
+                  {toUtcLocalDate(project.startDate)?.toLocaleDateString("vi-VN")}
                 </span>
               </div>
             )}
@@ -197,7 +199,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
                 </svg>
                 <span>Hạn chót:</span>
                 <span className="font-semibold text-slate-700">
-                  {new Date(project.dueDate).toLocaleDateString("vi-VN")}
+                  {toUtcLocalDate(project.dueDate)?.toLocaleDateString("vi-VN")}
                 </span>
               </div>
             )}

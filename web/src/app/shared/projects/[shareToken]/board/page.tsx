@@ -1,8 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { BoardColumnView, TaskDetailModal, BoardToolbar } from "@/components/project";
+import { BoardColumnView, BoardToolbar } from "@/components/project";
 import { api } from "@/lib/api";
+import dynamic from "next/dynamic";
+
+const TaskDetailModal = dynamic(() =>
+  import("@/components/project/TaskDetailModal").then((m) => m.TaskDetailModal),
+  { ssr: false }
+);
 import { TaskItem, BoardColumn } from "@/types/task";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSharedBoardFilters } from "@/hooks/useSharedBoardFilters";

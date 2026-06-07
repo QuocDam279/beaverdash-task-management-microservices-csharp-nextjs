@@ -58,6 +58,7 @@ export function EditProjectModal({ isOpen, onClose, project, onProjectUpdated }:
         dueDate: dueDate ? new Date(dueDate).toISOString() : sentinelDate,
       });
 
+      window.dispatchEvent(new Event("projects-updated"));
       onProjectUpdated();
       onClose();
     } catch (err: any) {

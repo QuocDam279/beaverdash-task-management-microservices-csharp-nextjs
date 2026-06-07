@@ -36,7 +36,7 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
     {
         var task = await _dbContext.TaskItems
             .Include(t => t.BoardColumn)
-                .ThenInclude(c => c.Project)
+                .ThenInclude(c => c!.Project)
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
@@ -44,12 +44,14 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
 
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
-        if (task.BoardColumn.Project.TeamId.HasValue)
+        if (task.BoardColumn == null || task.BoardColumn.Project == null || !task.BoardColumn.Project.TeamId.HasValue)
         {
-            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (requestingMember == null)
-                throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
+            throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
         }
+
+        var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (requestingMember == null)
+            throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
 
         var oldColumnId = task.BoardColumnId;
         var newColumnId = request.NewBoardColumnId;
@@ -68,7 +70,16 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
             task.CompletedAt = newColumn.IsDone ? DateTime.UtcNow : null;
 
             // Sinh ra Domain Event
-            task.AddDomainEvent(new PM.Domain.Events.TaskMovedEvent(task.Id, currentUserId, oldColumnId, newColumnId));
+            task.AddDomainEvent(new PM.Domain.Events.TaskMovedEvent(
+                task.BoardColumn!.ProjectId,
+                task.Id,
+                task.Title,
+                currentUserId,
+                oldColumnId,
+                task.BoardColumn!.Name,
+                newColumnId,
+                newColumn.Name
+            ));
         }
 
         // Update task to new column and direct double sort order

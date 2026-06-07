@@ -40,7 +40,6 @@ public class GetSharedProjectActivitiesQueryHandler : IRequestHandler<GetSharedP
 
         var queryable = _dbContext.ActivityLogs
             .AsNoTracking()
-            .Include(a => a.User)
             .Where(a => a.ProjectId == project.Id);
 
         if (request.UserId.HasValue)

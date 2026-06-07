@@ -50,15 +50,16 @@ public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivi
         if (project == null)
             return new List<ActivityLogDto>();
 
-        if (project.TeamId.HasValue && !project.IsPublic)
+        if (!project.IsPublic)
         {
+            if (!project.TeamId.HasValue)
+            {
+                throw new UnauthorizedAccessException("Bạn không có quyền xem lịch sử hoạt động của Project này.");
+            }
+
             var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
             if (!isMember)
                 throw new UnauthorizedAccessException("Bạn không có quyền xem lịch sử hoạt động của Project này.");
-        }
-        else if (!project.TeamId.HasValue && !project.IsPublic && project.CreatedByUserId != currentUserId)
-        {
-            throw new UnauthorizedAccessException("Bạn không có quyền xem lịch sử hoạt động của Project này.");
         }
 
         int page = request.Page > 0 ? request.Page : 1;
@@ -67,7 +68,6 @@ public class GetProjectActivitiesQueryHandler : IRequestHandler<GetProjectActivi
         // Truy vấn ActivityLog theo ProjectId, kết hợp bảng User để lấy tên/avatar
         var queryable = _dbContext.ActivityLogs
             .AsNoTracking()
-            .Include(a => a.User)
             .Where(a => a.ProjectId == request.ProjectId);
 
         if (request.UserId.HasValue)

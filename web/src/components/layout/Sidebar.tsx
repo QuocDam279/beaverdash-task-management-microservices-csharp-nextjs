@@ -3,12 +3,18 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
+import type { MyProjectDto } from "@/types/api";
 import { api } from "@/lib/api";
 import { SidebarHeader } from "./SidebarHeader";
 import { SidebarCollapsedNav } from "./SidebarCollapsedNav";
 import { SidebarExpandedNav } from "./SidebarExpandedNav";
 import { SidebarFooter } from "./SidebarFooter";
-import { CreateProjectModal } from "@/components/project";
+import dynamic from "next/dynamic";
+
+const CreateProjectModal = dynamic(() =>
+  import("@/components/project/CreateProjectModal").then((m) => m.CreateProjectModal),
+  { ssr: false }
+);
 
 /**
  * Sidebar chính của Dashboard.
@@ -19,10 +25,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user: currentUser } = useAuth();
 
-  const [projects, setProjects] = React.useState<any[]>([]);
+  const [projects, setProjects] = React.useState<MyProjectDto[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  // Fetch projects on mount/user change
+  // Active project ID matching /projects/[projectId]
+  const projectMatch = pathname.match(/\/projects\/([^\/]+)/);
+  const activeProjectId = projectMatch ? projectMatch[1] : null;
+
+  // Fetch projects on mount/user change/project navigation
   React.useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -38,11 +48,18 @@ export function Sidebar() {
     if (currentUser) {
       fetchProjects();
     }
-  }, [currentUser]);
 
-  // Active project ID matching /projects/[projectId]
-  const projectMatch = pathname.match(/\/projects\/([^\/]+)/);
-  const activeProjectId = projectMatch ? projectMatch[1] : null;
+    const handleProjectsUpdated = () => {
+      if (currentUser) {
+        fetchProjects();
+      }
+    };
+
+    window.addEventListener("projects-updated", handleProjectsUpdated);
+    return () => {
+      window.removeEventListener("projects-updated", handleProjectsUpdated);
+    };
+  }, [currentUser, activeProjectId]);
 
   // Lọc chỉ giữ lại dự án có nhóm làm việc (Team Projects)
   const teamProjects = React.useMemo(() => {

@@ -11,11 +11,8 @@ namespace PM.Infrastructure.Data;
 
 public class PMDbContext : DbContext, PM.Application.Contracts.IPMDbContext
 {
-    private readonly IMediator? _mediator;
-
-    public PMDbContext(DbContextOptions<PMDbContext> options, IMediator? mediator = null) : base(options)
+    public PMDbContext(DbContextOptions<PMDbContext> options) : base(options)
     {
-        _mediator = mediator;
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -30,19 +27,23 @@ public class PMDbContext : DbContext, PM.Application.Contracts.IPMDbContext
             .SelectMany(e => e.DomainEvents)
             .ToList();
 
-        // 2. Clear events ngay lập tức để tránh Infinite Loop (Lặp vô tận) nếu Handler gọi lại SaveChangesAsync
+        // 2. Clear events ngay lập tức
         entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
 
-        // 3. Publish tất cả các events
-        if (_mediator != null)
+        // 3. Chuyển thành OutboxMessages
+        foreach (var domainEvent in domainEvents)
         {
-            foreach (var domainEvent in domainEvents)
+            var outboxMessage = new OutboxMessage
             {
-                await _mediator.Publish(domainEvent, cancellationToken);
-            }
+                Id = Guid.CreateVersion7(),
+                OccurredOnUtc = DateTime.UtcNow,
+                Type = domainEvent.GetType().FullName!,
+                Content = System.Text.Json.JsonSerializer.Serialize(domainEvent, domainEvent.GetType())
+            };
+            OutboxMessages.Add(outboxMessage);
         }
 
-        // 4. Thực thi việc lưu dữ liệu gốc vào DB
+        // 4. Thực thi việc lưu dữ liệu gốc + OutboxMessages vào DB
         return await base.SaveChangesAsync(cancellationToken);
     }
 
@@ -58,6 +59,7 @@ public class PMDbContext : DbContext, PM.Application.Contracts.IPMDbContext
     public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

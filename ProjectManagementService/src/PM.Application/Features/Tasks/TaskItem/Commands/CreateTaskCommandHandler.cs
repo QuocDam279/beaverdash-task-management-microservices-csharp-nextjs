@@ -30,16 +30,19 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             .FirstOrDefaultAsync(c => c.Id == request.BoardColumnId, cancellationToken);
 
         if (column == null)
-            throw new InvalidOperationException("Board column not found.");
+            throw new KeyNotFoundException("Không tìm thấy cột Kanban được yêu cầu.");
 
-        if (column.Project.TeamId.HasValue)
+        if (column.Project == null)
+            throw new KeyNotFoundException("Không tìm thấy dự án liên kết với cột Kanban này.");
+
+        if (!column.Project.TeamId.HasValue)
         {
-            var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == column.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-            if (requestingMember == null)
-                throw new UnauthorizedAccessException("Bạn không có quyền thêm Task vào Project này.");
-
-
+            throw new UnauthorizedAccessException("Bạn không có quyền thêm Task vào Project này.");
         }
+
+        var requestingMember = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == column.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (requestingMember == null)
+            throw new UnauthorizedAccessException("Bạn không có quyền thêm Task vào Project này.");
 
         var isDuplicateName = await _dbContext.TaskItems
             .AnyAsync(t => t.Title.ToLower() == request.Title.ToLower() && t.BoardColumn!.ProjectId == column.ProjectId, cancellationToken);
@@ -57,11 +60,11 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
         {
             if (column.Project.StartDate.HasValue)
             {
-                if (request.StartDate.HasValue && request.StartDate.Value < column.Project.StartDate.Value)
+                if (request.StartDate.HasValue && request.StartDate.Value.Date < column.Project.StartDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Ngày bắt đầu của Task không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
                 }
-                if (request.DueDate.HasValue && request.DueDate.Value < column.Project.StartDate.Value)
+                if (request.DueDate.HasValue && request.DueDate.Value.Date < column.Project.StartDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Hạn hoàn thành của Task không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
                 }
@@ -69,11 +72,11 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
 
             if (column.Project.DueDate.HasValue)
             {
-                if (request.StartDate.HasValue && request.StartDate.Value > column.Project.DueDate.Value)
+                if (request.StartDate.HasValue && request.StartDate.Value.Date > column.Project.DueDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Ngày bắt đầu của Task không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
                 }
-                if (request.DueDate.HasValue && request.DueDate.Value > column.Project.DueDate.Value)
+                if (request.DueDate.HasValue && request.DueDate.Value.Date > column.Project.DueDate.Value.Date)
                 {
                     throw new InvalidOperationException($"Hạn hoàn thành của Task không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
                 }
@@ -94,7 +97,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
 
         var task = new PM.Domain.Entities.TaskItem
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             BoardColumnId = request.BoardColumnId,
             Title = request.Title,
             Description = request.Description,
@@ -113,7 +116,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
         _dbContext.TaskItems.Add(task);
         
         // Gắn sự kiện tạo Task để ghi log
-        task.AddDomainEvent(new PM.Domain.Events.TaskCreatedEvent(task.Id, currentUserId, task.Title));
+        task.AddDomainEvent(new PM.Domain.Events.TaskCreatedEvent(column.ProjectId, task.Id, currentUserId, task.Title));
         
         await _dbContext.SaveChangesAsync(cancellationToken);
 

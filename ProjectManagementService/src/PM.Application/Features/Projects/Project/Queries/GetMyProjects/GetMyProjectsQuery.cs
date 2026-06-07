@@ -41,11 +41,10 @@ public class GetMyProjectsQueryHandler : IRequestHandler<GetMyProjectsQuery, Lis
             .Select(tm => tm.TeamId)
             .ToListAsync(cancellationToken);
 
-        // Lấy các dự án cá nhân hoặc thuộc về team mà user tham gia
+        // Lấy các dự án thuộc về team mà user tham gia
         var projects = await _dbContext.Projects
             .AsNoTracking()
-            .Where(p => (p.TeamId == null && p.CreatedByUserId == currentUserId) || 
-                        (p.TeamId != null && myTeamIds.Contains(p.TeamId.Value)))
+            .Where(p => p.TeamId.HasValue && myTeamIds.Contains(p.TeamId.Value))
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new MyProjectDto
             {
