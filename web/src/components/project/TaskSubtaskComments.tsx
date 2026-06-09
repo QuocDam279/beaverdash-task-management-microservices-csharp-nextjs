@@ -52,7 +52,7 @@ export function TaskSubtaskComments({
 
       {/* Comments List */}
       {comments.length > 0 ? (
-        <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100/80 border-t border-slate-100 pt-1 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100/80 dark:divide-[#2c3338] border-t border-slate-100 dark:border-[#2c3338] pt-1 scrollbar-thin">
           {comments.map((comment) => (
             <TaskSubtaskCommentItem
               key={comment.id}
@@ -64,7 +64,7 @@ export function TaskSubtaskComments({
           ))}
         </div>
       ) : (
-        <p className="text-[10px] text-slate-400 font-medium italic py-1 px-1 flex-shrink-0">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic py-1 px-1 flex-shrink-0">
           Chưa có thảo luận nào cho công việc con này.
         </p>
       )}

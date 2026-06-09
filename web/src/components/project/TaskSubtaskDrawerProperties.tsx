@@ -41,8 +41,8 @@ export function TaskSubtaskDrawerProperties({
     setLocalDueDate(subtask.dueDate ? subtask.dueDate.substring(0, 10) : "");
   }, [subtask.dueDate]);
   return (
-    <div className="bg-slate-50/50 border border-slate-100 rounded-lg p-3 space-y-3.5">
-      <h4 className="text-[10px] font-bold text-[#6b6e76] uppercase tracking-wider">
+    <div className="bg-slate-50/50 dark:bg-[#22272b]/50 border border-slate-100 dark:border-[#2c3338] rounded-lg p-3 space-y-3.5">
+      <h4 className="text-[10px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider">
         Thuộc tính công việc con
       </h4>
       
@@ -50,7 +50,7 @@ export function TaskSubtaskDrawerProperties({
         {/* Assignee */}
         {!isPersonalProject && (
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 font-medium">Người thực hiện:</span>
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Người thực hiện:</span>
             <div className="relative h-7 w-40 flex items-center justify-end">
               <select
                 value={subtask.assigneeUserId || ""}
@@ -68,7 +68,7 @@ export function TaskSubtaskDrawerProperties({
                 ))}
               </select>
               
-              <div className="flex items-center gap-1.5 pointer-events-none bg-white border border-slate-200 px-2 py-0.5 rounded shadow-2xs">
+              <div className="flex items-center gap-1.5 pointer-events-none bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs">
                 {subtask.assigneeUser ? (
                   <>
                     <Avatar
@@ -76,14 +76,14 @@ export function TaskSubtaskDrawerProperties({
                       alt={subtask.assigneeUser.displayName}
                       className="h-4 w-4 rounded-full"
                     />
-                    <span className="text-[11px] font-bold text-slate-700 truncate max-w-[100px]">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
                       {subtask.assigneeUser.displayName}
                     </span>
                   </>
                 ) : (
-                  <span className="text-[11px] font-semibold text-slate-400">Chưa giao</span>
+                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Chưa giao</span>
                 )}
-                {canManageSubtasks && !readOnly && <span className="text-[9px] text-slate-400">▼</span>}
+                {canManageSubtasks && !readOnly && <span className="text-[9px] text-slate-400 dark:text-slate-500">▼</span>}
               </div>
             </div>
           </div>
@@ -91,8 +91,8 @@ export function TaskSubtaskDrawerProperties({
 
         {/* Due Date */}
         <div className="flex items-center justify-between">
-          <span className="text-slate-500 font-medium">Hạn chót:</span>
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded px-2 py-0.5 shadow-2xs">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">Hạn chót:</span>
+          <div className="flex items-center gap-1 bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] rounded px-2 py-0.5 shadow-2xs">
             <svg
               width="11"
               height="11"
@@ -125,14 +125,14 @@ export function TaskSubtaskDrawerProperties({
                   e.currentTarget.blur();
                 }
               }}
-              className="text-[11px] text-[#292a2e] font-bold bg-transparent border-none focus:outline-none w-24 cursor-pointer"
+              className="text-[11px] text-[#292a2e] dark:text-[#deebff] font-bold bg-transparent border-none focus:outline-none w-24 cursor-pointer"
             />
           </div>
         </div>
 
         {/* Priority */}
         <div className="flex items-center justify-between">
-          <span className="text-slate-500 font-medium">Độ ưu tiên:</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">Độ ưu tiên:</span>
           <div className="relative h-7 w-28 flex items-center justify-end">
             <select
               value={subtask.priority || ""}
@@ -152,7 +152,7 @@ export function TaskSubtaskDrawerProperties({
               {(() => {
                 if (!subtask.priority) {
                   return (
-                    <div className="flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded shadow-2xs text-[11px] font-semibold text-slate-400">
+                    <div className="flex items-center gap-1 bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                       <span>Chưa chọn</span>
                       {canManageSubtasks && !readOnly && <span className="text-[9px]">▼</span>}
                     </div>
@@ -162,9 +162,9 @@ export function TaskSubtaskDrawerProperties({
                 const p = subtask.priority.toLowerCase();
                 
                 let badgeClass = "";
-                if (p === "high") badgeClass = "bg-orange-50 border-orange-200 text-orange-700";
-                else if (p === "medium") badgeClass = "bg-blue-50 border-blue-200 text-blue-700";
-                else badgeClass = "bg-slate-50 border-slate-200 text-slate-500";
+                if (p === "high") badgeClass = "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40 text-orange-700 dark:text-orange-400";
+                else if (p === "medium") badgeClass = "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-400";
+                else badgeClass = "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-[#353e47] text-slate-500 dark:text-slate-400";
                 
                 return (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide flex items-center gap-1 ${badgeClass}`}>

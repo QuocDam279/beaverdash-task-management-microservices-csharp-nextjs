@@ -121,8 +121,8 @@ export function ProjectDocumentsView({
       {/* Title block */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Tài liệu dự án</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-[#deebff]">Tài liệu dự án</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Quản lý và chia sẻ các tệp tin đính kèm cho toàn bộ thành viên trong dự án.
           </p>
         </div>
@@ -134,10 +134,10 @@ export function ProjectDocumentsView({
             placeholder="Tìm kiếm tài liệu..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 focus:border-[#1868db] focus:ring-1 focus:ring-[#1868db]/30 rounded-[4px] bg-white text-slate-700 outline-none transition-all placeholder:text-slate-400"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] focus:border-[#1868db] dark:focus:border-[#579dff] focus:ring-1 focus:ring-[#1868db]/30 rounded-[4px] bg-white dark:bg-[#22272b] text-slate-700 dark:text-[#deebff] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
           <svg
-            className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400"
+            className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400 dark:text-slate-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -158,8 +158,8 @@ export function ProjectDocumentsView({
           onClick={triggerFileInput}
           className={`relative border-2 border-dashed rounded-[6px] p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[140px] group ${
             isDragActive
-              ? "border-[#1868db] bg-blue-50/50 shadow-inner"
-              : "border-slate-200 hover:border-[#1868db]/60 hover:bg-slate-50/30"
+              ? "border-[#1868db] dark:border-[#579dff] bg-blue-50/50 dark:bg-blue-950/20 shadow-inner"
+              : "border-slate-200 dark:border-[#353e47] hover:border-[#1868db]/60 dark:hover:border-[#579dff]/60 hover:bg-slate-50/30 dark:hover:bg-[#2c3338]/20"
           }`}
         >
           <input
@@ -171,23 +171,23 @@ export function ProjectDocumentsView({
 
           {isUploading ? (
             <div className="flex flex-col items-center gap-3">
-              <svg className="animate-spin h-7 w-7 text-[#1868db]" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-7 w-7 text-[#1868db] dark:text-[#579dff]" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              <span className="text-xs font-semibold text-slate-500">Đang tải tệp lên máy chủ...</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang tải tệp lên máy chủ...</span>
             </div>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mb-3 group-hover:bg-[#1868db]/10 group-hover:text-[#1868db] transition-colors">
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#2c3338] text-slate-500 dark:text-slate-400 flex items-center justify-center mb-3 group-hover:bg-[#1868db]/10 dark:group-hover:bg-[#579dff]/10 group-hover:text-[#1868db] dark:group-hover:text-[#579dff] transition-colors">
                 <svg className="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.3">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-8m0 8l-3-3m3 3l3-3m-9 8h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p className="text-xs font-bold text-slate-700">
-                Kéo thả tệp tin vào đây hoặc <span className="text-[#1868db] group-hover:underline">Nhấn để duyệt</span>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Kéo thả tệp tin vào đây hoặc <span className="text-[#1868db] dark:text-[#579dff] group-hover:underline">Nhấn để duyệt</span>
               </p>
-              <p className="text-[10px] text-slate-400 mt-1 font-medium">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
                 Hỗ trợ tệp đính kèm văn bản, bảng tính, hình ảnh, tài liệu nén PDF, ZIP... lên đến 50MB.
               </p>
             </>
@@ -196,24 +196,24 @@ export function ProjectDocumentsView({
       )}
 
       {/* Content table */}
-      <div className="bg-white border border-slate-200 rounded-[6px] overflow-hidden shadow-xs">
+      <div className="bg-white dark:bg-[#161a1d] border border-slate-200 dark:border-[#353e47] rounded-[6px] overflow-hidden shadow-xs">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-16 gap-3">
-            <svg className="animate-spin h-6 w-6 text-[#1868db]" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-6 w-6 text-[#1868db] dark:text-[#579dff]" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <span className="text-xs font-semibold text-slate-400">Đang tải danh sách tài liệu...</span>
+            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">Đang tải danh sách tài liệu...</span>
           </div>
         ) : filteredDocs.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-16 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-[#22272b] text-slate-400 dark:text-slate-500 flex items-center justify-center mb-3">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="text-xs font-bold text-slate-700">Chưa có tài liệu nào</h3>
-            <p className="text-[10px] text-slate-400 mt-1 max-w-sm">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300">Chưa có tài liệu nào</h3>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-sm">
               {searchQuery
                 ? "Không tìm thấy tài liệu phù hợp với từ khóa của bạn."
                 : "Dự án này chưa có tài liệu đính kèm nào được tải lên."}

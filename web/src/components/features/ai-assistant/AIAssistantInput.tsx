@@ -60,13 +60,13 @@ export function AIAssistantInput({
   });
 
   return (
-    <div className="p-4 bg-white shrink-0">
+    <div className="p-4 bg-transparent shrink-0">
       <div className="max-w-3xl mx-auto w-full px-4">
         {/* Upload Error Banner */}
         {uploadError && (
-          <div className="mb-2 text-[10px] text-red-500 font-bold bg-red-50 border border-red-100 rounded px-2.5 py-1 flex items-center justify-between">
+          <div className="mb-2 text-[10px] text-red-500 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded px-2.5 py-1 flex items-center justify-between">
             <span>⚠️ {uploadError}</span>
-            <button onClick={() => setUploadError(null)} className="text-red-400 hover:text-red-600 ml-1 font-bold border-0 bg-transparent cursor-pointer">
+            <button onClick={() => setUploadError(null)} className="text-red-400 hover:text-red-650 ml-1 font-bold border-0 bg-transparent cursor-pointer">
               ×
             </button>
           </div>
@@ -74,17 +74,17 @@ export function AIAssistantInput({
 
         {/* File Attachment Chip */}
         {fileAttachment && (
-          <div className="mb-2 flex items-center justify-between bg-blue-50/60 border border-blue-100 rounded-lg px-3 py-1.5 w-full shadow-3xs">
+          <div className="mb-2 flex items-center justify-between bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-lg px-3 py-1.5 w-full shadow-3xs">
             <div className="flex items-center gap-2 min-w-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1868db" strokeWidth="2.5" className="shrink-0">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
               </svg>
-              <span className="text-[11px] font-bold text-slate-700 truncate">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
                 {fileAttachment.fileName} ({fileAttachment.fileSize})
               </span>
               {fileAttachment.estimatedTokens !== undefined && (
-                <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded border border-slate-200">
+                <span className="text-[9px] bg-slate-100 dark:bg-[#2c3338] text-slate-500 dark:text-slate-400 px-1.5 py-0.2 rounded border border-slate-200 dark:border-[#353e47]">
                   Ước tính ~{fileAttachment.estimatedTokens.toLocaleString()} tokens
                 </span>
               )}
@@ -104,7 +104,7 @@ export function AIAssistantInput({
 
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-2 bg-[#f4f4f4] border border-transparent focus-within:border-slate-300/80 focus-within:bg-white rounded-3xl px-4 py-2 transition-all duration-150"
+          className="flex items-center gap-2 bg-slate-100 dark:bg-[#22272b] border border-transparent focus-within:border-slate-300/80 dark:focus-within:border-[#353e47] focus-within:bg-white dark:focus-within:bg-[#2c3338] rounded-3xl px-4 py-2 transition-all duration-150"
         >
           {/* Hidden File Input */}
           <input
@@ -122,7 +122,7 @@ export function AIAssistantInput({
             onClick={() => setIsPickerOpen(true)}
             disabled={isSending || isUploading || countdown > 0}
             title="Đính kèm tài liệu từ thư mục dự án"
-            className="p-1.5 rounded-full hover:bg-slate-200/50 text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center cursor-pointer border-0 bg-transparent shrink-0 disabled:opacity-50"
+            className="p-1.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-[#2c3338]/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center justify-center cursor-pointer border-0 bg-transparent shrink-0 disabled:opacity-50"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -135,7 +135,7 @@ export function AIAssistantInput({
             onClick={triggerFileInput}
             disabled={isSending || isUploading || countdown > 0}
             title="Đính kèm tài liệu từ thiết bị (.pdf, .docx, .xlsx, .txt, v.v.)"
-            className={`p-1.5 rounded-full hover:bg-slate-200/50 text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center cursor-pointer border-0 bg-transparent shrink-0 ${
+            className={`p-1.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-[#2c3338]/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center justify-center cursor-pointer border-0 bg-transparent shrink-0 ${
               isUploading ? "animate-pulse" : ""
             } ${countdown > 0 ? "opacity-50 cursor-not-allowed" : ""}`}
           >
@@ -169,7 +169,7 @@ export function AIAssistantInput({
             }
             disabled={isSending || isUploading || countdown > 0}
             rows={1}
-            className={`flex-1 bg-transparent border-none outline-hidden text-xs text-slate-800 placeholder-slate-450 py-1.5 resize-none min-h-[20px] max-h-[120px] custom-chat-scrollbar ${
+            className={`flex-1 bg-transparent border-none outline-hidden text-xs text-slate-800 dark:text-[#deebff] placeholder-slate-450 dark:placeholder-slate-500 py-1.5 resize-none min-h-[20px] max-h-[120px] custom-chat-scrollbar ${
               !inputText ? "overflow-hidden" : ""
             }`}
           />
@@ -178,7 +178,7 @@ export function AIAssistantInput({
             <button
               type="button"
               disabled
-              className="p-1.5 rounded-[4px] flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-[10px] min-w-[28px] h-6 cursor-not-allowed shadow-3xs border-0 shrink-0"
+              className="p-1.5 rounded-[4px] flex items-center justify-center bg-slate-200 dark:bg-[#2c3338] text-slate-500 dark:text-slate-400 font-bold text-[10px] min-w-[28px] h-6 cursor-not-allowed shadow-3xs border-0 shrink-0"
             >
               {countdown}s
             </button>
@@ -199,8 +199,8 @@ export function AIAssistantInput({
               disabled={(!inputText.trim() && !fileAttachment) || isUploading}
               className={`p-2 rounded-full flex items-center justify-center cursor-pointer transition-all duration-150 border-0 shrink-0 ${
                 (inputText.trim() || fileAttachment) && !isUploading
-                  ? "bg-slate-900 hover:bg-black text-white hover:scale-[1.05] active:scale-[0.95]"
-                  : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  ? "bg-slate-900 hover:bg-black text-white dark:bg-[#579dff] dark:hover:bg-blue-400 dark:text-[#1d2125] hover:scale-[1.05] active:scale-[0.95]"
+                  : "bg-slate-200 dark:bg-[#2c3338] text-slate-400 dark:text-slate-650 cursor-not-allowed"
               }`}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">

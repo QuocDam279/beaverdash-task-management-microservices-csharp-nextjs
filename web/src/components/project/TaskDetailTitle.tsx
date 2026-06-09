@@ -48,7 +48,7 @@ export function TaskDetailTitle({ title, onUpdateTitle, readOnly }: TaskDetailTi
         onBlur={handleTitleBlur}
         onKeyDown={handleTitleKeyDown}
         autoFocus
-        className="w-full text-xl font-bold text-[#292a2e] px-2 py-1 border-2 border-[#1868db] rounded-[4px] bg-white focus:outline-none"
+        className="w-full text-xl font-bold text-[#292a2e] dark:text-[#deebff] px-2 py-1 border-2 border-[#1868db] dark:border-[#579dff] rounded-[4px] bg-white dark:bg-[#22272b] focus:outline-none"
       />
     );
   }
@@ -56,8 +56,8 @@ export function TaskDetailTitle({ title, onUpdateTitle, readOnly }: TaskDetailTi
   return (
     <h2
       onClick={() => !readOnly && setIsEditingTitle(true)}
-      className={`text-xl font-bold text-[#292a2e] px-2 py-1 -ml-2 rounded-[4px] transition-colors border border-transparent ${
-        readOnly ? "cursor-default" : "hover:bg-slate-50 cursor-pointer hover:border-slate-200"
+      className={`text-xl font-bold text-[#292a2e] dark:text-[#deebff] px-2 py-1 -ml-2 rounded-[4px] transition-colors border border-transparent ${
+        readOnly ? "cursor-default" : "hover:bg-slate-50 dark:hover:bg-[#2c3338] cursor-pointer hover:border-slate-200 dark:hover:border-[#353e47]"
       }`}
     >
       {title}

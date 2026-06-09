@@ -47,7 +47,7 @@ export function ProjectDocumentsTable({
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <tr className="bg-slate-50 dark:bg-[#2c3338] border-b border-slate-200 dark:border-[#353e47] text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
             <th className="px-4 py-3 min-w-[280px]">Tên tệp tin</th>
             <th className="px-4 py-3 w-28">Kích thước</th>
             <th className="px-4 py-3 min-w-[150px]">Người tải lên</th>
@@ -55,7 +55,7 @@ export function ProjectDocumentsTable({
             <th className="px-4 py-3 w-24 text-right">Thao tác</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-150">
+        <tbody className="divide-y divide-slate-150 dark:divide-[#2c3338]">
           {documents.map((doc) => {
             const absoluteUrl = getAbsoluteFileUrl(doc.fileUrl);
             const isDeletable =
@@ -66,7 +66,7 @@ export function ProjectDocumentsTable({
             return (
               <tr
                 key={doc.id}
-                className="hover:bg-slate-50/50 transition-colors text-xs text-slate-600 font-medium"
+                className="hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/40 transition-colors text-xs text-slate-600 dark:text-slate-300 font-medium"
               >
                 {/* Name / Icon */}
                 <td className="px-4 py-3">
@@ -77,12 +77,12 @@ export function ProjectDocumentsTable({
                         href={absoluteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-bold text-slate-700 hover:text-[#1868db] hover:underline truncate block"
+                        className="font-bold text-slate-700 dark:text-[#deebff] hover:text-[#1868db] dark:hover:text-[#579dff] hover:underline truncate block"
                         title={doc.fileName}
                       >
                         {doc.fileName}
                       </a>
-                      <span className="text-[9px] text-slate-400 font-semibold block mt-0.5 uppercase tracking-wide">
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold block mt-0.5 uppercase tracking-wide">
                         {doc.fileName.split(".").pop() || "unknown"}
                       </span>
                     </div>
@@ -90,7 +90,7 @@ export function ProjectDocumentsTable({
                 </td>
 
                 {/* File size */}
-                <td className="px-4 py-3 text-[11px] font-semibold text-slate-500 whitespace-nowrap">
+                <td className="px-4 py-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                   {formatBytes(doc.fileSizeBytes)}
                 </td>
 
@@ -100,16 +100,16 @@ export function ProjectDocumentsTable({
                     <Avatar
                       src={doc.uploadedByUserAvatar}
                       alt={doc.uploadedByUserName}
-                      className="w-5 h-5 rounded-full border border-slate-200"
+                      className="w-5 h-5 rounded-full border border-slate-200 dark:border-[#2c3338]"
                     />
-                    <span className="font-bold text-slate-700 truncate max-w-[130px]" title={doc.uploadedByUserName}>
+                    <span className="font-bold text-slate-700 dark:text-[#deebff] truncate max-w-[130px]" title={doc.uploadedByUserName}>
                       {doc.uploadedByUserName}
                     </span>
                   </div>
                 </td>
 
                 {/* Date */}
-                <td className="px-4 py-3 text-[11px] text-slate-400 font-semibold whitespace-nowrap">
+                <td className="px-4 py-3 text-[11px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">
                   <span title={new Date(doc.createdAt).toLocaleString("vi-VN")}>
                     {formatRelativeTime(doc.createdAt)}
                   </span>
@@ -123,7 +123,7 @@ export function ProjectDocumentsTable({
                       download={doc.fileName}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 rounded text-slate-400 hover:text-[#1868db] hover:bg-slate-100 transition-colors flex items-center justify-center"
+                      className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-[#1868db] dark:hover:text-[#579dff] hover:bg-slate-100 dark:hover:bg-[#2c3338] transition-colors flex items-center justify-center"
                       title="Tải xuống tài liệu"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -134,7 +134,7 @@ export function ProjectDocumentsTable({
                     {isDeletable && (
                       <button
                         onClick={() => onDeleteAttempt(doc)}
-                        className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center cursor-pointer"
+                        className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center justify-center cursor-pointer"
                         title="Xóa tài liệu"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">

@@ -123,3 +123,252 @@ body {
 .transition-tilt {
   transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
 }
+
+/* ==========================================
+   DARK MODE OVERRIDES (JIRA INSPIRED STYLE)
+   ========================================== */
+.dark {
+  color-scheme: dark;
+}
+
+/* Base Body Background */
+.dark body {
+  background-color: #1d2125 !important;
+  color: #c1c7d0 !important;
+}
+
+/* Sidebar & Board Column Well backgrounds (sinking elements) */
+.dark aside,
+.dark .bg-\[\#f4f5f7\],
+.dark .bg-slate-50,
+.dark .bg-slate-50\/40,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/80 {
+  background-color: #161a1d !important;
+  border-color: #2c3338 !important;
+}
+
+/* Headers, Popups, and Content Area Default backgrounds */
+.dark header,
+.dark .bg-white,
+.dark .bg-\[\#fafbfc\] {
+  background-color: #1d2125 !important;
+  border-color: #2c3338 !important;
+}
+
+/* Task Cards & Modal cards (rising elements) */
+.dark .card,
+.dark .bg-white.border {
+  background-color: #22272b !important;
+  border-color: #353e47 !important;
+}
+
+/* Modals & Dialogs background overrides for elevated surface depth */
+.dark .fixed.inset-0 + div.bg-white,
+.dark .fixed.inset-0 + .bg-white {
+  background-color: #22272b !important;
+  border-color: #353e47 !important;
+}
+
+/* Soft borders */
+.dark .border-slate-200,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/60,
+.dark .border-slate-100 {
+  border-color: #2c3338 !important;
+}
+.dark .border-t,
+.dark .border-b,
+.dark .border-r,
+.dark .border-l {
+  border-color: #2c3338 !important;
+}
+
+/* Text Primary */
+.dark .text-\[\#292a2e\],
+.dark .text-slate-800,
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #deebff !important;
+}
+
+/* Text Secondary */
+.dark .text-\[\#505258\],
+.dark .text-slate-700,
+.dark .text-slate-600 {
+  color: #a5adba !important;
+}
+
+/* Text Muted / Tertiary */
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: #8c9bab !important;
+}
+
+/* Input elements */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #22272b !important;
+  color: #deebff !important;
+  border-color: #454f59 !important;
+}
+.dark textarea.bg-transparent {
+  background-color: transparent !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #626f7f !important;
+}
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #579dff !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(87, 157, 255, 0.2) !important;
+}
+.dark select option {
+  background-color: #22272b !important;
+  color: #deebff !important;
+}
+
+/* Hover highlights */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-50\/80:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200\/60:hover,
+.dark .hover\:bg-slate-200:hover {
+  background-color: #2c3338 !important;
+  color: #deebff !important;
+}
+
+/* Brand Blue Overrides for modern soft neon-blue (Jira style) */
+.dark .text-\[\#1868db\],
+.dark .text-blue-600,
+.dark .text-blue-700 {
+  color: #579dff !important;
+}
+.dark .bg-\[\#1868db\],
+.dark .bg-blue-600,
+.dark .bg-blue-700 {
+  background-color: #579dff !important;
+  color: #1d2125 !important;
+}
+.dark .bg-\[\#1868db\]\/10,
+.dark .bg-blue-50 {
+  background-color: rgba(87, 157, 255, 0.15) !important;
+  color: #579dff !important;
+  border-color: rgba(87, 157, 255, 0.3) !important;
+}
+.dark .border-\[\#1868db\],
+.dark .border-blue-600,
+.dark .border-blue-700 {
+  border-color: #579dff !important;
+}
+.dark .hover\:bg-\[\#0052cc\]:hover,
+.dark .hover\:bg-blue-700:hover {
+  background-color: #85b8ff !important;
+  color: #1d2125 !important;
+}
+.dark .hover\:text-\[\#1868db\]:hover {
+  color: #85b8ff !important;
+}
+
+/* Red Badges & Text (Overdue / High Priority) */
+.dark .bg-red-50,
+.dark .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+.dark .text-red-700,
+.dark .text-red-800,
+.dark .text-red-900,
+.dark .text-red-700\/80 {
+  color: #f87171 !important;
+}
+.dark .border-red-100,
+.dark .border-red-200 {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Amber Badges & Text (Today / Warnings) */
+.dark .bg-amber-50,
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+.dark .text-amber-600,
+.dark .text-amber-700,
+.dark .text-amber-800,
+.dark .text-amber-900,
+.dark .text-amber-700\/80 {
+  color: #f59e0b !important;
+}
+.dark .border-amber-100,
+.dark .border-amber-200 {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Orange Badges (Upcoming) */
+.dark .bg-orange-50 {
+  background-color: rgba(255, 134, 56, 0.15) !important;
+  color: #ff8638 !important;
+  border-color: rgba(255, 134, 56, 0.3) !important;
+}
+
+/* Emerald Badges & Text (Completed) */
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+.dark .text-emerald-700 {
+  color: #10b981 !important;
+}
+.dark .border-emerald-200,
+.dark .border-emerald-250 {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Slate/Muted Badges & Text */
+.dark .bg-slate-100 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #c1c7d0 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.dark .text-slate-700 {
+  color: #c1c7d0 !important;
+}
+
+/* Row Hover Overrides in My Tasks list */
+.dark .hover\:bg-blue-50\/20:hover {
+  background-color: rgba(87, 157, 255, 0.08) !important;
+}
+.dark .hover\:bg-blue-50\/30:hover {
+  background-color: rgba(87, 157, 255, 0.15) !important;
+}
+
+/* Dialog Backdrop & Glassmorphism elements */
+.dark .bg-white\/80 {
+  background-color: rgba(29, 33, 37, 0.8) !important;
+}
+.dark .bg-black\/45 {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Layout lines & dividers */
+.dark .divide-slate-100 > * + *,
+.dark .divide-slate-150 > * + *,
+.dark .divide-slate-200 > * + * {
+  border-color: #2c3338 !important;
+}
+
+/* Shadow configurations */
+.dark .shadow-xl,
+.dark .shadow-2xl,
+.dark .shadow-lg,
+.dark .shadow-md {
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+

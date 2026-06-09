@@ -68,17 +68,17 @@ export function TaskSidebarProperties({
   };
 
   return (
-    <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-100 bg-[#fafbfc] overflow-y-auto p-6 space-y-5">
+    <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-100 dark:border-[#2c3338] bg-[#fafbfc] dark:bg-[#1d2125] overflow-y-auto p-6 space-y-5">
       {/* Status Field */}
       <div className="space-y-1">
-        <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+        <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
           Trạng thái (Cột)
         </label>
         <select
           value={task.boardColumnId}
           onChange={(e) => onStatusChange(e.target.value)}
           disabled={!canModifyProperties}
-          className={`w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
+          className={`w-full px-2.5 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all ${
             !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
           }`}
         >
@@ -94,14 +94,14 @@ export function TaskSidebarProperties({
 
       {/* Priority Field */}
       <div className="space-y-1">
-        <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+        <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
           Độ ưu tiên
         </label>
         <select
           value={task.priority || ""}
           onChange={(e) => onPriorityChange(e.target.value)}
           disabled={!canModifyProperties}
-          className={`w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
+          className={`w-full px-2.5 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all ${
             !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
           }`}
         >
@@ -115,7 +115,7 @@ export function TaskSidebarProperties({
       {/* Dates (Start / Due Date) */}
       <div className="grid grid-cols-2 gap-3 pt-1">
         <div className="space-y-1">
-          <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+          <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
             Ngày bắt đầu
           </label>
           <input
@@ -131,14 +131,14 @@ export function TaskSidebarProperties({
               }
             }}
             disabled={!canModifyProperties}
-            className={`w-full px-2 py-1.5 text-[11px] border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
+            className={`w-full px-2 py-1.5 text-[11px] border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all ${
               !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
             }`}
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+          <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
             Hạn chót
           </label>
           <input
@@ -154,7 +154,7 @@ export function TaskSidebarProperties({
               }
             }}
             disabled={!canModifyProperties}
-            className={`w-full px-2 py-1.5 text-[11px] border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all ${
+            className={`w-full px-2 py-1.5 text-[11px] border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all ${
               !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
             }`}
           />
@@ -162,7 +162,7 @@ export function TaskSidebarProperties({
       </div>
 
       {/* Creation Audit Metadata */}
-      <div className="pt-4 border-t border-slate-100 text-[10px] font-medium text-slate-400 space-y-2 leading-snug">
+      <div className="pt-4 border-t border-slate-100 dark:border-[#2c3338] text-[10px] font-medium text-slate-400 dark:text-slate-500 space-y-2 leading-snug">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span>Tạo bởi:</span>
           {task.createdByUser?.displayName ? (
@@ -170,14 +170,14 @@ export function TaskSidebarProperties({
               <Avatar
                 src={task.createdByUser.avatar}
                 alt={task.createdByUser.displayName}
-                className="h-4.5 w-4.5 rounded-full border border-slate-200"
+                className="h-4.5 w-4.5 rounded-full border border-slate-200 dark:border-[#353e47]"
               />
-              <span className="font-semibold text-slate-600">
+              <span className="font-semibold text-slate-600 dark:text-slate-300">
                 {task.createdByUser.displayName}
               </span>
             </div>
           ) : (
-            <span className="font-semibold text-slate-500">Hệ thống</span>
+            <span className="font-semibold text-slate-500 dark:text-slate-400">Hệ thống</span>
           )}
         </div>
         <div>

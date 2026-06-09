@@ -41,17 +41,17 @@ export function ProjectListTable({
     if (!priority) return null;
     const p = priority.toLowerCase();
     let label = getTaskPriorityLabel(priority);
-    let badgeClass = "bg-slate-50 text-slate-600 border-slate-200 font-medium";
+    let badgeClass = "bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#353e47] font-medium";
 
     if (p === "required" || p === "high") {
       label = p === "high" ? "Cao" : label;
-      badgeClass = "bg-red-50 text-red-700 border-red-200 font-extrabold";
+      badgeClass = "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/40 font-extrabold";
     } else if (p === "important" || p === "medium") {
       label = p === "medium" ? "Trung bình" : label;
-      badgeClass = "bg-blue-50 text-blue-700 border-blue-200 font-bold";
+      badgeClass = "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-[#579dff] border-blue-200 dark:border-blue-900/40 font-bold";
     } else if (p === "extended" || p === "low") {
       label = p === "low" ? "Thấp" : label;
-      badgeClass = "bg-slate-50 text-slate-600 border-slate-200 font-medium";
+      badgeClass = "bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#353e47] font-medium";
     }
 
     return (
@@ -63,13 +63,13 @@ export function ProjectListTable({
 
   const renderStatusBadge = (columnId: string, columnName?: string) => {
     const name = columnName || getStatusName(columnId);
-    let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+    let badgeClass = "bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-450 border-slate-200 dark:border-[#353e47]";
     if (name === "Đã hoàn thành" || (name.includes("Hoàn thành") && !name.includes("Chưa")) || name.toLowerCase().includes("done")) {
-      badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold";
+      badgeClass = "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40 font-bold";
     } else if (name === "Chưa hoàn thành" || name.includes("Chưa")) {
-      badgeClass = "bg-amber-50 text-amber-700 border-amber-200 font-bold";
+      badgeClass = "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-250 dark:border-amber-900/40 font-bold";
     } else if (name.includes("Đang") || name.toLowerCase().includes("progress")) {
-      badgeClass = "bg-blue-50 text-blue-700 border-blue-200 font-bold";
+      badgeClass = "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-[#579dff] border-blue-200 dark:border-blue-900/40 font-bold";
     }
     return (
       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] uppercase border tracking-wider font-semibold ${badgeClass}`}>
@@ -89,10 +89,10 @@ export function ProjectListTable({
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       if (target < today) {
-        return <span className="text-red-600 font-bold font-sans" title="Quá hạn">{text} ⚠️</span>;
+        return <span className="text-red-600 dark:text-red-400 font-bold font-sans" title="Quá hạn">{text} ⚠️</span>;
       }
     }
-    return <span className="text-slate-600 font-medium">{text}</span>;
+    return <span className="text-slate-600 dark:text-slate-400 font-medium">{text}</span>;
   };
 
   const getTaskAssignees = (task: TaskItem) => {
@@ -127,14 +127,14 @@ export function ProjectListTable({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto border border-slate-200 rounded-[6px] shadow-2xs">
+    <div className="flex-1 min-h-0 overflow-auto border border-slate-200 dark:border-[#353e47] rounded-[6px] shadow-2xs bg-white dark:bg-[#161a1d]">
       {tasks.length === 0 ? (
-        <div className="py-16 text-center text-slate-500 font-semibold italic">
+        <div className="py-16 text-center text-slate-500 dark:text-slate-450 font-semibold italic">
           Không có công việc nào thỏa mãn bộ lọc.
         </div>
       ) : (
         <table className="w-full text-left text-xs border-collapse table-fixed">
-          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
+          <thead className="bg-slate-50 dark:bg-[#1d2125] border-b border-slate-200 dark:border-[#353e47] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
             <tr>
               <th className="py-2.5 px-3 w-[28%] min-w-[150px] whitespace-nowrap">
                 {titleColumnName}
@@ -169,7 +169,7 @@ export function ProjectListTable({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-slate-100 dark:divide-[#2c3338] bg-white dark:bg-[#161a1d]">
             {tasks.map((t) => {
               const subTasksCount = (t as any).subTasksCount || (t.subTasks ? t.subTasks.length : 0);
               const completedSubTasksCount = (t as any).completedSubTasksCount || (t.subTasks ? t.subTasks.filter(st => st.isCompleted).length : 0);
@@ -183,18 +183,18 @@ export function ProjectListTable({
                 <tr
                   key={t.id}
                   onClick={() => onTaskClick(t)}
-                  className="hover:bg-blue-50/20 transition-colors cursor-pointer"
+                  className="hover:bg-blue-50/20 dark:hover:bg-blue-950/10 transition-colors cursor-pointer"
                 >
-                  <td className="py-3 px-3 font-semibold text-[#292a2e] max-w-0 truncate" title={t.title}>
+                  <td className="py-3 px-3 font-semibold text-[#292a2e] dark:text-[#deebff] max-w-0 truncate" title={t.title}>
                     {t.title}
                   </td>
                   {showParentTaskColumn && (
-                    <td className="py-3 px-3 text-slate-500 font-medium max-w-0 truncate" title={(t as any).parentTaskTitle || "-"}>
+                    <td className="py-3 px-3 text-slate-500 dark:text-slate-400 font-medium max-w-0 truncate" title={(t as any).parentTaskTitle || "-"}>
                       {(t as any).parentTaskTitle || "-"}
                     </td>
                   )}
                   {showProjectColumn && (
-                    <td className="py-3 px-3 text-slate-500 font-bold max-w-0 truncate" title={(t as any).projectName || "-"}>
+                    <td className="py-3 px-3 text-slate-500 dark:text-slate-400 font-bold max-w-0 truncate" title={(t as any).projectName || "-"}>
                       {(t as any).projectName || "-"}
                     </td>
                   )}
@@ -208,11 +208,11 @@ export function ProjectListTable({
                               src={user.avatar}
                               alt={user.displayName}
                               title={user.displayName}
-                              className="h-6 w-6 rounded-full border border-white hover:z-10 transition-all scale-95"
+                              className="h-6 w-6 rounded-full border border-white dark:border-[#161a1d] hover:z-10 transition-all scale-95"
                             />
                           ))
                         ) : (
-                          <span className="text-slate-300">-</span>
+                          <span className="text-slate-300 dark:text-slate-700">-</span>
                         )}
                       </div>
                     </td>
@@ -225,7 +225,7 @@ export function ProjectListTable({
                     <td className="py-3 px-3 text-center whitespace-nowrap">
                       {subTasksCount > 0 && (
                         <div className="flex items-center justify-center gap-1.5">
-                          <span className="font-bold text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm">
+                          <span className="font-bold text-[10px] bg-slate-100 dark:bg-[#2c3338] text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded-sm">
                             {completedSubTasksCount}/{subTasksCount}
                           </span>
                           {(() => {
@@ -235,7 +235,7 @@ export function ProjectListTable({
                             if (unassignedCount > 0) {
                               return (
                                 <span 
-                                  className="text-amber-600 bg-amber-50 border border-amber-200 px-1 py-[1px] rounded text-[9px] font-bold flex items-center" 
+                                  className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 px-1 py-[1px] rounded text-[9px] font-bold flex items-center" 
                                   title={`Có ${unassignedCount} công việc con chưa phân công`}
                                 >
                                   ⚠️ {unassignedCount}

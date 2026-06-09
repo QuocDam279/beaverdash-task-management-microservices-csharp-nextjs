@@ -56,16 +56,16 @@ export function ProjectOverviewPriorityChart({
 
   return (
     <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] flex flex-col w-full">
-      <CardHeader className="p-5 pb-3 border-b border-slate-100 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-[#292a2e]">Mức độ ưu tiên công việc con</h3>
-        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+      <CardHeader className="p-5 pb-3 border-b border-slate-100 dark:border-[#2c3338] flex items-center justify-between">
+        <h3 className="text-sm font-bold text-[#292a2e] dark:text-[#deebff]">Mức độ ưu tiên công việc con</h3>
+        <span className="text-[10px] font-bold text-slate-500 dark:text-[#8c9bab] bg-slate-100 dark:bg-[#2c3338] px-2 py-0.5 rounded-full uppercase tracking-wider">
           {totalCount} việc con
         </span>
       </CardHeader>
       
       <CardBody className="p-5 flex-1 flex flex-col justify-end min-h-[220px]">
         {/* Legend in the top right of the chart body */}
-        <div className="flex justify-end gap-3.5 text-[10px] font-bold text-[#6b6e76] mb-3.5 select-none shrink-0">
+        <div className="flex justify-end gap-3.5 text-[10px] font-bold text-[#6b6e76] dark:text-[#8c9bab] mb-3.5 select-none shrink-0">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-[3px] bg-red-500 shadow-xs" />
             <span>Cao ({totalHigh})</span>
@@ -81,12 +81,12 @@ export function ProjectOverviewPriorityChart({
         </div>
 
         {/* Chart Area with Grid Lines */}
-        <div className="relative h-40 border-b border-slate-200 pb-2 px-4 w-full flex items-end justify-around">
+        <div className="relative h-40 border-b border-slate-200 dark:border-[#353e47] pb-2 px-4 w-full flex items-end justify-around">
           {/* Subtle horizontal grid lines */}
           <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-2">
-            <div className="w-full border-t border-dashed border-slate-100/70" />
-            <div className="w-full border-t border-dashed border-slate-100/70" />
-            <div className="w-full border-t border-dashed border-slate-100/70" />
+            <div className="w-full border-t border-dashed border-slate-100/70 dark:border-[#2c3338]/50" />
+            <div className="w-full border-t border-dashed border-slate-100/70 dark:border-[#2c3338]/50" />
+            <div className="w-full border-t border-dashed border-slate-100/70 dark:border-[#2c3338]/50" />
             <div className="w-full" /> {/* Bottom axis */}
           </div>
 
@@ -131,7 +131,7 @@ export function ProjectOverviewPriorityChart({
               )}
 
               {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-slate-700 absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
                 {reqTotal}
               </span>
             </div>
@@ -178,7 +178,7 @@ export function ProjectOverviewPriorityChart({
               )}
 
               {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-slate-700 absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
                 {impTotal}
               </span>
             </div>
@@ -225,7 +225,7 @@ export function ProjectOverviewPriorityChart({
               )}
 
               {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-slate-700 absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
                 {extTotal}
               </span>
             </div>
@@ -233,10 +233,10 @@ export function ProjectOverviewPriorityChart({
         </div>
 
         {/* Labels Underneath */}
-        <div className="flex justify-around pt-2.5 text-[10px] font-extrabold text-slate-500 text-center uppercase tracking-wider select-none">
-          <span className="w-16 text-[#ef4444]">Bắt buộc</span>
-          <span className="w-16 text-[#1868db]">Quan trọng</span>
-          <span className="w-16 text-[#64748b]">Mở rộng</span>
+        <div className="flex justify-around pt-2.5 text-[10px] font-extrabold text-slate-500 dark:text-[#8c9bab] text-center uppercase tracking-wider select-none">
+          <span className="w-16 text-[#ef4444] dark:text-red-400">Bắt buộc</span>
+          <span className="w-16 text-[#1868db] dark:text-[#579dff]">Quan trọng</span>
+          <span className="w-16 text-[#64748b] dark:text-[#8c9bab]">Mở rộng</span>
         </div>
       </CardBody>
     </Card>

@@ -65,11 +65,11 @@ export function TaskSubtaskItem({
       onClick={onSelect}
       className={`relative border rounded-lg transition-all duration-150 p-3 flex items-center justify-between group cursor-pointer select-none pl-4 ${
         isActive
-          ? "border-slate-200 bg-slate-50/40 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
-          : "border-slate-200/70 bg-white hover:border-slate-350 hover:bg-slate-50/50 hover:shadow-sm"
+          ? "border-slate-200 dark:border-[#353e47] bg-slate-50/40 dark:bg-[#22272b]/40 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
+          : "border-slate-200/70 dark:border-[#2c3338] bg-white dark:bg-[#22272b] hover:border-slate-350 dark:hover:border-slate-500 hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/80 hover:shadow-sm"
       }`}
     >
-      {isActive && <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#1868db] rounded-l-lg" />}
+      {isActive && <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#1868db] dark:bg-[#579dff] rounded-l-lg" />}
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <input
           type="checkbox"
@@ -85,8 +85,8 @@ export function TaskSubtaskItem({
           }`}
         />
         <span
-          className={`text-xs text-[#292a2e] pr-2 leading-normal break-words whitespace-normal font-semibold ${
-            subtask.isCompleted ? "line-through text-slate-400 font-medium" : ""
+          className={`text-xs text-[#292a2e] dark:text-[#deebff] pr-2 leading-normal break-words whitespace-normal font-semibold ${
+            subtask.isCompleted ? "line-through text-slate-400 dark:text-slate-500 font-medium" : ""
           }`}
           title={subtask.title}
         >
@@ -101,8 +101,8 @@ export function TaskSubtaskItem({
             e.stopPropagation();
             onSelect?.();
           }}
-          className={`p-1 rounded hover:bg-slate-150 flex items-center gap-1 transition-all cursor-pointer ${
-            isActive ? "text-[#1868db] font-bold" : "text-slate-400 hover:text-[#1868db]"
+          className={`p-1 rounded hover:bg-slate-150 dark:hover:bg-[#353e47] flex items-center gap-1 transition-all cursor-pointer ${
+            isActive ? "text-[#1868db] dark:text-[#579dff] font-bold" : "text-slate-400 dark:text-slate-500 hover:text-[#1868db] dark:hover:text-[#579dff]"
           }`}
           title="Xem bình luận & thảo luận"
         >
@@ -119,7 +119,7 @@ export function TaskSubtaskItem({
           {comments.length > 0 && (
             <span
               className={`text-[9px] font-extrabold h-4 min-w-4 px-1 rounded-full flex items-center justify-center scale-90 ${
-                isActive ? "bg-[#1868db] text-white" : "bg-slate-100 text-slate-500"
+                isActive ? "bg-[#1868db] dark:bg-[#579dff] text-white dark:text-[#1d2125]" : "bg-slate-100 dark:bg-[#353e47] text-slate-500 dark:text-slate-400"
               }`}
             >
               {comments.length}
@@ -130,8 +130,8 @@ export function TaskSubtaskItem({
         {/* Subtask Due Date Picker */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`flex items-center gap-1 bg-slate-50 border border-slate-200/70 rounded px-1.5 py-0.5 transition-all ${
-            canManage ? "hover:border-slate-300 hover:bg-slate-100/50 cursor-pointer" : "opacity-60"
+          className={`flex items-center gap-1 bg-slate-50 dark:bg-[#2c3338] border border-slate-200/70 dark:border-[#353e47] rounded px-1.5 py-0.5 transition-all ${
+            canManage ? "hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-[#353e47]/50 cursor-pointer" : "opacity-60"
           }`}
           title="Hạn chót công việc con"
         >
@@ -167,7 +167,7 @@ export function TaskSubtaskItem({
                 e.currentTarget.blur();
               }
             }}
-            className={`text-[10px] text-[#292a2e] font-semibold bg-transparent border-none focus:outline-none w-22 ${
+            className={`text-[10px] text-[#292a2e] dark:text-[#deebff] font-semibold bg-transparent border-none focus:outline-none w-22 ${
               canManage ? "cursor-pointer" : "cursor-not-allowed"
             }`}
           />
@@ -194,7 +194,7 @@ export function TaskSubtaskItem({
             {(() => {
               if (!subtask.priority) {
                 return (
-                  <div className="flex items-center gap-0.5 border border-dashed border-slate-200 rounded px-1.5 py-0.5 text-slate-400 group-hover:border-slate-300 group-hover:text-slate-500 transition-all text-[9px] font-bold">
+                  <div className="flex items-center gap-0.5 border border-dashed border-slate-200 dark:border-[#353e47] rounded px-1.5 py-0.5 text-slate-400 dark:text-slate-500 group-hover:border-slate-300 dark:group-hover:border-slate-450 group-hover:text-slate-500 dark:group-hover:text-slate-350 transition-all text-[9px] font-bold">
                     <span>Ưu tiên</span>
                   </div>
                 );
@@ -204,21 +204,21 @@ export function TaskSubtaskItem({
               const p = subtask.priority.toLowerCase();
               if (p === "high") {
                 return (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-50 border border-red-200/60 text-red-700 uppercase tracking-wide">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 text-red-700 dark:text-red-400 uppercase tracking-wide">
                     {displayLabel}
                   </span>
                 );
               }
               if (p === "medium") {
                 return (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200/60 text-amber-700 uppercase tracking-wide">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wide">
                     {displayLabel}
                   </span>
                 );
               }
               if (p === "low") {
                 return (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200/60 text-emerald-700 uppercase tracking-wide">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-455 uppercase tracking-wide">
                     {displayLabel}
                   </span>
                 );
@@ -254,12 +254,12 @@ export function TaskSubtaskItem({
                   src={subtask.assigneeUser.avatar}
                   alt={subtask.assigneeUser.displayName}
                   title={`Giao cho: ${subtask.assigneeUser.displayName}`}
-                  className="h-5 w-5 rounded-full border border-slate-200"
+                  className="h-5 w-5 rounded-full border border-slate-200 dark:border-[#353e47]"
                 />
               ) : (
                 <div
                   title="Chưa giao việc"
-                  className="h-5 w-5 rounded-full border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 transition-all"
+                  className="h-5 w-5 rounded-full border-2 border-dashed border-slate-300 dark:border-[#353e47] bg-slate-50 dark:bg-[#2c3338] flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:border-slate-400 dark:group-hover:border-slate-450 group-hover:text-slate-500 dark:group-hover:text-slate-350 transition-all"
                 >
                   <svg
                     width="10"
@@ -295,7 +295,7 @@ export function TaskSubtaskItem({
                 onDeleteSubtask(subtask.id);
               }
             }}
-            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 p-1 rounded hover:bg-slate-100 transition-all cursor-pointer"
+            className="opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-[#353e47] transition-all cursor-pointer"
             title="Xóa công việc con"
           >
             <svg

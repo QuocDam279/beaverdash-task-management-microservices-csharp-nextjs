@@ -55,10 +55,10 @@ export function GanttChartView({
       High: "from-red-500 to-red-600 border-red-700 text-white",
       Important: "from-blue-400 to-blue-500 border-blue-600 text-white",
       Medium: "from-blue-400 to-blue-500 border-blue-600 text-white",
-      Extended: "from-slate-400 to-slate-500 border-slate-600 text-white",
-      Low: "from-slate-400 to-slate-500 border-slate-600 text-white",
+      Extended: "from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-700 border-slate-600 dark:border-[#2c3338] text-white",
+      Low: "from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-700 border-slate-600 dark:border-[#2c3338] text-white",
     };
-    return colors[priority || ""] || "from-slate-200 to-slate-300 border-slate-400 text-slate-600";
+    return colors[priority || ""] || "from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 border-slate-400 dark:border-[#353e47] text-slate-600 dark:text-slate-400";
   };
 
   const handleUpdateTask = (updatedTask: TaskItem) => {
@@ -69,15 +69,15 @@ export function GanttChartView({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-white overflow-hidden p-6 pt-4">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-[#1d2125] overflow-hidden p-6 pt-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4 shrink-0">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-[#2c3338] pb-4 shrink-0">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-bold text-[#292a2e] capitalize">{monthLabel}</h2>
-          <div className="flex items-center border border-slate-200 rounded-[4px] bg-white overflow-hidden shadow-xs">
+          <h2 className="text-lg font-bold text-[#292a2e] dark:text-[#deebff] capitalize">{monthLabel}</h2>
+          <div className="flex items-center border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] overflow-hidden shadow-xs">
             <button
               onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
-              className="px-2.5 py-1.5 hover:bg-slate-100 active:bg-slate-200 text-slate-600 border-r border-slate-200 cursor-pointer flex items-center justify-center"
+              className="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-[#2c3338] active:bg-slate-200 dark:active:bg-[#353e47] text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-[#353e47] cursor-pointer flex items-center justify-center"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="15 18 9 12 15 6" />
@@ -85,13 +85,13 @@ export function GanttChartView({
             </button>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="px-3 py-1.5 hover:bg-slate-100 active:bg-slate-200 text-xs font-bold text-[#292a2e] border-r border-slate-200 cursor-pointer"
+              className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-[#2c3338] active:bg-slate-200 dark:active:bg-[#353e47] text-xs font-bold text-[#292a2e] dark:text-[#deebff] border-r border-slate-200 dark:border-[#353e47] cursor-pointer"
             >
               Hôm nay
             </button>
             <button
               onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
-              className="px-2.5 py-1.5 hover:bg-slate-100 active:bg-slate-200 text-slate-600 cursor-pointer flex items-center justify-center"
+              className="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-[#2c3338] active:bg-slate-200 dark:active:bg-[#353e47] text-slate-600 dark:text-slate-400 cursor-pointer flex items-center justify-center"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="9 18 15 12 9 6" />
@@ -99,27 +99,27 @@ export function GanttChartView({
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
+        <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-red-500" /> Bắt buộc</div>
           <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-blue-500" /> Quan trọng</div>
-          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-slate-400" /> Mở rộng</div>
+          <div className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-slate-400 dark:bg-slate-500" /> Mở rộng</div>
         </div>
       </div>
 
       {/* Gantt Container */}
-      <div className="flex-1 overflow-hidden border border-slate-200 rounded-lg flex flex-col mt-4 shadow-xs">
+      <div className="flex-1 overflow-hidden border border-slate-200 dark:border-[#353e47] rounded-lg flex flex-col mt-4 shadow-xs">
         
         {/* Single Scroll Container */}
         <div 
           ref={rightScrollRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin relative bg-white"
+          className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin relative bg-white dark:bg-[#161a1d]"
         >
           {/* HEADER AREA (sticky top) */}
           <div 
-            className="sticky top-0 z-30 h-10 border-b border-slate-200 bg-slate-50 flex shrink-0 w-full"
+            className="sticky top-0 z-30 h-10 border-b border-slate-200 dark:border-[#353e47] bg-slate-50 dark:bg-[#1d2125] flex shrink-0 w-full"
           >
             {/* Top-Left Header Cell (sticky left & top) */}
-            <div className="w-[280px] sticky left-0 z-40 border-r border-slate-200 bg-slate-50 flex items-center px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 select-none">
+            <div className="w-[280px] sticky left-0 z-40 border-r border-slate-200 dark:border-[#353e47] bg-slate-50 dark:bg-[#1d2125] flex items-center px-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 select-none">
               Công việc
             </div>
             
@@ -136,8 +136,8 @@ export function GanttChartView({
                 return (
                   <div
                     key={day}
-                    className={`border-r border-slate-200 last:border-r-0 flex items-center justify-center text-[10px] font-bold ${
-                      isToday ? "bg-red-50 text-red-600" : "text-slate-500"
+                    className={`border-r border-slate-200 dark:border-[#2c3338] last:border-r-0 flex items-center justify-center text-[10px] font-bold ${
+                      isToday ? "bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400" : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {day}
@@ -148,7 +148,7 @@ export function GanttChartView({
           </div>
 
           {/* BODY AREA (scrollable rows) */}
-          <div className="divide-y divide-slate-150 relative w-full">
+          <div className="divide-y divide-slate-150 dark:divide-[#2c3338] relative w-full">
             {/* Today Line (absolute positioned inside the body container) */}
             {(() => {
               const today = new Date();
@@ -198,14 +198,14 @@ export function GanttChartView({
               return (
                 <div 
                   key={task.id} 
-                  className="h-14 flex group hover:bg-slate-50/50 transition-colors w-full"
+                  className="h-14 flex group hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/40 transition-colors w-full"
                 >
                   {/* Sticky Left Task Cell */}
                   <div
                     onClick={() => setSelectedTask(task)}
-                    className="w-[280px] sticky left-0 z-20 border-r border-slate-200 bg-white group-hover:bg-slate-50/80 flex flex-col justify-center px-4 cursor-pointer transition-colors shrink-0"
+                    className="w-[280px] sticky left-0 z-20 border-r border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#161a1d] group-hover:bg-slate-50/80 dark:group-hover:bg-[#2c3338]/60 flex flex-col justify-center px-4 cursor-pointer transition-colors shrink-0"
                   >
-                    <span className="text-xs font-semibold text-[#292a2e] truncate" title={task.title}>
+                    <span className="text-xs font-semibold text-[#292a2e] dark:text-[#deebff] truncate" title={task.title}>
                       {task.title}
                     </span>
                   </div>
@@ -217,7 +217,7 @@ export function GanttChartView({
                   >
                     {/* Grid Lines */}
                     <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))` }}>
-                      {dayNumbers.map((d) => <div key={d} className="border-r border-slate-100 last:border-r-0 h-full" />)}
+                      {dayNumbers.map((d) => <div key={d} className="border-r border-slate-100 dark:border-[#2c3338]/50 last:border-r-0 h-full" />)}
                     </div>
 
                     {hasDates ? (
@@ -237,13 +237,13 @@ export function GanttChartView({
                           </div>
                         </div>
                       ) : (
-                        <div className="absolute left-4 text-[10px] text-[#80838d] italic pointer-events-none select-none">
+                        <div className="absolute left-4 text-[10px] text-[#80838d] dark:text-slate-500 italic pointer-events-none select-none">
                           (Ngoài phạm vi tháng này)
                         </div>
                       )
                     ) : (
-                      <div className="absolute h-7 rounded-md border border-dashed border-slate-300 bg-slate-50/50 flex items-center justify-center select-none" style={{ left: "12px", right: "12px" }}>
-                        <span className="text-[10px] font-bold text-slate-400">Chưa thiết lập ngày (Start / Due Date)</span>
+                      <div className="absolute h-7 rounded-md border border-dashed border-slate-300 dark:border-[#353e47] bg-slate-50/50 dark:bg-[#22272b]/20 flex items-center justify-center select-none" style={{ left: "12px", right: "12px" }}>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Chưa thiết lập ngày (Start / Due Date)</span>
                       </div>
                     )}
                   </div>

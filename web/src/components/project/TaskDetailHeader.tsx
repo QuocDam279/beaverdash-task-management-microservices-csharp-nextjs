@@ -14,8 +14,8 @@ interface TaskDetailHeaderProps {
 
 export function TaskDetailHeader({ onClose, onDelete }: TaskDetailHeaderProps) {
   return (
-    <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-[#fafbfc]">
-      <div className="flex items-center gap-2 text-xs font-semibold text-[#505258]">
+    <div className="px-6 py-4 border-b border-slate-100 dark:border-[#2c3338] flex justify-between items-center bg-[#fafbfc] dark:bg-[#1d2125]">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[#505258] dark:text-slate-400">
         <svg
           width="14"
           height="14"
@@ -23,21 +23,21 @@ export function TaskDetailHeader({ onClose, onDelete }: TaskDetailHeaderProps) {
           fill="none"
           stroke="currentColor"
           strokeWidth="2.5"
-          className="text-[#1868db]"
+          className="text-[#1868db] dark:text-[#579dff]"
         >
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M9 3v18M15 3v18" />
         </svg>
         <span>DỰ ÁN</span>
         <span>/</span>
-        <span className="text-[#1868db]">CÔNG VIỆC</span>
+        <span className="text-[#1868db] dark:text-[#579dff]">CÔNG VIỆC</span>
       </div>
       
       <div className="flex items-center gap-3">
         {onDelete && (
           <button
             onClick={onDelete}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer px-2 py-1 rounded transition-colors flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider border border-red-100"
+            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer px-2 py-1 rounded transition-colors flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider border border-red-100 dark:border-red-900/40"
             title="Xóa công việc"
           >
             <svg
@@ -60,7 +60,7 @@ export function TaskDetailHeader({ onClose, onDelete }: TaskDetailHeaderProps) {
         )}
         <button
           onClick={onClose}
-          className="text-slate-400 hover:text-slate-600 cursor-pointer p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+          className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350 cursor-pointer p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#2c3338] transition-colors"
         >
           <svg
             width="18"

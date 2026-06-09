@@ -43,7 +43,7 @@ export default function SharedProjectDocumentsPage({ params }: PageProps) {
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-500 font-semibold bg-white min-h-full">
+      <div className="p-6 text-center text-red-500 dark:text-red-400 font-semibold bg-white dark:bg-[#1d2125] min-h-full">
         {error}
       </div>
     );
@@ -54,7 +54,7 @@ export default function SharedProjectDocumentsPage({ params }: PageProps) {
   const noopDelete = async () => {};
 
   return (
-    <div className="p-6 bg-white min-h-full">
+    <div className="p-6 bg-white dark:bg-[#1d2125] min-h-full">
       <ProjectDocumentsView
         documents={documents}
         isLoading={isLoading}

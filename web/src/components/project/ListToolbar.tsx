@@ -82,7 +82,7 @@ export function ListToolbar({
             placeholder="Tìm kiếm nhanh..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-56 pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+            className="w-56 pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff] placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
         </div>
 
@@ -94,10 +94,10 @@ export function ListToolbar({
               setIsSortOpen(false);
               setActiveSubMenu(null);
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white cursor-pointer transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white dark:bg-[#22272b] cursor-pointer transition-all ${
               hasAnyFilterActive
-                ? "border-[#1868db] text-[#1868db] bg-blue-50/30"
-                : "border-slate-200 text-slate-700 hover:border-slate-400"
+                ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff] bg-blue-50/30 dark:bg-blue-950/20"
+                : "border-slate-200 dark:border-[#353e47] text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500"
             }`}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -105,7 +105,7 @@ export function ListToolbar({
             </svg>
             <span>Bộ lọc</span>
             {hasAnyFilterActive && (
-              <span className="h-1.5 w-1.5 rounded-full bg-[#1868db] ml-0.5 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1868db] dark:bg-[#579dff] ml-0.5 animate-pulse" />
             )}
           </button>
 
@@ -113,12 +113,12 @@ export function ListToolbar({
             <>
               <div className="fixed inset-0 z-10" onClick={closePopovers} />
               <div
-                className="absolute left-0 mt-1.5 w-48 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]"
+                className="absolute left-0 mt-1.5 w-48 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e] dark:text-[#deebff]"
                 onMouseLeave={() => setActiveSubMenu(null)}
               >
                 {/* Trạng thái */}
                 <div
-                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
+                  className="relative px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-between font-semibold"
                   onMouseEnter={() => setActiveSubMenu("status")}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -135,7 +135,7 @@ export function ListToolbar({
 
                   {activeSubMenu === "status" && (
                     <div
-                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100 max-h-60 overflow-y-auto"
+                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100 max-h-60 overflow-y-auto"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div
@@ -143,12 +143,12 @@ export function ListToolbar({
                           setSelectedStatus("all");
                           closePopovers();
                         }}
-                        className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
-                          selectedStatus === "all" ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                        className={`px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-left cursor-pointer flex items-center justify-between ${
+                          selectedStatus === "all" ? "text-[#1868db] dark:text-[#579dff] bg-blue-50/20 dark:bg-blue-950/10 font-bold" : "text-slate-600 dark:text-slate-400 font-medium"
                         }`}
                       >
                         <span>Tất cả trạng thái</span>
-                        {selectedStatus === "all" && <span className="text-[#1868db]">✓</span>}
+                        {selectedStatus === "all" && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
                       </div>
                       {columns.map((col) => (
                         <div
@@ -157,12 +157,12 @@ export function ListToolbar({
                             setSelectedStatus(col.id);
                             closePopovers();
                           }}
-                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
-                            selectedStatus === col.id ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                          className={`px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-left cursor-pointer flex items-center justify-between ${
+                            selectedStatus === col.id ? "text-[#1868db] dark:text-[#579dff] bg-blue-50/20 dark:bg-blue-950/10 font-bold" : "text-slate-600 dark:text-slate-400 font-medium"
                           }`}
                         >
                           <span className="truncate pr-2">{col.name}</span>
-                          {selectedStatus === col.id && <span className="text-[#1868db]">✓</span>}
+                          {selectedStatus === col.id && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
                         </div>
                       ))}
                     </div>
@@ -171,7 +171,7 @@ export function ListToolbar({
 
                 {/* Độ ưu tiên */}
                 <div
-                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
+                  className="relative px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-between font-semibold"
                   onMouseEnter={() => setActiveSubMenu("priority")}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -188,7 +188,7 @@ export function ListToolbar({
 
                   {activeSubMenu === "priority" && (
                     <div
-                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
+                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {[
@@ -203,12 +203,12 @@ export function ListToolbar({
                             setSelectedPriority(item.value);
                             closePopovers();
                           }}
-                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
-                            selectedPriority === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                          className={`px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-left cursor-pointer flex items-center justify-between ${
+                            selectedPriority === item.value ? "text-[#1868db] dark:text-[#579dff] bg-blue-50/20 dark:bg-blue-950/10 font-bold" : "text-slate-600 dark:text-slate-400 font-medium"
                           }`}
                         >
                           <span>{item.label}</span>
-                          {selectedPriority === item.value && <span className="text-[#1868db]">✓</span>}
+                          {selectedPriority === item.value && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
                         </div>
                       ))}
                     </div>
@@ -217,7 +217,7 @@ export function ListToolbar({
 
                 {/* Hạn chót */}
                 <div
-                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
+                  className="relative px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-between font-semibold"
                   onMouseEnter={() => setActiveSubMenu("dueDate")}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -234,7 +234,7 @@ export function ListToolbar({
 
                   {activeSubMenu === "dueDate" && (
                     <div
-                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
+                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {[
@@ -248,12 +248,12 @@ export function ListToolbar({
                             setSelectedDueDateFilter(item.value);
                             closePopovers();
                           }}
-                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
-                            selectedDueDateFilter === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                          className={`px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-left cursor-pointer flex items-center justify-between ${
+                            selectedDueDateFilter === item.value ? "text-[#1868db] dark:text-[#579dff] bg-blue-50/20 dark:bg-blue-950/10 font-bold" : "text-slate-600 dark:text-slate-400 font-medium"
                           }`}
                         >
                           <span>{item.label}</span>
-                          {selectedDueDateFilter === item.value && <span className="text-[#1868db]">✓</span>}
+                          {selectedDueDateFilter === item.value && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
                         </div>
                       ))}
                     </div>
@@ -263,7 +263,7 @@ export function ListToolbar({
                 {/* Xóa bộ lọc nhanh */}
                 {hasAnyFilterActive && (
                   <>
-                    <div className="h-[1px] bg-slate-100 my-1" />
+                    <div className="h-[1px] bg-slate-100 dark:bg-[#2c3338] my-1" />
                     <div
                       onClick={() => {
                         setSelectedPriority("all");
@@ -271,7 +271,7 @@ export function ListToolbar({
                         setSelectedDueDateFilter("all");
                         closePopovers();
                       }}
-                      className="px-3 py-2 hover:bg-red-50 text-red-600 font-bold cursor-pointer text-left transition-colors"
+                      className="px-3 py-2 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 font-bold cursor-pointer text-left transition-colors"
                     >
                       Xóa bộ lọc
                     </div>
@@ -290,10 +290,10 @@ export function ListToolbar({
               setIsFilterOpen(false);
               setActiveSubMenu(null);
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white cursor-pointer transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white dark:bg-[#22272b] cursor-pointer transition-all ${
               sortBy !== "dueDate"
-                ? "border-[#1868db] text-[#1868db] bg-blue-50/30"
-                : "border-slate-200 text-slate-700 hover:border-slate-400"
+                ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff] bg-blue-50/30 dark:bg-blue-950/20"
+                : "border-slate-200 dark:border-[#353e47] text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500"
             }`}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -305,7 +305,7 @@ export function ListToolbar({
           {isSortOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={closePopovers} />
-              <div className="absolute left-0 mt-1.5 w-44 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]">
+              <div className="absolute left-0 mt-1.5 w-44 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e] dark:text-[#deebff]">
                 {[
                   { value: "dueDate", label: "Hạn chót" },
                   { value: "priority", label: "Độ ưu tiên" },
@@ -316,12 +316,12 @@ export function ListToolbar({
                       setSortBy(item.value);
                       closePopovers();
                     }}
-                    className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
-                      sortBy === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                    className={`px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-left cursor-pointer flex items-center justify-between ${
+                      sortBy === item.value ? "text-[#1868db] dark:text-[#579dff] bg-blue-50/20 dark:bg-blue-950/10 font-bold" : "text-slate-600 dark:text-slate-400 font-medium"
                     }`}
                   >
                     <span>{item.label}</span>
-                    {sortBy === item.value && <span className="text-[#1868db]">✓</span>}
+                    {sortBy === item.value && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
                   </div>
                 ))}
               </div>
@@ -331,8 +331,8 @@ export function ListToolbar({
 
         {/* Assignees circles filter */}
         {!isPersonalProject && assignees.length > 0 && (
-          <div className="flex items-center gap-1 ml-1 pl-2 border-l border-slate-200">
-            <span className="text-xs text-[#505258] font-semibold mr-1.5">Người thực hiện:</span>
+          <div className="flex items-center gap-1 ml-1 pl-2 border-l border-slate-200 dark:border-[#2c3338]">
+            <span className="text-xs text-[#505258] dark:text-slate-300 font-semibold mr-1.5">Người thực hiện:</span>
             <div className="flex -space-x-1.5 items-center">
               {assignees.map((user) => {
                 const isSelected = selectedAssignee === user.id;
@@ -342,7 +342,7 @@ export function ListToolbar({
                     onClick={() => setSelectedAssignee(isSelected ? "all" : user.id)}
                     title={user.displayName}
                     className={`h-7 w-7 rounded-full border-2 transition-all cursor-pointer ${
-                      isSelected ? "border-[#1868db] scale-110 z-10" : "border-white hover:border-slate-300"
+                      isSelected ? "border-[#1868db] dark:border-[#579dff] scale-110 z-10" : "border-white dark:border-[#1d2125] hover:border-slate-300 dark:hover:border-slate-500"
                     }`}
                   >
                     <Avatar
@@ -358,11 +358,11 @@ export function ListToolbar({
               <button
                 onClick={() => setSelectedAssignee(selectedAssignee === "unassigned" ? "all" : "unassigned")}
                 title="Công việc hoặc subtask chưa phân công"
-                className={`h-7 w-7 rounded-full border-2 border-dashed transition-all cursor-pointer flex items-center justify-center bg-slate-50 hover:bg-slate-100 hover:border-slate-400 ml-1.5 ${
-                  selectedAssignee === "unassigned" ? "border-[#1868db] bg-blue-50/50 scale-110 z-10" : "border-slate-300"
+                className={`h-7 w-7 rounded-full border-2 border-dashed transition-all cursor-pointer flex items-center justify-center bg-slate-50 dark:bg-[#22272b] hover:bg-slate-100 dark:hover:bg-[#2c3338] hover:border-slate-400 dark:hover:border-slate-500 ml-1.5 ${
+                  selectedAssignee === "unassigned" ? "border-[#1868db] dark:border-[#579dff] bg-blue-50/50 dark:bg-blue-950/20 scale-110 z-10" : "border-slate-300 dark:border-[#353e47]"
                 }`}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={selectedAssignee === "unassigned" ? "text-[#1868db]" : "text-slate-400"}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={selectedAssignee === "unassigned" ? "text-[#1868db] dark:text-[#579dff]" : "text-slate-400 dark:text-slate-500"}>
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
@@ -382,7 +382,7 @@ export function ListToolbar({
               setSelectedDueDateFilter("all");
               setSortBy("dueDate");
             }}
-            className="text-xs font-bold text-[#1868db] hover:text-[#0052cc] px-2 py-1 cursor-pointer transition-colors"
+            className="text-xs font-bold text-[#1868db] dark:text-[#579dff] hover:text-[#0052cc] dark:hover:text-blue-400 px-2 py-1 cursor-pointer transition-colors"
           >
             Xóa bộ lọc
           </button>
@@ -392,7 +392,7 @@ export function ListToolbar({
       {!readOnly && (
         <button
           onClick={onCreateTaskClick}
-          className="px-3.5 py-1.5 bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold rounded-[4px] cursor-pointer flex items-center gap-1 shadow-xs transition-colors whitespace-nowrap shrink-0 animate-in fade-in"
+          className="px-3.5 py-1.5 bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 text-white dark:text-[#1d2125] text-xs font-bold rounded-[4px] cursor-pointer flex items-center gap-1 shadow-xs transition-colors whitespace-nowrap shrink-0 animate-in fade-in"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="12" y1="5" x2="12" y2="19" />

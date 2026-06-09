@@ -281,8 +281,8 @@ export function TaskDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-[#091e42]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
-      <div className="relative bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+    <div className="fixed inset-0 bg-[#091e42]/50 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none animate-in fade-in duration-200">
+      <div className="relative bg-white dark:bg-[#161a1d] rounded-lg border border-slate-200 dark:border-[#2c3338] shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
         <TaskDetailHeader onClose={onClose} onDelete={readOnly ? undefined : handleDeleteTask} />
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
           <div className="flex-1 flex flex-col p-6 gap-6 overflow-hidden min-h-0">

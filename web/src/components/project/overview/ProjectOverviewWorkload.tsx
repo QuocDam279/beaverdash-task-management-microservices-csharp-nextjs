@@ -33,8 +33,8 @@ export function ProjectOverviewWorkload({ projectId, shareToken, memberWorkloads
 
   return (
     <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] flex flex-col w-full">
-      <CardHeader className="p-5 pb-3 border-b border-slate-100">
-        <h3 className="text-sm font-bold text-[#292a2e]">Phân bổ thành viên & Khối lượng</h3>
+      <CardHeader className="p-5 pb-3 border-b border-slate-100 dark:border-[#2c3338]">
+        <h3 className="text-sm font-bold text-[#292a2e] dark:text-[#deebff]">Phân bổ thành viên & Khối lượng</h3>
       </CardHeader>
       <CardBody className="p-5 flex-1 flex flex-col justify-center space-y-4">
         {memberWorkloads.length > 0 ? (
@@ -42,7 +42,7 @@ export function ProjectOverviewWorkload({ projectId, shareToken, memberWorkloads
             <Link
               key={member.userId}
               href={getBoardUrl(`?assigneeId=${member.userId}`)}
-              className="block group hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors space-y-1.5 cursor-pointer"
+              className="block group hover:bg-slate-50 dark:hover:bg-[#2c3338]/60 p-2 -mx-2 rounded-lg transition-colors space-y-1.5 cursor-pointer"
             >
               {/* Member info row */}
               <div className="flex items-center justify-between text-xs">
@@ -50,22 +50,22 @@ export function ProjectOverviewWorkload({ projectId, shareToken, memberWorkloads
                   <Avatar
                     src={member.avatar}
                     alt={member.displayName}
-                    className="h-6 w-6 rounded-full border border-slate-200 object-cover"
+                    className="h-6 w-6 rounded-full border border-slate-200 dark:border-[#353e47] object-cover"
                   />
                   <div>
-                    <span className="font-bold text-[#292a2e] block group-hover:text-[#1868db] transition-colors">
+                    <span className="font-bold text-[#292a2e] dark:text-[#deebff] block group-hover:text-[#1868db] dark:group-hover:text-[#579dff] transition-colors">
                       {member.displayName}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase">{member.role}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-[#8c9bab] font-semibold uppercase">{member.role}</span>
                   </div>
                 </div>
-                <span className="text-[#505258] font-bold shrink-0">
+                <span className="text-[#505258] dark:text-[#a5adba] font-bold shrink-0">
                   {member.assignedTasksCount} việc con ({member.workloadPercentage}%)
                 </span>
               </div>
 
               {/* Workload Progress Bar */}
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/30">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200/30 dark:border-slate-700/30">
                 <div 
                   style={{ width: `${member.workloadPercentage}%` }} 
                   className="bg-[#1868db] h-full rounded-full transition-all duration-500"
@@ -74,7 +74,7 @@ export function ProjectOverviewWorkload({ projectId, shareToken, memberWorkloads
             </Link>
           ))
         ) : (
-          <div className="h-full flex items-center justify-center text-xs text-slate-400 font-semibold py-8 text-center">
+          <div className="h-full flex items-center justify-center text-xs text-slate-400 dark:text-[#8c9bab] font-semibold py-8 text-center">
             Dự án chưa có thành viên phân công
           </div>
         )}

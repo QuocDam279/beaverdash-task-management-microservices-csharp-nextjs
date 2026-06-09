@@ -114,28 +114,28 @@ export function BoardColumnView({
       onDrop={handleDrop}
       className={`flex flex-col rounded-lg p-3 min-h-[300px] h-full transition-all duration-200 border-2 ${
         isDraggingOver 
-          ? "bg-slate-200 border-dashed border-[#1868db] scale-[1.01]" 
+          ? "bg-slate-200 dark:bg-[#2c3338]/50 border-dashed border-[#1868db] dark:border-[#579dff] scale-[1.01]" 
           : isWipExceeded
-            ? "bg-[#fff5f5] border-red-200/60 border-t-4 border-t-red-500"
-            : "bg-[#f4f5f7] border-transparent"
+            ? "bg-[#fff5f5] dark:bg-red-950/10 border-red-200/60 dark:border-red-900/30 border-t-4 border-t-red-500"
+            : "bg-[#f4f5f7] dark:bg-[#22272b] border-transparent"
       }`}
     >
       <div className={`flex items-center justify-between mb-3 px-2 py-1.5 rounded-md transition-all border ${
         isWipExceeded 
-          ? "bg-red-50/80 border-red-200/80 text-red-700" 
-          : "bg-transparent border-transparent text-[#505258]"
+          ? "bg-red-50/80 dark:bg-red-950/20 border-red-200/80 dark:border-red-900/40 text-red-700 dark:text-red-400" 
+          : "bg-transparent border-transparent text-[#505258] dark:text-slate-350"
       }`}>
         <div className="flex items-center gap-1.5 min-w-0">
           {column.isDone && (
             <span className={`rounded-[4px] px-1 flex items-center justify-center scale-90 select-none font-bold ${
               isWipExceeded 
-                ? "text-red-700 bg-red-100 border border-red-300" 
-                : "text-emerald-600 bg-emerald-50 border border-emerald-250"
+                ? "text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-950/20 border border-red-300 dark:border-red-900/45" 
+                : "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900/40"
             }`} title="Cột hoàn thành">
               ✓
             </span>
           )}
-          <span className={`text-xs font-bold tracking-wider uppercase truncate ${isWipExceeded ? "text-red-700 font-extrabold" : "text-[#505258]"}`} title={column.name}>
+          <span className={`text-xs font-bold tracking-wider uppercase truncate ${isWipExceeded ? "text-red-700 dark:text-red-400 font-extrabold" : "text-[#505258] dark:text-slate-350"}`} title={column.name}>
             {column.name}
           </span>
         </div>
@@ -144,15 +144,15 @@ export function BoardColumnView({
             <span 
               className={`text-xs font-bold px-2 py-0.5 rounded-full border transition-all ${
                 isWipExceeded
-                  ? "bg-red-600 text-white border-transparent"
-                  : "bg-slate-200/80 text-[#6b6e76] border-transparent"
+                  ? "bg-red-600 dark:bg-red-700 text-white border-transparent"
+                  : "bg-slate-200/80 dark:bg-[#2c3338] text-[#6b6e76] dark:text-slate-400 border-transparent"
               }`}
               title={`Số lượng công việc: ${tasks.length} / Giới hạn WIP: ${column.wipLimit}${isWipExceeded ? " (Vượt giới hạn WIP!)" : ""}`}
             >
               {tasks.length}/{column.wipLimit}
             </span>
           ) : (
-            <span className="text-xs font-bold text-[#6b6e76] bg-slate-200/80 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold text-[#6b6e76] dark:text-slate-400 bg-slate-200/80 dark:bg-[#2c3338] px-2 py-0.5 rounded-full">
               {tasks.length}
             </span>
           )}
@@ -164,8 +164,8 @@ export function BoardColumnView({
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className={`p-1 rounded transition-colors cursor-pointer flex items-center justify-center border-0 bg-transparent ${
                   isWipExceeded 
-                    ? "hover:bg-red-100 text-red-600 hover:text-red-800" 
-                    : "hover:bg-slate-200 text-slate-500 hover:text-slate-700"
+                    ? "hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-450 hover:text-red-800 dark:hover:text-red-300" 
+                    : "hover:bg-slate-200 dark:hover:bg-[#2c3338] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
                 title="Thao tác cột"
               >
@@ -179,14 +179,14 @@ export function BoardColumnView({
               {isMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 text-[11px] text-[#292a2e]">
+                  <div className="absolute right-0 top-full mt-1 w-44 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#2c3338] shadow-lg z-20 py-1 text-[11px] text-[#292a2e] dark:text-[#deebff]">
                     <button
                       disabled={isFirst}
                       onClick={() => {
                         setIsMenuOpen(false);
                         onMoveLeft();
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed border-0 bg-transparent"
+                      className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#353e47] disabled:opacity-40 disabled:hover:bg-transparent font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed border-0 bg-transparent text-[#292a2e] dark:text-[#deebff]"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -200,7 +200,7 @@ export function BoardColumnView({
                         setIsMenuOpen(false);
                         onMoveRight();
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed border-0 bg-transparent"
+                      className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#353e47] disabled:opacity-40 disabled:hover:bg-transparent font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed border-0 bg-transparent text-[#292a2e] dark:text-[#deebff]"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -213,7 +213,7 @@ export function BoardColumnView({
                         setIsMenuOpen(false);
                         onSetWipLimit();
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-100 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent"
+                      className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#353e47] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent text-[#292a2e] dark:text-[#deebff]"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -227,7 +227,7 @@ export function BoardColumnView({
                           setIsMenuOpen(false);
                           onSetColumnDone(column.id);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-slate-100 font-semibold text-emerald-600 flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent"
+                        className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#353e47] font-semibold text-emerald-600 dark:text-emerald-450 flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12" />
@@ -235,13 +235,13 @@ export function BoardColumnView({
                         Đặt làm cột hoàn thành
                       </button>
                     )}
-                    <div className="border-t border-slate-100 my-1" />
+                    <div className="border-t border-slate-100 dark:border-[#353e47] my-1" />
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         onDeleteColumn();
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 font-bold flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent"
+                      className="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 font-bold flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -272,7 +272,7 @@ export function BoardColumnView({
             />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed border-slate-200/50 rounded-lg text-slate-400 text-xs">
+          <div className="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed border-slate-200/50 dark:border-[#353e47]/50 rounded-lg text-slate-400 dark:text-slate-500 text-xs">
             Không có công việc
           </div>
         )}
@@ -281,26 +281,26 @@ export function BoardColumnView({
       {!readOnly && (
         <div className="mt-3">
           {isAdding ? (
-            <form onSubmit={handleCreateTask} className="space-y-2.5 bg-white p-3 rounded-lg border border-slate-200 shadow-sm animate-in fade-in duration-200">
+            <form onSubmit={handleCreateTask} className="space-y-2.5 bg-white dark:bg-[#2c3338] p-3 rounded-lg border border-slate-200 dark:border-[#353e47] shadow-sm animate-in fade-in duration-200">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tiêu đề công việc</label>
+                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Tiêu đề công việc</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Nhập tiêu đề..."
-                  className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+                  className="w-full px-2 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff]"
                   autoFocus
                 />
               </div>
               
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Độ ưu tiên</label>
+                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Độ ưu tiên</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+                  className="w-full px-2 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff] cursor-pointer"
                 >
                   <option value="">Không có</option>
                   <option value="Required">Bắt buộc</option>
@@ -311,25 +311,25 @@ export function BoardColumnView({
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ngày bắt đầu</label>
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Ngày bắt đầu</label>
                   <input
                     type="date"
                     value={startDate}
                     min={projectStartDate ? projectStartDate.substring(0, 10) : undefined}
                     max={dueDate ? dueDate : (projectDueDate ? projectDueDate.substring(0, 10) : undefined)}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+                    className="w-full px-2 py-1 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff] cursor-pointer"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hạn chót</label>
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Hạn chót</label>
                   <input
                     type="date"
                     value={dueDate}
                     min={startDate ? startDate : (projectStartDate ? projectStartDate.substring(0, 10) : undefined)}
                     max={projectDueDate ? projectDueDate.substring(0, 10) : undefined}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+                    className="w-full px-2 py-1 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff] cursor-pointer"
                   />
                 </div>
               </div>
@@ -344,13 +344,13 @@ export function BoardColumnView({
                     setStartDate("");
                     setDueDate("");
                   }}
-                  className="px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 rounded border-0 bg-transparent cursor-pointer"
+                  className="px-2 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#22272b] rounded border-0 bg-transparent cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-[#1868db] text-white rounded hover:bg-[#0052cc] border-0 cursor-pointer"
+                  className="px-2.5 py-1 text-[11px] font-semibold bg-[#1868db] dark:bg-[#579dff] text-white dark:text-[#1d2125] rounded hover:bg-[#0052cc] dark:hover:bg-blue-400 border-0 cursor-pointer"
                 >
                   Thêm
                 </button>
@@ -359,7 +359,7 @@ export function BoardColumnView({
           ) : (
             <button
               onClick={() => setIsAdding(true)}
-              className="w-full py-1.5 text-xs text-[#505258] hover:text-[#1868db] hover:bg-slate-200/50 rounded text-left px-2 font-semibold transition-colors"
+              className="w-full py-1.5 text-xs text-[#505258] dark:text-slate-400 hover:text-[#1868db] dark:hover:text-[#579dff] hover:bg-slate-200/50 dark:hover:bg-[#2c3338]/50 rounded text-left px-2 font-semibold transition-colors"
             >
               + Thêm công việc
             </button>

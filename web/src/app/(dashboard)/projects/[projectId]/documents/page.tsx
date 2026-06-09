@@ -74,7 +74,7 @@ export default function ProjectDocumentsPage({ params }: PageProps) {
     : false;
 
   return (
-    <div className="p-6 bg-white min-h-full">
+    <div className="p-6 bg-white dark:bg-[#1d2125] min-h-full">
       <ProjectDocumentsView
         documents={documents}
         isLoading={isLoading}

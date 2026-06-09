@@ -65,22 +65,22 @@ export default function SharedListPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-full flex items-center justify-center p-8 bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 border-t-[#1868db]" />
+      <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125]">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 dark:border-[#353e47] border-t-[#1868db] dark:border-t-[#579dff]" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-full flex items-center justify-center p-8 bg-white text-red-500 font-bold">
+      <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125] text-red-500 dark:text-red-400 font-bold">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-white min-h-full">
+    <div className="p-6 bg-white dark:bg-[#1d2125] min-h-full">
       <ProjectListView
         tasks={tasks}
         columns={columns}

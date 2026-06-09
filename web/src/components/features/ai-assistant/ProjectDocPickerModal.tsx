@@ -45,14 +45,14 @@ export function ProjectDocPickerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-xs select-none">
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-4 flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 dark:bg-black/60 backdrop-blur-xs select-none">
+      <div className="bg-white dark:bg-[#161a1d] rounded-xl border border-slate-200 dark:border-[#2c3338] shadow-xl max-w-md w-full p-4 flex flex-col max-h-[80vh]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b pb-3.5 mb-3.5">
-          <h3 className="text-sm font-bold text-slate-800">Chọn tài liệu từ dự án</h3>
+        <div className="flex items-center justify-between border-b dark:border-[#2c3338] pb-3.5 mb-3.5">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-[#deebff]">Chọn tài liệu từ dự án</h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg cursor-pointer"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-[#deebff] transition-colors p-1 rounded-lg cursor-pointer"
             title="Đóng"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -73,7 +73,7 @@ export function ProjectDocPickerModal({
               <span className="text-[10px] font-semibold text-slate-400">Đang tải danh sách tài liệu...</span>
             </div>
           ) : documents.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-450 italic font-semibold">
+            <div className="p-8 text-center text-xs text-slate-450 dark:text-slate-500 italic font-semibold">
               Không tìm thấy tài liệu nào trong dự án này.
             </div>
           ) : (
@@ -85,10 +85,10 @@ export function ProjectDocPickerModal({
                 <button
                   key={doc.id}
                   onClick={() => onSelect(doc)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 hover:border-[#1868db] hover:bg-slate-50/50 text-left transition-all cursor-pointer group"
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 dark:border-[#2c3338] hover:border-[#1868db] dark:hover:border-[#579dff] hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/50 text-left transition-all cursor-pointer group"
                 >
                   {/* Small doc icon */}
-                  <div className="p-2 rounded bg-slate-50 text-slate-500 border border-slate-100 group-hover:bg-[#1868db]/10 group-hover:text-[#1868db] transition-colors shrink-0">
+                  <div className="p-2 rounded bg-slate-50 dark:bg-[#2c3338] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-[#353e47] group-hover:bg-[#1868db]/10 dark:group-hover:bg-[#579dff]/10 group-hover:text-[#1868db] dark:group-hover:text-[#579dff] transition-colors shrink-0">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -96,10 +96,10 @@ export function ProjectDocPickerModal({
                   
                   {/* File Info */}
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-slate-700 truncate group-hover:text-[#1868db] transition-colors" title={doc.fileName}>
+                    <div className="text-xs font-bold text-slate-700 dark:text-slate-350 truncate group-hover:text-[#1868db] dark:group-hover:text-[#579dff] transition-colors" title={doc.fileName}>
                       {doc.fileName}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
                       {fileExt} • {sizeInKb > 1024 ? `${(sizeInKb / 1024).toFixed(1)} MB` : `${sizeInKb} KB`}
                     </div>
                   </div>
@@ -110,10 +110,10 @@ export function ProjectDocPickerModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end pt-3 border-t">
+        <div className="flex justify-end pt-3 border-t dark:border-[#2c3338]">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-1.5 border border-slate-200 dark:border-[#353e47] hover:border-slate-350 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-slate-600 dark:text-slate-400 text-xs font-bold rounded-lg transition-colors cursor-pointer"
           >
             Hủy bỏ
           </button>

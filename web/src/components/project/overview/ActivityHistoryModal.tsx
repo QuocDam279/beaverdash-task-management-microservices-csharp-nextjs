@@ -160,31 +160,31 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
       return (
         <div key={event.id} className="relative text-xs block group pl-2">
           {/* Avatar with Overlay Action Badge */}
-          <div className="absolute -left-[33px] top-0.5 h-6 w-6 rounded-full bg-slate-100 ring-4 ring-white flex items-center justify-center z-10 select-none">
+          <div className="absolute -left-[33px] top-0.5 h-6 w-6 rounded-full bg-slate-100 dark:bg-[#161a1d] ring-4 ring-white dark:ring-[#22272b] flex items-center justify-center z-10 select-none">
             <Avatar src={event.avatar} alt={event.displayName} className="h-full w-full rounded-full object-cover" />
-            <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full flex items-center justify-center ${iconBg} ring-2 ring-white shadow-xs`}>
+            <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full flex items-center justify-center ${iconBg} ring-2 ring-white dark:ring-[#22272b] shadow-xs`}>
               {React.cloneElement(icon as any, { className: "h-2 w-2 text-white" })}
             </span>
           </div>
 
           <div className="flex flex-col gap-0.5 pl-2">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-slate-500 font-semibold leading-relaxed">
-                <span className="text-[#292a2e] font-bold">{event.displayName}</span>{" "}
+              <div className="text-slate-500 dark:text-[#8c9bab] font-semibold leading-relaxed">
+                <span className="text-[#292a2e] dark:text-[#deebff] font-bold">{event.displayName}</span>{" "}
                 <span className={actionColor}>{actionStr}</span>{" "}
-                <span className="text-[#1868db] font-bold">{count} công việc con</span>{" "}
+                <span className="text-[#1868db] dark:text-[#579dff] font-bold">{count} công việc con</span>{" "}
                 của đầu việc{" "}
                 {href ? (
-                  <Link href={href} onClick={onClose} className="text-[#1868db] font-bold hover:underline">
+                  <Link href={href} onClick={onClose} className="text-[#1868db] dark:text-[#579dff] font-bold hover:underline">
                     '{event.parentTaskTitle}'
                   </Link>
                 ) : (
-                  <span className="text-slate-700 font-semibold">'{event.parentTaskTitle}'</span>
+                  <span className="text-slate-700 dark:text-[#deebff] font-semibold">'{event.parentTaskTitle}'</span>
                 )}
               </div>
               <button
                 onClick={(e) => toggleGroup(event.id, e)}
-                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer shrink-0 border-0 bg-transparent"
+                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#2c3338] text-slate-400 dark:text-[#8c9bab] hover:text-slate-700 dark:hover:text-[#deebff] transition-colors cursor-pointer shrink-0 border-0 bg-transparent"
                 title={isExpanded ? "Thu gọn" : "Xem chi tiết"}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transform transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
@@ -193,22 +193,22 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
               </button>
             </div>
             
-            <span className="text-[10px] text-slate-400 font-semibold w-fit mt-0.5 select-none">
+            <span className="text-[10px] text-slate-400 dark:text-[#8c9bab] font-semibold w-fit mt-0.5 select-none">
               {formatEventTime(event.createdAt)}
             </span>
 
             {isExpanded && (
-              <div className="mt-2.5 ml-1 pl-3 border-l-2 border-slate-200 space-y-1.5 py-1 text-[11px] text-slate-500 font-medium animate-in slide-in-from-top-1 duration-200">
+              <div className="mt-2.5 ml-1 pl-3 border-l-2 border-slate-200 dark:border-[#353e47] space-y-1.5 py-1 text-[11px] text-slate-500 dark:text-[#8c9bab] font-medium animate-in slide-in-from-top-1 duration-200">
                 {event.items.map((item: any) => {
                   const detail = getSubtaskChangeDetail(event.actionType, item.newValue);
                   return (
                     <div key={item.id} className="flex items-center justify-between gap-4 py-0.5 pr-2">
                       <div className="flex items-center gap-1.5 truncate">
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0" />
-                        <span className="text-slate-700 font-semibold truncate">{item.subtaskTitle}</span>
-                        {detail && <span className="text-slate-400 italic font-normal">({detail})</span>}
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-[#8c9bab] shrink-0" />
+                        <span className="text-slate-700 dark:text-[#deebff] font-semibold truncate">{item.subtaskTitle}</span>
+                        {detail && <span className="text-slate-400 dark:text-slate-500 italic font-normal">({detail})</span>}
                       </div>
-                      <span className="text-[9px] text-slate-400 shrink-0 font-semibold bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-sm select-none">
+                      <span className="text-[9px] text-slate-450 dark:text-[#8c9bab] shrink-0 font-semibold bg-slate-50 dark:bg-[#161a1d] border border-slate-100 dark:border-[#2c3338] px-1.5 py-0.5 rounded-sm select-none">
                         {new Date(item.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}
                       </span>
                     </div>
@@ -226,31 +226,31 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
       return (
         <div key={event.id} className="relative text-xs block group pl-2">
           {/* Avatar with Overlay Action Badge */}
-          <div className="absolute -left-[33px] top-0.5 h-6 w-6 rounded-full bg-slate-100 ring-4 ring-white flex items-center justify-center z-10">
+          <div className="absolute -left-[33px] top-0.5 h-6 w-6 rounded-full bg-slate-100 dark:bg-[#161a1d] ring-4 ring-white dark:ring-[#22272b] flex items-center justify-center z-10">
             <Avatar
               src={event.avatar}
               alt={event.displayName}
               className="h-full w-full rounded-full object-cover"
             />
-            <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full flex items-center justify-center ${iconBg} ring-2 ring-white shadow-xs`}>
+            <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full flex items-center justify-center ${iconBg} ring-2 ring-white dark:ring-[#22272b] shadow-xs`}>
               {React.cloneElement(icon as any, { className: "h-2 w-2 text-white" })}
             </span>
           </div>
 
           {/* Event Content */}
           <div className="flex flex-col gap-0.5 pl-2">
-            <div className="text-slate-500 font-semibold leading-relaxed">
-              <span className="text-[#292a2e] font-bold">{event.displayName}</span>{" "}
+            <div className="text-slate-500 dark:text-[#8c9bab] font-semibold leading-relaxed">
+              <span className="text-[#292a2e] dark:text-[#deebff] font-bold">{event.displayName}</span>{" "}
               <span className={actionColor}>{actionText}</span>{" "}
               {href ? (
-                <Link href={href} onClick={onClose} className="text-[#1868db] font-bold hover:underline">
+                <Link href={href} onClick={onClose} className="text-[#1868db] dark:text-[#579dff] font-bold hover:underline">
                   {targetText}
                 </Link>
               ) : (
-                <span className="text-slate-700 font-semibold">{targetText}</span>
+                <span className="text-slate-700 dark:text-[#deebff] font-semibold">{targetText}</span>
               )}
             </div>
-            <span className="text-[10px] text-slate-400 font-semibold">
+            <span className="text-[10px] text-slate-400 dark:text-[#8c9bab] font-semibold">
               {formatEventTime(event.createdAt)}
             </span>
           </div>
@@ -263,13 +263,13 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
 
   return (
     <div className="fixed inset-0 bg-[#091e42]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
-      <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-2xl h-[70vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+      <div className="bg-white dark:bg-[#22272b] rounded-lg border border-slate-200 dark:border-[#353e47] shadow-2xl w-full max-w-2xl h-[70vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
-          <h3 className="text-sm font-bold text-[#292a2e]">Lịch sử hoạt động dự án</h3>
+        <div className="p-5 border-b border-slate-100 dark:border-[#2c3338] flex items-center justify-between shrink-0">
+          <h3 className="text-sm font-bold text-[#292a2e] dark:text-[#deebff]">Lịch sử hoạt động dự án</h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition-colors cursor-pointer"
+            className="text-slate-400 dark:text-[#8c9bab] hover:text-slate-600 dark:hover:text-[#deebff] p-1 rounded-full hover:bg-slate-50 dark:hover:bg-[#2c3338] transition-colors cursor-pointer"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -279,14 +279,14 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
         </div>
 
         {/* Filters Toolbar */}
-        <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/20 flex flex-wrap items-center gap-4 shrink-0">
+        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#2c3338] bg-slate-50/20 dark:bg-[#161a1d]/40 flex flex-wrap items-center gap-4 shrink-0">
           {/* User selector */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-slate-500 font-semibold">Người thực hiện:</span>
+            <span className="text-xs text-slate-500 dark:text-[#8c9bab] font-semibold">Người thực hiện:</span>
             <select
               value={selectedUser}
               onChange={(e) => { setSelectedUser(e.target.value); setPage(1); }}
-              className="px-2.5 py-1 text-xs border border-slate-200 rounded-[4px] bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+              className="px-2.5 py-1 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#1d2125] text-slate-700 dark:text-[#deebff] font-medium focus:outline-none focus:ring-1 focus:ring-[#1868db]"
             >
               <option value="all">Tất cả thành viên</option>
               {teamMembers.map((m) => (
@@ -297,12 +297,12 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
 
           {/* Date Selector */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-slate-500 font-semibold">Ngày hoạt động:</span>
+            <span className="text-xs text-slate-500 dark:text-[#8c9bab] font-semibold">Ngày hoạt động:</span>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => { setSelectedDate(e.target.value); setPage(1); }}
-              className="px-2.5 py-1 text-xs border border-slate-200 rounded-[4px] bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
+              className="px-2.5 py-1 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#1d2125] text-slate-700 dark:text-[#deebff] font-medium focus:outline-none focus:ring-1 focus:ring-[#1868db] cursor-pointer"
             />
           </div>
 
@@ -314,7 +314,7 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
                 setSelectedDate("");
                 setPage(1);
               }}
-              className="text-xs font-bold text-[#1868db] hover:text-[#0052cc] px-2 py-1 cursor-pointer transition-colors"
+              className="text-xs font-bold text-[#1868db] dark:text-[#579dff] hover:text-[#0052cc] dark:hover:text-blue-400 px-2 py-1 cursor-pointer transition-colors"
             >
               Xóa bộ lọc
             </button>
@@ -325,38 +325,38 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
           {isLoading ? (
             <div className="h-full flex items-center justify-center py-20">
-              <svg className="animate-spin h-6 w-6 text-[#1868db]" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-6 w-6 text-[#1868db] dark:text-[#579dff]" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             </div>
           ) : displayActivities.length > 0 ? (
-            <div className="relative pl-6 border-l border-slate-150 space-y-6">
+            <div className="relative pl-6 border-l border-slate-150 dark:border-[#2c3338] space-y-6">
               {displayActivities.map(renderActivityContent)}
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center text-xs text-slate-400 font-semibold py-8 text-center">
+            <div className="h-full flex items-center justify-center text-xs text-slate-400 dark:text-[#8c9bab] font-semibold py-8 text-center">
               Chưa có hoạt động nào được ghi nhận
             </div>
           )}
         </div>
 
         {/* Footer Pagination Controls */}
-        <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 text-xs font-semibold text-[#505258] shrink-0">
+        <div className="px-5 py-3 border-t border-slate-100 dark:border-[#2c3338] flex items-center justify-between bg-slate-50/50 dark:bg-[#161a1d]/50 text-xs font-semibold text-[#505258] dark:text-[#a5adba] shrink-0">
           <button
             type="button"
             disabled={page === 1 || isLoading}
             onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            className="px-3 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white text-slate-600 transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] hover:bg-slate-50 dark:hover:bg-[#2c3338] disabled:opacity-50 disabled:hover:bg-white dark:disabled:hover:bg-[#22272b] text-slate-600 dark:text-[#deebff] transition-all cursor-pointer disabled:cursor-not-allowed"
           >
             Trang trước
           </button>
-          <span className="text-slate-500 font-bold">Trang {page}</span>
+          <span className="text-slate-500 dark:text-[#deebff] font-bold">Trang {page}</span>
           <button
             type="button"
             disabled={!hasMore || isLoading}
             onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white text-slate-600 transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] hover:bg-slate-50 dark:hover:bg-[#2c3338] disabled:opacity-50 disabled:hover:bg-white dark:disabled:hover:bg-[#22272b] text-slate-600 dark:text-[#deebff] transition-all cursor-pointer disabled:cursor-not-allowed"
           >
             Trang sau
           </button>

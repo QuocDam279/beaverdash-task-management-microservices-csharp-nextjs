@@ -107,26 +107,26 @@ export function TaskSubtaskCommentForm({
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="border border-slate-200 rounded bg-slate-50/50 p-2 space-y-2 focus-within:border-slate-350 transition-colors">
+    <form onSubmit={handleFormSubmit} className="border border-slate-200 dark:border-[#353e47] rounded bg-slate-50/50 dark:bg-[#22272b]/30 p-2 space-y-2 focus-within:border-slate-350 dark:focus-within:border-slate-500 transition-colors">
       <textarea
         placeholder="Viết bình luận hoặc đính kèm tài liệu..."
         value={commentInput}
         onChange={(e) => setCommentInput(e.target.value)}
         rows={2}
-        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent text-[#292a2e] focus-visible:outline-none placeholder:text-slate-400 leading-normal resize-none"
+        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 leading-normal resize-none"
       />
 
       {/* Staged Attachments Preview List */}
       {stagedAttachments.length > 0 && (
         <div className="flex flex-wrap gap-1.5 px-2 pb-1.5">
           {stagedAttachments.map((att, idx) => (
-            <div key={idx} className="flex items-center gap-1.5 bg-white border border-slate-200 pl-2 pr-1 py-0.5 rounded text-[10px] text-slate-600 font-semibold shadow-xs select-none">
+            <div key={idx} className="flex items-center gap-1.5 bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] pl-2 pr-1 py-0.5 rounded text-[10px] text-slate-600 dark:text-slate-300 font-semibold shadow-xs select-none">
               <span>{att.fileType === "link" ? "🔗" : "📁"}</span>
               <span className="truncate max-w-[120px]">{att.fileName}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveStaged(idx)}
-                className="text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-full p-0.5 cursor-pointer ml-0.5"
+                className="text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#353e47] rounded-full p-0.5 cursor-pointer ml-0.5"
               >
                 ✕
               </button>
@@ -137,13 +137,13 @@ export function TaskSubtaskCommentForm({
 
       {/* Inline Link Popover/Form */}
       {showLinkInput && (
-        <div className="border border-slate-200 rounded p-2 bg-white mx-2 space-y-1.5 shadow-sm animate-in fade-in slide-in-from-top-1 duration-100">
+        <div className="border border-slate-200 dark:border-[#353e47] rounded p-2 bg-white dark:bg-[#22272b] mx-2 space-y-1.5 shadow-sm animate-in fade-in slide-in-from-top-1 duration-100">
           <input
             type="text"
             placeholder="URL liên kết (ví dụ: https://example.com)..."
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
-            className="w-full px-2 py-1 text-[10px] border border-slate-200 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1868db]"
+            className="w-full px-2 py-1 text-[10px] border border-slate-200 dark:border-[#353e47] rounded bg-white dark:bg-[#2c3338] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff]"
             autoFocus
           />
           <div className="flex gap-1.5">
@@ -152,20 +152,20 @@ export function TaskSubtaskCommentForm({
               placeholder="Tên hiển thị (tùy chọn)..."
               value={linkTitle}
               onChange={(e) => setLinkTitle(e.target.value)}
-              className="flex-1 px-2 py-1 text-[10px] border border-slate-200 rounded focus-visible:outline-none"
+              className="flex-1 px-2 py-1 text-[10px] border border-slate-200 dark:border-[#353e47] rounded bg-white dark:bg-[#2c3338] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff]"
             />
             <button
               type="button"
               onClick={handleAddLink}
               disabled={!linkUrl.trim()}
-              className="bg-[#1868db] hover:bg-[#0052cc] disabled:bg-slate-100 disabled:text-slate-400 text-white text-[9px] font-extrabold px-2.5 rounded cursor-pointer"
+              className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 disabled:bg-slate-100 dark:disabled:bg-[#353e47] disabled:text-slate-400 dark:disabled:text-slate-600 text-white dark:text-[#1d2125] text-[9px] font-extrabold px-2.5 rounded cursor-pointer"
             >
               Thêm liên kết
             </button>
             <button
               type="button"
               onClick={() => setShowLinkInput(false)}
-              className="border border-slate-200 text-slate-600 text-[9px] font-semibold px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
+              className="border border-slate-200 dark:border-[#353e47] text-slate-600 dark:text-slate-400 text-[9px] font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-[#2c3338] cursor-pointer"
             >
               Hủy
             </button>
@@ -174,7 +174,7 @@ export function TaskSubtaskCommentForm({
       )}
 
       {/* Action Toolbar */}
-      <div className="flex items-center justify-between border-t border-slate-200/50 pt-2 px-1">
+      <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-[#353e47]/30 pt-2 px-1">
         <div className="flex items-center gap-1.5">
           {/* File input (hidden) */}
           <input
@@ -188,7 +188,7 @@ export function TaskSubtaskCommentForm({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-150 transition-colors cursor-pointer"
+            className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-150 dark:hover:bg-[#2c3338] transition-colors cursor-pointer"
             title="Đính kèm tệp tin"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -200,7 +200,7 @@ export function TaskSubtaskCommentForm({
           <button
             type="button"
             onClick={() => setShowLinkInput(!showLinkInput)}
-            className={`p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-150 transition-colors cursor-pointer ${showLinkInput ? "text-slate-700 bg-slate-150" : ""}`}
+            className={`p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-150 dark:hover:bg-[#2c3338] transition-colors cursor-pointer ${showLinkInput ? "text-slate-700 dark:text-slate-300 bg-slate-150 dark:bg-[#2c3338]" : ""}`}
             title="Thêm liên kết"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -213,7 +213,7 @@ export function TaskSubtaskCommentForm({
         <button
           type="submit"
           disabled={!commentInput.trim() && stagedAttachments.length === 0}
-          className="bg-[#1868db] hover:bg-[#0052cc] disabled:bg-slate-150 disabled:text-slate-400 text-white text-[10px] font-extrabold px-3 py-1 rounded transition-colors cursor-pointer shrink-0"
+          className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 disabled:bg-slate-150 dark:disabled:bg-[#2c3338] disabled:text-slate-400 dark:disabled:text-slate-600 text-white dark:text-[#1d2125] text-[10px] font-extrabold px-3 py-1 rounded transition-colors cursor-pointer shrink-0"
         >
           Gửi bình luận
         </button>

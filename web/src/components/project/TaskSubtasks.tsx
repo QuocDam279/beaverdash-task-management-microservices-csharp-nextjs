@@ -75,7 +75,7 @@ export function TaskSubtasks({
   };
 
   return (
-    <div className="space-y-3 pt-2 border-t border-slate-100 flex-1 flex flex-col min-h-0">
+    <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-[#2c3338] flex-1 flex flex-col min-h-0">
       {/* Title & Count */}
       <div className="flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -90,12 +90,12 @@ export function TaskSubtasks({
           >
             <path d="m9 11-4 4 4 4m6-14 4 4-4 4" />
           </svg>
-          <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+          <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
             Công việc con (Subtasks)
           </label>
         </div>
         {totalCount > 0 && (
-          <span className="text-[11px] font-bold text-[#505258] bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="text-[11px] font-bold text-[#505258] dark:text-slate-355 bg-slate-100 dark:bg-[#22272b] px-2 py-0.5 rounded-full">
             {completedCount}/{totalCount} hoàn thành ({progressPercentage}%)
           </span>
         )}
@@ -103,7 +103,7 @@ export function TaskSubtasks({
 
       {/* Progress Bar */}
       {totalCount > 0 && (
-        <div className="w-full bg-slate-150 h-1.5 rounded-full overflow-hidden border border-slate-200/20 flex-shrink-0">
+        <div className="w-full bg-slate-150 dark:bg-[#2c3338] h-1.5 rounded-full overflow-hidden border border-slate-200/20 dark:border-[#353e47]/30 flex-shrink-0">
           <div
             style={{ width: `${progressPercentage}%` }}
             className="bg-[#10b981] h-full rounded-full transition-all duration-300"
@@ -119,12 +119,12 @@ export function TaskSubtasks({
             placeholder="Thêm công việc con..."
             value={newSubtaskTitle}
             onChange={(e) => setNewSubtaskTitle(e.target.value)}
-            className="flex-1 px-3 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all placeholder:text-slate-400"
+            className="flex-1 px-3 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
           <select
             value={newSubtaskPriority}
             onChange={(e) => setNewSubtaskPriority(e.target.value)}
-            className="px-2 py-1.5 text-xs border border-slate-200 rounded-[4px] bg-white text-slate-700 font-semibold focus:outline-none cursor-pointer"
+            className="px-2 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-slate-700 dark:text-slate-300 font-semibold focus:outline-none cursor-pointer"
           >
             <option value="">Độ ưu tiên</option>
             <option value="High">Cao</option>
@@ -134,7 +134,7 @@ export function TaskSubtasks({
           <button
             type="submit"
             disabled={!newSubtaskTitle.trim()}
-            className="bg-[#1868db] hover:bg-[#0052cc] disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-bold px-3 py-1.5 rounded-[4px] transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+            className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 disabled:bg-slate-200 dark:disabled:bg-[#2c3338] disabled:text-slate-400 dark:disabled:text-slate-600 text-white dark:text-[#1d2125] text-xs font-bold px-3 py-1.5 rounded-[4px] transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
           >
             <svg
               width="12"
@@ -176,7 +176,7 @@ export function TaskSubtasks({
             />
           ))
         ) : (
-          <div className="text-center py-6 border-2 border-dashed border-slate-200/50 rounded-lg text-slate-400 text-xs font-medium animate-in fade-in duration-200 flex-shrink-0">
+          <div className="text-center py-6 border-2 border-dashed border-slate-200/50 dark:border-[#353e47]/50 rounded-lg text-slate-400 dark:text-slate-500 text-xs font-medium animate-in fade-in duration-200 flex-shrink-0">
             {canManageSubtasks ? "Chưa có công việc con nào. Nhập tiêu đề ở trên để tạo!" : "Chưa có công việc con nào."}
           </div>
         )}

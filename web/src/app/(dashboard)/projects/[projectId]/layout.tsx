@@ -84,13 +84,13 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
 
   if (isLoading || !project) {
     return (
-      <div className="min-h-full flex items-center justify-center p-8 bg-white">
+      <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125]">
         <div className="flex flex-col items-center gap-3">
-          <svg className="animate-spin h-8 w-8 text-[#1868db]" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 text-[#1868db] dark:text-[#579dff]" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <span className="text-sm font-semibold text-slate-500">Đang tải thông tin dự án...</span>
+          <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Đang tải thông tin dự án...</span>
         </div>
       </div>
     );
@@ -102,21 +102,21 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     : project?.createdByUserId === currentUser?.id || userWorkload?.role === "Chủ sở hữu";
 
   return (
-    <div className="flex flex-col h-full w-full bg-white select-none">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-[#1d2125] select-none">
       {/* Project Header Area */}
-      <div className="px-6 pt-6 pb-2 border-b border-slate-200 shrink-0">
+      <div className="px-6 pt-6 pb-2 border-b border-slate-200 dark:border-[#2c3338] shrink-0">
         <div className="flex items-start justify-between gap-4 mb-2">
           <div>
             {/* Breadcrumb / Project Type */}
-            <div className="flex items-center gap-1.5 text-xs text-[#505258] font-semibold mb-1 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-xs text-[#505258] dark:text-[#8c9bab] font-semibold mb-1 uppercase tracking-wider">
               <span>Dự án</span>
               <span className="text-slate-300">/</span>
-              <span className="text-[#1868db]">
+              <span className="text-[#1868db] dark:text-[#579dff]">
                 {project.teamId ? "Dự án nhóm" : "Dự án cá nhân"}
               </span>
             </div>
             {/* Project Title */}
-            <h1 className="text-2xl font-bold tracking-tight text-[#292a2e]">
+            <h1 className="text-2xl font-bold tracking-tight text-[#292a2e] dark:text-[#deebff]">
               {project.name}
             </h1>
           </div>
@@ -176,9 +176,9 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
 
         {/* Project Dates */}
         {(project?.startDate || project?.dueDate) && (
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[#505258] mb-4">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-[#505258] dark:text-[#8c9bab] mb-4">
             {project.startDate && (
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/60 px-2 py-0.5 rounded-[4px]">
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#22272b] border border-slate-200/60 dark:border-[#353e47] px-2 py-0.5 rounded-[4px]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -186,19 +186,19 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
                 <span>Bắt đầu:</span>
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-slate-700 dark:text-[#deebff]">
                   {toUtcLocalDate(project.startDate)?.toLocaleDateString("vi-VN")}
                 </span>
               </div>
             )}
             {project.dueDate && (
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/60 px-2 py-0.5 rounded-[4px]">
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#22272b] border border-slate-200/60 dark:border-[#353e47] px-2 py-0.5 rounded-[4px]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
                 <span>Hạn chót:</span>
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-slate-700 dark:text-[#deebff]">
                   {toUtcLocalDate(project.dueDate)?.toLocaleDateString("vi-VN")}
                 </span>
               </div>
@@ -232,8 +232,8 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
                 href={tab.href}
                 className={`pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
                   isTabActive
-                    ? "border-[#1868db] text-[#1868db]"
-                    : "border-transparent text-[#505258] hover:text-[#1868db] hover:border-slate-300"
+                    ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff]"
+                    : "border-transparent text-[#505258] dark:text-[#8c9bab] hover:text-[#1868db] dark:hover:text-[#579dff] hover:border-slate-300 dark:hover:border-slate-500"
                 }`}
               >
                 {tab.name}
@@ -244,14 +244,14 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
       </div>
 
       {/* Project Content Area */}
-      <div className="flex-1 min-h-0 w-full flex overflow-hidden bg-[#f4f5f7] relative">
+      <div className="flex-1 min-h-0 w-full flex overflow-hidden bg-[#f4f5f7] dark:bg-[#161a1d] relative">
         {/* Persistent AI Assistant chat workspace, hidden when not in assistant route to retain its internal state and session load */}
         <div className={`flex-1 min-h-0 w-full ${pathname.endsWith("/assistant") ? "flex" : "hidden"}`}>
           <AIAssistantContainer projectId={projectId} />
         </div>
 
         {/* Regular routing views (Board, Calendar, Gantt, Overview, List), hidden when in assistant route */}
-        <div key={projectId} className={`flex-1 min-h-0 w-full overflow-auto bg-white custom-chat-scrollbar ${pathname.endsWith("/assistant") ? "hidden" : "block"}`}>
+        <div key={projectId} className={`flex-1 min-h-0 w-full overflow-auto bg-white dark:bg-[#1d2125] custom-chat-scrollbar ${pathname.endsWith("/assistant") ? "hidden" : "block"}`}>
           {children}
         </div>
       </div>

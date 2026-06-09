@@ -47,7 +47,7 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
   };
 
   return (
-    <div className="flex h-full w-full bg-[#f8fafc] overflow-hidden select-none">
+    <div className="flex h-full w-full bg-[#f8fafc] dark:bg-[#161a1d] overflow-hidden select-none">
       {/* 1. LEFT PANEL: AI Chat Sessions */}
       <AIAssistantSidebar
         sessions={sessions}
@@ -60,10 +60,10 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
       />
 
       {/* 2. RIGHT PANEL: Chat Viewport & Input */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#1d2125]">
         {/* Chat Header */}
-        <div className="h-13 px-6 border-b border-slate-200/65 bg-white flex items-center shrink-0">
-          <span className="text-xs font-extrabold text-slate-800 tracking-tight uppercase">Trợ lý BeaverDash</span>
+        <div className="h-13 px-6 border-b border-slate-200/65 dark:border-[#2c3338] bg-white dark:bg-[#1d2125] flex items-center shrink-0">
+          <span className="text-xs font-extrabold text-slate-800 dark:text-[#deebff] tracking-tight uppercase">Trợ lý BeaverDash</span>
         </div>
 
         {/* Message Container Viewport */}

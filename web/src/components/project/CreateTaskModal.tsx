@@ -79,16 +79,16 @@ export function CreateTaskModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/45 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none animate-in fade-in duration-200">
-      <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/45 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#161a1d] rounded-lg border border-slate-200 dark:border-[#2c3338] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-          <h2 className="text-sm font-bold text-[#292a2e] uppercase tracking-wide">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-[#2c3338] flex justify-between items-center bg-slate-50/50 dark:bg-[#1d2125]">
+          <h2 className="text-sm font-bold text-[#292a2e] dark:text-[#deebff] uppercase tracking-wide">
             Tạo công việc mới
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded hover:bg-slate-100"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350 cursor-pointer p-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#2c3338]"
           >
             <svg
               width="18"
@@ -109,7 +109,7 @@ export function CreateTaskModal({
           <div className="p-5 space-y-4 overflow-y-auto scrollbar-thin flex-1">
             {/* Title */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+              <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
                 Tiêu đề công việc <span className="text-red-500">*</span>
               </label>
               <input
@@ -118,14 +118,14 @@ export function CreateTaskModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Nhập tiêu đề công việc..."
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all"
                 autoFocus
               />
             </div>
 
             {/* Description */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+              <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
                 Mô tả chi tiết
               </label>
               <textarea
@@ -133,20 +133,20 @@ export function CreateTaskModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Mô tả các bước thực hiện, mục tiêu..."
                 rows={3}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all resize-none"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all resize-none"
               />
             </div>
 
             {/* Board Column */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+              <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
                 Cột công việc <span className="text-red-500">*</span>
               </label>
               <select
                 required
                 value={boardColumnId}
                 onChange={(e) => setBoardColumnId(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all cursor-pointer"
               >
                 {columns.map((col) => (
                   <option key={col.id} value={col.id}>
@@ -160,13 +160,13 @@ export function CreateTaskModal({
             <div className="grid grid-cols-3 gap-3">
               {/* Priority */}
               <div className="space-y-1 col-span-1">
-                <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
                   Độ ưu tiên
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all cursor-pointer"
                 >
                   <option value="">Không có</option>
                   <option value="Required">Bắt buộc</option>
@@ -177,7 +177,7 @@ export function CreateTaskModal({
 
               {/* Start Date */}
               <div className="space-y-1 col-span-1">
-                <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block font-semibold text-slate-500">
+                <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block font-semibold text-slate-500 dark:text-slate-400">
                   Ngày bắt đầu
                 </label>
                 <input
@@ -186,13 +186,13 @@ export function CreateTaskModal({
                   min={projectStartDate ? projectStartDate.substring(0, 10) : undefined}
                   max={dueDate ? dueDate : (projectDueDate ? projectDueDate.substring(0, 10) : undefined)}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                  className="w-full px-2 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all cursor-pointer"
                 />
               </div>
 
               {/* Due Date */}
               <div className="space-y-1 col-span-1">
-                <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block font-semibold text-slate-500">
+                <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block font-semibold text-slate-500 dark:text-slate-400">
                   Hạn chót
                 </label>
                 <input
@@ -201,26 +201,26 @@ export function CreateTaskModal({
                   min={startDate ? startDate : (projectStartDate ? projectStartDate.substring(0, 10) : undefined)}
                   max={projectDueDate ? projectDueDate.substring(0, 10) : undefined}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all cursor-pointer"
+                  className="w-full px-2 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="px-5 py-3 border-t border-slate-200 bg-slate-50/50 flex justify-end gap-2 shrink-0">
+          <div className="px-5 py-3 border-t border-slate-200 dark:border-[#2c3338] bg-slate-50/50 dark:bg-[#1d2125] flex justify-end gap-2 shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="bg-transparent hover:bg-slate-100 text-[#505258] text-xs font-bold px-3 py-2 rounded-[4px] border border-slate-200 cursor-pointer transition-colors disabled:opacity-50"
+              className="bg-transparent hover:bg-slate-100 dark:hover:bg-[#22272b] text-[#505258] dark:text-slate-400 text-xs font-bold px-3 py-2 rounded-[4px] border border-slate-200 dark:border-[#353e47] cursor-pointer transition-colors disabled:opacity-50"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#1868db] hover:bg-[#0052cc] text-white text-xs font-bold px-3 py-2 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-75"
+              className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 text-white dark:text-[#1d2125] text-xs font-bold px-3 py-2 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-75 disabled:dark:bg-[#2c3338] disabled:dark:text-slate-600"
             >
               {isSubmitting ? (
                 <>

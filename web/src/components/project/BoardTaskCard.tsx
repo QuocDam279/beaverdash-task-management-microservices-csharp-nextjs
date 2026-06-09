@@ -22,21 +22,21 @@ const renderPriority = (priority: string | null) => {
   const label = getTaskPriorityLabel(priority);
   if (p === "required") {
     return (
-      <span className="flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 border border-red-200">
+      <span className="flex items-center gap-0.5 rounded bg-red-50 dark:bg-red-950/20 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/40">
         {label}
       </span>
     );
   }
   if (p === "important") {
     return (
-      <span className="flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700 border border-blue-200">
+      <span className="flex items-center gap-0.5 rounded bg-blue-50 dark:bg-blue-950/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/40">
         {label}
       </span>
     );
   }
   if (p === "extended") {
     return (
-      <span className="flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600 border border-slate-200">
+      <span className="flex items-center gap-0.5 rounded bg-slate-50 dark:bg-slate-900/40 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#353e47]">
         {label}
       </span>
     );
@@ -59,19 +59,19 @@ const renderDueDate = (dueDateStr: string | null, isDone: boolean = false) => {
     day: "numeric",
   });
 
-  let badgeClass = "bg-slate-50 border-slate-200 text-slate-600";
+  let badgeClass = "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-[#353e47] text-slate-600 dark:text-slate-400";
   let text = `${formattedDate}`;
 
   if (isDone) {
     // Không hiển thị cảnh báo trễ khi công việc ở cột hoàn thành
   } else if (diffDays < 0) {
-    badgeClass = "bg-red-50 border-red-200 text-red-700 font-bold";
+    badgeClass = "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 font-bold";
     text = `Trễ: ${formattedDate}`;
   } else if (diffDays === 0) {
-    badgeClass = "bg-amber-50 border-amber-200 text-amber-700 font-bold animate-pulse";
+    badgeClass = "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 font-bold animate-pulse";
     text = `Hôm nay`;
   } else if (diffDays <= 2) {
-    badgeClass = "bg-orange-50 border-orange-200 text-orange-700 font-bold";
+    badgeClass = "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40 text-orange-700 dark:text-orange-400 font-bold";
     text = `Còn ${diffDays} ngày`;
   }
 
@@ -139,13 +139,13 @@ export function BoardTaskCard({
         e.dataTransfer.setData("taskId", task.id);
         e.dataTransfer.setData("sourceColumnId", column.id);
       }}
-      className={`border border-slate-200/80 bg-white hover:border-slate-300/80 hover:shadow-md transition-all duration-150 rounded-[6px] ${
+      className={`border border-slate-200/80 dark:border-[#353e47] bg-white dark:bg-[#2c3338] hover:border-slate-300/80 dark:hover:border-slate-500 hover:shadow-md transition-all duration-150 rounded-[6px] ${
         canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"
       }`}
     >
       <CardBody className="p-2.5 space-y-2">
         <div className="space-y-0.5">
-          <h4 className="text-sm font-semibold text-[#292a2e] leading-tight line-clamp-2">
+          <h4 className="text-sm font-semibold text-[#292a2e] dark:text-[#deebff] leading-tight line-clamp-2">
             {task.title}
           </h4>
         </div>
@@ -155,7 +155,7 @@ export function BoardTaskCard({
           {renderDueDate(task.dueDate, column.isDone)}
 
           {commentCount > 0 && (
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-1 py-0.5 rounded">
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-[#353e47] px-1 py-0.5 rounded">
               💬 {commentCount}
             </span>
           )}
@@ -163,7 +163,7 @@ export function BoardTaskCard({
 
         {subtaskCount > 0 && (
           <div className="space-y-0.5">
-            <div className="flex items-center justify-between text-[9px] font-bold text-slate-500">
+            <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 dark:text-slate-400">
               <span>Tiến độ công việc con</span>
               <div className="flex items-center gap-1.5">
                 {(() => {
@@ -173,7 +173,7 @@ export function BoardTaskCard({
                   if (unassignedCount > 0) {
                     return (
                       <span 
-                        className="text-amber-600 bg-amber-50 border border-amber-200 rounded px-1 py-[1px] text-[8px] flex items-center gap-0.5 font-bold" 
+                        className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded px-1 py-[1px] text-[8px] flex items-center gap-0.5 font-bold" 
                         title={`Có ${unassignedCount} công việc con chưa được phân công`}
                       >
                         ⚠️ {unassignedCount} chưa giao
@@ -185,7 +185,7 @@ export function BoardTaskCard({
                 <span>{completedSubtaskCount}/{subtaskCount}</span>
               </div>
             </div>
-            <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+            <div className="w-full h-1 bg-slate-100 dark:bg-[#22272b] rounded-full overflow-hidden border border-slate-200/50 dark:border-[#353e47]/30">
               <div 
                 className="h-full bg-emerald-500 rounded-full transition-all duration-355"
                 style={{ width: `${(completedSubtaskCount / subtaskCount) * 100}%` }}
@@ -196,7 +196,7 @@ export function BoardTaskCard({
 
 
         {!isPersonalProject && subtaskAssignees.length > 0 && (
-          <div className="flex items-center justify-end pt-1.5 border-t border-slate-100">
+          <div className="flex items-center justify-end pt-1.5 border-t border-slate-100 dark:border-[#353e47]">
             <div className="flex items-center gap-1.5">
               {/* Stack avatar công việc phụ (subtasks) */}
               <div className="flex -space-x-1.5 items-center mr-1" title="Những người thực hiện công việc con">
@@ -206,7 +206,7 @@ export function BoardTaskCard({
                     src={user.avatar}
                     alt={user.displayName}
                     title={`Người thực hiện công việc con: ${user.displayName}`}
-                    className="h-5 w-5 rounded-full border border-white hover:z-10 transition-all scale-95"
+                    className="h-5 w-5 rounded-full border border-white dark:border-[#2c3338] hover:z-10 transition-all scale-95"
                   />
                 ))}
               </div>

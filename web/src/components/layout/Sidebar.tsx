@@ -8,7 +8,6 @@ import { api } from "@/lib/api";
 import { SidebarHeader } from "./SidebarHeader";
 import { SidebarCollapsedNav } from "./SidebarCollapsedNav";
 import { SidebarExpandedNav } from "./SidebarExpandedNav";
-import { SidebarFooter } from "./SidebarFooter";
 import dynamic from "next/dynamic";
 
 const CreateProjectModal = dynamic(() =>
@@ -158,8 +157,6 @@ export function Sidebar() {
           onOpenCreateProject={() => setIsCreateProjectModalOpen(true)}
         />
       )}
-
-      <SidebarFooter isCollapsed={isCollapsed} />
 
       <CreateProjectModal 
         isOpen={isCreateProjectModalOpen} 

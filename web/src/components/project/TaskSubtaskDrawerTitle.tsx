@@ -55,7 +55,7 @@ export function TaskSubtaskDrawerTitle({
         onBlur={handleTitleBlur}
         onKeyDown={handleTitleKeyDown}
         autoFocus
-        className="w-full text-sm font-bold text-[#292a2e] px-1.5 py-0.5 border border-[#1868db] rounded bg-white focus:outline-none"
+        className="w-full text-sm font-bold text-[#292a2e] dark:text-[#deebff] px-1.5 py-0.5 border border-[#1868db] dark:border-[#579dff] rounded bg-white dark:bg-[#22272b] focus:outline-none"
       />
     );
   }
@@ -63,9 +63,9 @@ export function TaskSubtaskDrawerTitle({
   return (
     <h3
       onClick={() => !readOnly && setIsEditingTitle(true)}
-      className={`text-sm font-bold text-[#292a2e] leading-snug break-words whitespace-normal px-1 py-0.5 -ml-1 rounded border border-transparent transition-colors ${
-        readOnly ? "cursor-default" : "hover:bg-slate-50 hover:border-slate-200 cursor-pointer"
-      } ${isCompleted ? "line-through text-slate-400 font-medium" : ""}`}
+      className={`text-sm font-bold text-[#292a2e] dark:text-[#deebff] leading-snug break-words whitespace-normal px-1 py-0.5 -ml-1 rounded border border-transparent transition-colors ${
+        readOnly ? "cursor-default" : "hover:bg-slate-50 dark:hover:bg-[#2c3338] hover:border-slate-200 dark:hover:border-[#353e47] cursor-pointer"
+      } ${isCompleted ? "line-through text-slate-400 dark:text-slate-500 font-medium" : ""}`}
     >
       {title}
     </h3>

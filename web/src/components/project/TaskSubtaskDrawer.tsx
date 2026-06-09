@@ -69,22 +69,22 @@ export function TaskSubtaskDrawer({
       {isOpen && (
         <div
           onClick={onClose}
-          className="absolute inset-0 bg-[#091e42]/20 backdrop-blur-[1px] z-20 animate-in fade-in duration-200"
+          className="absolute inset-0 bg-[#091e42]/20 dark:bg-black/40 backdrop-blur-[1px] z-20 animate-in fade-in duration-200"
         />
       )}
 
       {/* Drawer Container */}
       <div
         ref={containerRef}
-        className={`absolute top-0 right-0 h-full w-full sm:w-[420px] bg-white border-l border-slate-200 shadow-2xl z-30 flex flex-col transition-transform duration-300 ease-in-out transform ${
+        className={`absolute top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-[#161a1d] border-l border-slate-200 dark:border-[#2c3338] shadow-2xl z-30 flex flex-col transition-transform duration-300 ease-in-out transform ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0 bg-slate-50/50">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#2c3338] flex-shrink-0 bg-slate-50/50 dark:bg-[#1d2125]">
           <button
             onClick={onClose}
-            className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-[#1868db] transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-[#1868db] dark:hover:text-[#579dff] transition-colors cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
             Quay lại công việc chính
@@ -92,7 +92,7 @@ export function TaskSubtaskDrawer({
           
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#2c3338] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350 transition-all cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
@@ -138,7 +138,7 @@ export function TaskSubtaskDrawer({
                       onClose();
                     }
                   }}
-                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 p-1 rounded hover:bg-slate-100 transition-all cursor-pointer shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-[#2c3338] transition-all cursor-pointer shrink-0"
                   title="Xóa công việc con"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
@@ -167,7 +167,7 @@ export function TaskSubtaskDrawer({
           <div className="pt-2 flex-1 flex flex-col min-h-0">
             <div className="flex items-center gap-1.5 px-1 pb-2 flex-shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-              <h4 className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider">
+              <h4 className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider">
                 Thảo luận ({comments.length})
               </h4>
             </div>

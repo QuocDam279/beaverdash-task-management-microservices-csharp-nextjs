@@ -32,20 +32,20 @@ export default function BoardPage({ params }: PageProps) {
 
   if (b.isLoading) {
     return (
-      <div className="min-h-full flex items-center justify-center p-8 bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 border-t-[#1868db]" />
+      <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125]">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 dark:border-[#353e47] border-t-[#1868db] dark:border-t-[#579dff]" />
       </div>
     );
   }
 
   if (b.error) {
     return (
-      <div className="min-h-full flex items-center justify-center p-8 bg-white text-red-500 font-bold">{b.error}</div>
+      <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125] text-red-500 dark:text-red-400 font-bold">{b.error}</div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-full w-full p-6 pt-4 select-none bg-white">
+    <div className="flex flex-col min-h-full w-full p-6 pt-4 select-none bg-white dark:bg-[#1d2125]">
       {/* TOOLBAR */}
       <BoardToolbar
         searchQuery={b.searchQuery}
@@ -92,27 +92,27 @@ export default function BoardPage({ params }: PageProps) {
         {/* Add Column Card */}
         <div className="w-80 shrink-0 flex flex-col select-none">
           {b.isAddingColumn ? (
-            <div className="bg-[#f4f5f7] rounded-lg p-4 border border-slate-200 shadow-xs space-y-3">
+            <div className="bg-[#f4f5f7] dark:bg-[#22272b] rounded-lg p-4 border border-slate-200 dark:border-[#353e47] shadow-xs space-y-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tên cột trạng thái</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Tên cột trạng thái</label>
                 <input
                   type="text"
                   placeholder="Nhập tên cột..."
                   value={b.newColName}
                   onChange={(e) => b.setNewColName(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+                  className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded bg-white dark:bg-[#2c3338] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff]"
                   autoFocus
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Giới hạn công việc (WIP Limit)</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Giới hạn công việc (WIP Limit)</label>
                 <input
                   type="number"
                   placeholder="Không giới hạn"
                   value={b.newColWip || ""}
                   onChange={(e) => b.setNewColWip(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white text-[#292a2e] focus:outline-none focus:ring-1 focus:ring-[#1868db]"
+                  className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded bg-white dark:bg-[#2c3338] text-[#292a2e] dark:text-[#deebff] focus:outline-none focus:ring-1 focus:ring-[#1868db] dark:focus:ring-[#579dff]"
                   min="1"
                 />
               </div>
@@ -125,7 +125,7 @@ export default function BoardPage({ params }: PageProps) {
                     b.setNewColName("");
                     b.setNewColWip(null);
                   }}
-                  className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-200 rounded transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#2c3338] rounded transition-all cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -133,7 +133,7 @@ export default function BoardPage({ params }: PageProps) {
                   type="button"
                   onClick={b.handleCreateColumn}
                   disabled={!b.newColName.trim()}
-                  className="px-3 py-1.5 text-xs font-bold bg-[#1868db] hover:bg-[#0052cc] disabled:bg-slate-200 disabled:text-slate-400 text-white rounded transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-bold bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 disabled:bg-slate-200 dark:disabled:bg-[#2c3338] disabled:text-slate-400 dark:disabled:text-slate-600 text-white dark:text-[#1d2125] rounded transition-all cursor-pointer"
                 >
                   Thêm cột
                 </button>
@@ -142,7 +142,7 @@ export default function BoardPage({ params }: PageProps) {
           ) : (
             <button
               onClick={() => b.setIsAddingColumn(true)}
-              className="w-full py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-[#505258] hover:text-[#1868db] rounded-lg border-2 border-dashed border-slate-200 hover:border-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="w-full py-3.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-[#22272b] dark:hover:bg-[#2c3338] text-[#505258] dark:text-slate-300 hover:text-[#1868db] dark:hover:text-[#579dff] rounded-lg border-2 border-dashed border-slate-200 dark:border-[#353e47] hover:border-slate-300 dark:hover:border-slate-500 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" />
