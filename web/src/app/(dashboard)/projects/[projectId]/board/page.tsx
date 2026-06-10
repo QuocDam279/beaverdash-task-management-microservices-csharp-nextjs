@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { BoardColumnView, BoardToolbar } from "@/components/project";
 import { useBoard } from "@/hooks/useBoard";
+import { api } from "@/lib/api";
 import dynamic from "next/dynamic";
 
 const TaskDetailModal = dynamic(() =>
@@ -21,6 +23,10 @@ const DeleteColumnModal = dynamic(() =>
   import("@/components/project/DeleteColumnModal").then((m) => m.DeleteColumnModal),
   { ssr: false }
 );
+const CloseSprintModal = dynamic(() =>
+  import("@/components/project/CloseSprintModal").then((m) => m.CloseSprintModal),
+  { ssr: false }
+);
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -29,6 +35,37 @@ interface PageProps {
 export default function BoardPage({ params }: PageProps) {
   const { projectId } = React.use(params);
   const b = useBoard(projectId);
+
+  const [activeCloseSprint, setActiveCloseSprint] = React.useState<any | null>(null);
+  const [futureSprints, setFutureSprints] = React.useState<any[]>([]);
+  const [isClosingSprintLoading, setIsClosingSprintLoading] = React.useState(false);
+
+  const handleCloseSprintClick = async () => {
+    if (!b.activeSprintId) return;
+    try {
+      setIsClosingSprintLoading(true);
+      const backlogData = await api.get(`/projects/${projectId}/backlog`);
+      if (backlogData && backlogData.sprints) {
+        const activeSprintObj = backlogData.sprints.find((s: any) => s.status === "Active");
+        const futures = backlogData.sprints.filter((s: any) => s.status === "Future");
+        setFutureSprints(futures);
+        if (activeSprintObj) {
+          setActiveCloseSprint(activeSprintObj);
+        } else {
+          setActiveCloseSprint({
+            id: b.activeSprintId,
+            name: b.activeSprintName || "",
+            taskCount: b.tasks.length,
+            completedTaskCount: b.tasks.filter(t => b.columns.find(c => c.id === t.boardColumnId)?.isDone).length
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load sprint details for closing:", err);
+    } finally {
+      setIsClosingSprintLoading(false);
+    }
+  };
 
   if (b.isLoading) {
     return (
@@ -62,7 +99,32 @@ export default function BoardPage({ params }: PageProps) {
         isPersonalProject={b.isPersonalProject}
         sortBy={b.sortBy}
         onSortChange={b.setSortBy}
+        activeSprintName={b.activeSprintName}
+        activeSprintEndDate={b.activeSprintEndDate}
+        sprints={b.sprints}
+        selectedSprintId={b.selectedSprintId}
+        setSelectedSprintId={b.setSelectedSprintId}
+        onCloseSprintClick={handleCloseSprintClick}
       />
+
+      {/* KANBAN BOARD */}
+      {/* NO ACTIVE SPRINT WARNING BANNER */}
+      {b.selectedSprintId === "active" && !b.activeSprintId && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-250 dark:border-amber-900/40 rounded-lg flex items-center justify-between text-xs text-amber-800 dark:text-amber-300 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2">
+            <span>🏃‍♂️</span>
+            <span>
+              <strong>Không có Sprint nào đang hoạt động.</strong> Bảng hiện không hiển thị công việc. Hãy vào trang Backlog để bắt đầu một Sprint mới.
+            </span>
+          </div>
+          <Link
+            href={`/projects/${projectId}/backlog`}
+            className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-[#1d2125] font-bold px-2.5 py-1 rounded transition-colors text-[11px]"
+          >
+            Đi đến Backlog
+          </Link>
+        </div>
+      )}
 
       {/* KANBAN BOARD */}
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-stretch scrollbar-thin">
@@ -77,6 +139,7 @@ export default function BoardPage({ params }: PageProps) {
               isLast={index === b.columns.length - 1}
               onMoveLeft={() => b.handleMoveColumn(column.id, "left")}
               onMoveRight={() => b.handleMoveColumn(column.id, "right")}
+              onMoveColumn={b.handleSwapColumns}
               onSetWipLimit={() => b.handleOpenWipLimitModal(column)}
               onDeleteColumn={() => b.handleOpenDeleteModal(column)}
               onMoveTask={b.handleMoveTask}
@@ -194,6 +257,20 @@ export default function BoardPage({ params }: PageProps) {
         onClose={() => b.setDeleteModalColumn(null)}
         onConfirm={b.handleConfirmDelete}
       />
+
+      {/* Close Sprint Modal */}
+      {activeCloseSprint && (
+        <CloseSprintModal
+          isOpen={!!activeCloseSprint}
+          onClose={() => setActiveCloseSprint(null)}
+          onConfirm={async (action, nextId) => {
+            await b.handleCloseSprint(activeCloseSprint.id, action, nextId);
+            setActiveCloseSprint(null);
+          }}
+          sprint={activeCloseSprint}
+          futureSprints={futureSprints}
+        />
+      )}
     </div>
   );
 }

@@ -68,6 +68,30 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Apply migrations on startup with retry logic
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+    int retryCount = 10;
+    int delaySeconds = 3;
+    for (int i = 1; i <= retryCount; i++)
+    {
+        try
+        {
+            Console.WriteLine($"[Migration] Applying Identity DB migrations (Attempt {i}/{retryCount})...");
+            context.Database.Migrate();
+            Console.WriteLine("[Migration] Identity DB migrations applied successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Migration] Error on attempt {i}: {ex.Message}");
+            if (i == retryCount) throw;
+            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(delaySeconds));
+        }
+    }
+}
+
 app.Run();
 
 

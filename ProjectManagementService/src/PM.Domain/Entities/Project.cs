@@ -26,5 +26,6 @@ public class Project : BaseEntity
     public DateTime UpdatedAt { get; set; }
 
     public ICollection<BoardColumn> BoardColumns { get; set; } = new List<BoardColumn>();
+    public ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
     public ICollection<ProjectDocument> ProjectDocuments { get; set; } = new List<ProjectDocument>();
 }

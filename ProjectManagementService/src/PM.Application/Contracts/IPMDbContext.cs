@@ -20,6 +20,7 @@ public interface IPMDbContext
     DbSet<ActivityLog> ActivityLogs { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<OutboxMessage> OutboxMessages { get; }
+    DbSet<Sprint> Sprints { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

@@ -22,6 +22,10 @@ interface ListToolbarProps {
   onCreateTaskClick: () => void;
   readOnly?: boolean;
   isPersonalProject?: boolean;
+  sprints?: any[];
+  selectedSprintId?: string;
+  setSelectedSprintId?: (id: string) => void;
+  activeSprintName?: string | null;
 }
 
 /**
@@ -46,6 +50,10 @@ export function ListToolbar({
   onCreateTaskClick,
   readOnly = false,
   isPersonalProject = false,
+  sprints = [],
+  selectedSprintId = "active",
+  setSelectedSprintId = () => {},
+  activeSprintName = null,
 }: ListToolbarProps) {
   // Popover State
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -71,6 +79,40 @@ export function ListToolbar({
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 select-none">
       <div className="flex flex-wrap items-center gap-2">
+        {/* Sprint Filter Dropdown */}
+        <div className="relative mr-1 select-none">
+          <select
+            value={selectedSprintId}
+            onChange={(e) => setSelectedSprintId(e.target.value)}
+            className="appearance-none pl-8 pr-8 py-1.5 rounded-[4px] bg-indigo-50/60 hover:bg-indigo-100/70 dark:bg-indigo-950/10 dark:hover:bg-indigo-900/20 border border-indigo-150 dark:border-indigo-900/30 text-xs font-bold text-indigo-700 dark:text-indigo-300 focus:outline-none transition-all cursor-pointer"
+          >
+            <option value="active" className="bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] font-semibold">
+              Sprint đang hoạt động {activeSprintName ? `(${activeSprintName})` : "(Trống)"}
+            </option>
+            <option value="00000000-0000-0000-0000-000000000000" className="bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff]">
+              Product Backlog (Danh sách tồn đọng)
+            </option>
+            {sprints && sprints.length > 0 && (
+              <optgroup label="Danh sách Sprint" className="bg-white dark:bg-[#22272b] text-slate-400 dark:text-slate-500 font-bold">
+                {sprints
+                  .filter((s) => s.status !== "Active")
+                  .map((s) => (
+                    <option key={s.id} value={s.id} className="text-[#292a2e] dark:text-[#deebff] font-medium">
+                      {s.name} {s.status === "Closed" ? "(Đã đóng)" : "(Chưa chạy)"}
+                    </option>
+                  ))
+                }
+              </optgroup>
+            )}
+          </select>
+          <div className="absolute left-2.5 top-1.5 text-xs pointer-events-none select-none">
+            {selectedSprintId === "active" ? "🏃" : selectedSprintId === "00000000-0000-0000-0000-000000000000" ? "📅" : sprints.find(s => s.id === selectedSprintId)?.status === "Closed" ? "📁" : "🔮"}
+          </div>
+          <svg className="absolute right-2 top-2 h-3.5 w-3.5 text-indigo-500 pointer-events-none select-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
         {/* Quick Search */}
         <div className="relative">
           <svg className="absolute left-2.5 top-[9px] h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -389,18 +431,7 @@ export function ListToolbar({
         )}
       </div>
 
-      {!readOnly && (
-        <button
-          onClick={onCreateTaskClick}
-          className="px-3.5 py-1.5 bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 text-white dark:text-[#1d2125] text-xs font-bold rounded-[4px] cursor-pointer flex items-center gap-1 shadow-xs transition-colors whitespace-nowrap shrink-0 animate-in fade-in"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>Tạo công việc</span>
-        </button>
-      )}
+      {/* Create Task Button removed as requested */}
     </div>
   );
 }

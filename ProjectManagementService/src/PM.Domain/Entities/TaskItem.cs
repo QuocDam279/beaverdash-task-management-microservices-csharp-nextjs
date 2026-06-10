@@ -11,7 +11,9 @@ public class TaskItem : BaseEntity
     
     public Guid BoardColumnId { get; set; }
     public BoardColumn? BoardColumn { get; set; }
-    
+
+    public Guid? SprintId { get; set; }
+    public Sprint? Sprint { get; set; }
 
     public string Title { get; set; } = null!;
     

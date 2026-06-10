@@ -12,6 +12,7 @@ interface CreateTaskModalProps {
   onTaskCreated: () => void;
   projectStartDate?: string | null;
   projectDueDate?: string | null;
+  sprintId?: string | null;
 }
 
 export function CreateTaskModal({
@@ -22,6 +23,7 @@ export function CreateTaskModal({
   onTaskCreated,
   projectStartDate,
   projectDueDate,
+  sprintId,
 }: CreateTaskModalProps) {
   const { alert } = useAlertConfirm();
   const [title, setTitle] = React.useState("");
@@ -63,9 +65,9 @@ export function CreateTaskModal({
         title: title.trim(),
         description: description.trim() || null,
         priority: priority || null,
-
         startDate: startDate ? new Date(startDate).toISOString() : null,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        sprintId: sprintId !== undefined ? (sprintId === null ? "00000000-0000-0000-0000-000000000000" : sprintId) : null,
       });
 
       onTaskCreated();
@@ -137,24 +139,7 @@ export function CreateTaskModal({
               />
             </div>
 
-            {/* Board Column */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
-                Cột công việc <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                value={boardColumnId}
-                onChange={(e) => setBoardColumnId(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all cursor-pointer"
-              >
-                {columns.map((col) => (
-                  <option key={col.id} value={col.id}>
-                    {col.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+
 
             {/* Grid 3 Columns */}
             <div className="grid grid-cols-3 gap-3">

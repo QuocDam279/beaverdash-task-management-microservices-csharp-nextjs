@@ -95,10 +95,24 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             sortOrder = (maxSortOrder ?? 0) + 1;
         }
 
+        Guid? sprintId = null;
+        if (request.SprintId.HasValue)
+        {
+            sprintId = request.SprintId.Value == Guid.Empty ? null : request.SprintId.Value;
+        }
+        else
+        {
+            var activeSprint = await _dbContext.Sprints
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ProjectId == column.ProjectId && s.Status == SprintStatus.Active, cancellationToken);
+            sprintId = activeSprint?.Id;
+        }
+
         var task = new PM.Domain.Entities.TaskItem
         {
             Id = Guid.CreateVersion7(),
             BoardColumnId = request.BoardColumnId,
+            SprintId = sprintId,
             Title = request.Title,
             Description = request.Description,
             Priority = string.IsNullOrEmpty(request.Priority)

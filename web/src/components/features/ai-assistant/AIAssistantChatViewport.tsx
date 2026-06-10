@@ -133,9 +133,58 @@ export function AIAssistantChatViewport({
   onSuggestionClick,
   messagesEndRef,
 }: ViewportProps) {
-  const lastUserIndex = [...messages].reverse().findIndex((m) => m.role === "user");
-  const currentTurnMessages = lastUserIndex !== -1 ? messages.slice(messages.length - 1 - lastUserIndex) : messages;
-  const isCreatingTasks = currentTurnMessages.some((m) => m.tool_calls && m.tool_calls.length > 0);
+  const creationProgress = React.useMemo(() => {
+    let total = 0;
+    let completed = 0;
+    let currentTaskName = "";
+    let isTaskCreationActive = false;
+
+    const lastUserIdx = [...messages].reverse().findIndex((m) => m.role === "user");
+    const turnMsgs = lastUserIdx !== -1 ? messages.slice(messages.length - 1 - lastUserIdx) : messages;
+
+    for (let idx = 0; idx < turnMsgs.length; idx++) {
+      const msg = turnMsgs[idx];
+      if (msg.role === "assistant" && msg.tool_calls) {
+        for (const tc of msg.tool_calls) {
+          if (tc.name === "create_task" || tc.name === "create_subtask") {
+            total++;
+            isTaskCreationActive = true;
+            
+            // Check if there is a corresponding tool_result in the subsequent tool messages of this turn
+            let isItemCompleted = false;
+            for (let i = idx + 1; i < turnMsgs.length; i++) {
+              const nextMsg = turnMsgs[i];
+              if (nextMsg.role === "tool" && nextMsg.tool_results) {
+                const hasResult = nextMsg.tool_results.some(
+                  (r) => r.name === tc.name && (r.result.includes("Thành công") || r.result.includes("Success"))
+                );
+                if (hasResult) {
+                  isItemCompleted = true;
+                  break;
+                }
+              }
+              if (nextMsg.role === "assistant") {
+                break;
+              }
+            }
+
+            if (isItemCompleted) {
+              completed++;
+            } else if (!currentTaskName && tc.args && tc.args.title) {
+              currentTaskName = tc.args.title;
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      total,
+      completed,
+      currentTaskName,
+      isActive: isTaskCreationActive
+    };
+  }, [messages]);
 
   if (isHistoryLoading) {
     return (
@@ -191,7 +240,7 @@ export function AIAssistantChatViewport({
   return (
     <div className="flex-1 overflow-y-auto px-6 py-6 custom-chat-scrollbar bg-white dark:bg-[#1d2125]">
       <div className="max-w-3xl mx-auto w-full space-y-6">
-        {messages.map((msg) => {
+        {messages.map((msg, index) => {
           const isUser = msg.role === "user";
           if (msg.role === "tool") return null;
 
@@ -234,6 +283,20 @@ export function AIAssistantChatViewport({
               </div>
             );
           } else {
+            // Find tool results for this assistant message by scanning forward in the message list
+            const toolResults: any[] = [];
+            if (msg.tool_calls && msg.tool_calls.length > 0) {
+              for (let i = index + 1; i < messages.length; i++) {
+                const nextMsg = messages[i];
+                if (nextMsg.role === "tool" && nextMsg.tool_results) {
+                  toolResults.push(...nextMsg.tool_results);
+                }
+                if (nextMsg.role === "assistant" || nextMsg.role === "user") {
+                  break;
+                }
+              }
+            }
+
             return (
               <div key={msg.id} className="flex gap-4 items-start w-full text-slate-800 dark:text-slate-300">
                 {/* AI Avatar */}
@@ -254,7 +317,7 @@ export function AIAssistantChatViewport({
                         <AIAssistantToolCard
                           key={idx}
                           toolCall={tc}
-                          toolResults={msg.tool_results}
+                          toolResults={toolResults.length > 0 ? toolResults : null}
                         />
                       ))}
                     </div>
@@ -277,18 +340,51 @@ export function AIAssistantChatViewport({
               className="w-10 h-10 object-contain shrink-0 select-none animate-pulse filter drop-shadow-[0_0_6px_rgba(99,102,241,0.25)]"
             />
             {/* Content */}
-            <div className="flex-1 min-w-0 pt-0.5 space-y-1">
+            <div className="flex-1 min-w-0 pt-0.5 space-y-2">
               <div className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase select-none">Trợ lý BeaverDash</div>
-              <div className="flex items-center gap-2 pt-0.5">
-                <div className="flex gap-1 shrink-0">
-                  <span className="h-1.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                  <span className="h-1.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                  <span className="h-1.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+              
+              {creationProgress.isActive ? (
+                <div className="p-4 rounded-2xl border border-indigo-100 dark:border-indigo-950/40 bg-gradient-to-br from-indigo-50/40 to-white dark:from-indigo-950/10 dark:to-slate-900/10 shadow-sm space-y-3 max-w-md">
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-800 dark:text-[#deebff]">
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Đang tự động tạo các công việc...</span>
+                    </div>
+                    <span className="text-indigo-600 dark:text-indigo-400 tabular-nums">
+                      {creationProgress.completed}/{creationProgress.total}
+                    </span>
+                  </div>
+
+                  {/* Progress Bar Container */}
+                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-500 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${(creationProgress.completed / Math.max(1, creationProgress.total)) * 100}%` }}
+                    />
+                  </div>
+
+                  {/* Details of the task currently being processed */}
+                  {creationProgress.currentTaskName && (
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      Đang xử lý: <strong className="text-slate-700 dark:text-slate-200">{creationProgress.currentTaskName}</strong>
+                    </div>
+                  )}
                 </div>
-                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-wide animate-pulse select-none">
-                  {isCreatingTasks ? "Đang tạo công việc..." : "Đang suy nghĩ..."}
-                </span>
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 pt-0.5">
+                  <div className="flex gap-1 shrink-0">
+                    <span className="h-1.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                    <span className="h-1.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                    <span className="h-1.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                  </div>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-wide animate-pulse select-none">
+                    Đang suy nghĩ...
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}

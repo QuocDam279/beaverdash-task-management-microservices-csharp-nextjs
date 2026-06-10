@@ -10,4 +10,5 @@ public record CreateTaskCommand(
     string? Priority,
     DateTime? DueDate,
     DateTime? StartDate,
-    double? SortOrder) : IRequest<Guid>;
+    double? SortOrder,
+    Guid? SprintId = null) : IRequest<Guid>;

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { TaskItem } from "@/types/task";
 import { Avatar } from "@/components/ui/Avatar";
+import { toUtcLocalDate } from "@/lib/utils";
 
 interface CalendarGridProps {
   cells: { date: Date; isCurrentMonth: boolean }[];
@@ -25,7 +26,14 @@ export function CalendarGrid({
 
   const getLocalDateString = (dateInput: Date | string | null) => {
     if (!dateInput) return "";
-    const d = new Date(dateInput);
+    let d: Date;
+    if (typeof dateInput === "string") {
+      const parsed = toUtcLocalDate(dateInput);
+      if (!parsed) return "";
+      d = parsed;
+    } else {
+      d = dateInput;
+    }
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");

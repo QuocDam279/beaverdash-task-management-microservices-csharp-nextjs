@@ -35,13 +35,19 @@ class AIAssistantService:
         "    - NEVER mix these two priority systems. Do not use 'Thấp/Trung bình/Cao' for parent Tasks, and do not use 'Bắt buộc/Quan trọng/Mở rộng' for Subtasks.\n"
         "    - When proposing the task list to the user, ALWAYS display priority names in VIETNAMESE ('Bắt buộc', 'Quan trọng', 'Mở rộng', 'Thấp', 'Trung bình', 'Cao'). DO NOT show English values to the user.\n"
         "11. REQUIRED FIELDS RULES:\n"
-        "    - Main Tasks (Task) only require: title, status/board column, priority, start_date, due_date. Absolutely NO description field.\n"
+        "    - Main Tasks (Task) only require: title, priority, start_date, due_date. Absolutely NO description field and NO status/board column (do not prompt the user for the board column or status, nor show it in the proposed list).\n"
         "    - Subtasks (SubTask) only require: title, priority, due_date (no start_date, no description field).\n"
-        "    - You MUST suggest reasonable dates and priorities when listing proposals to the user, unless the user explicitly mentions they do not need dates or priorities.\n"
+        "    - You MUST suggest reasonable dates and priorities when listing proposals to the user, unless the user explicitly mentions they do not need dates or priorities. When planning task dates, you MUST call the tool `get_project_details` first to inspect the project's start date and due date, to ensure that the proposed dates for both main tasks and subtasks fall strictly within the project's active date range.\n"
         "12. When displaying proposed task lists or announcing results to the user, ALWAYS use the Vietnamese phrases 'công việc chính' instead of 'task'/'Task'/'công việc cha', and 'công việc con' instead of 'subtask'/'Subtask'. Never use these English terms in your response to the user.\n"
-        "13. ABSOLUTELY NEVER DISPLAY OR MENTION the names of the technical tools or functions (such as `create_task`, `update_task`, `create_subtask`, `update_subtask`, `get_project_details`, etc.) in your text response to the user. Speak using natural Vietnamese descriptions instead.\n"
+        "13. ABSOLUTELY NEVER DISPLAY OR MENTION the names of the technical tools or functions (such as `create_task`, `update_task`, `create_subtask`, `update_subtask`, `get_project_details`, `get_project_sprints`, etc.) in your text response to the user. Speak using natural Vietnamese descriptions instead.\n"
         "14. You are provided with the tool `get_project_details` to read the current project details including its name, description, start date, due date, and existing columns. Use this tool whenever you need to understand the project structure or find the available columns.\n"
         "15. You are provided with the tools `update_task` and `update_subtask` to modify existing main tasks and subtasks. Just like the creation process, when a user asks to edit task info or change task status/column, you must first propose the text modifications, and only execute the update tools after they confirm they agree.\n"
+        "16. SPRINT & PRODUCT BACKLOG RULES:\n"
+        "    - The project is divided into Sprints and a Product Backlog. You are provided with the tool `get_project_sprints` to get the list of all sprints in the current project, including their names, IDs, and statuses (Active, Future, Closed).\n"
+        "    - By default, if you create a main task (Task) without passing `sprint_id`, the system will automatically assign it to the Active Sprint of the project. If there is no active sprint, it goes to the Product Backlog.\n"
+        "    - When the user asks to assign a task to a specific sprint (e.g., 'assign to Sprint 1'), use `get_project_sprints` to find the correct sprint ID and pass it as `sprint_id` when calling task tools.\n"
+        "    - If the user wants to move a task to the Product Backlog (or out of a sprint), pass '00000000-0000-0000-0000-000000000000' as the `sprint_id`.\n"
+        "    - NEVER assign tasks to a Closed sprint.\n"
     )
 
     def __init__(self):
@@ -75,7 +81,8 @@ class AIAssistantService:
             tools_provider.create_subtask,
             tools_provider.get_project_details,
             tools_provider.update_task,
-            tools_provider.update_subtask
+            tools_provider.update_subtask,
+            tools_provider.get_project_sprints
         ]
 
         # 1. Convert DB history to Gemini SDK format
@@ -190,6 +197,8 @@ class AIAssistantService:
                         result_str = await tools_provider.update_task(**tool_args)
                     elif tool_name == "update_subtask":
                         result_str = await tools_provider.update_subtask(**tool_args)
+                    elif tool_name == "get_project_sprints":
+                        result_str = await tools_provider.get_project_sprints(**tool_args)
                     else:
                         result_str = f"Lỗi: Không tìm thấy công cụ '{tool_name}'."
                     

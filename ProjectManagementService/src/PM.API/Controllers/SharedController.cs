@@ -33,9 +33,9 @@ public class SharedController : ControllerBase
     }
 
     [HttpGet("projects/{shareToken}/board")]
-    public async Task<IActionResult> GetSharedProjectBoard(string shareToken)
+    public async Task<IActionResult> GetSharedProjectBoard(string shareToken, [FromQuery] Guid? sprintId = null)
     {
-        var query = new GetSharedProjectBoardQuery(shareToken);
+        var query = new GetSharedProjectBoardQuery(shareToken, sprintId);
         var result = await _mediator.Send(query);
 
         if (result == null)

@@ -19,6 +19,12 @@ export interface BoardToolbarProps {
   isPersonalProject?: boolean;
   sortBy?: string;
   onSortChange?: (val: string) => void;
+  activeSprintName?: string | null;
+  activeSprintEndDate?: string | null;
+  sprints?: any[];
+  selectedSprintId?: string;
+  setSelectedSprintId?: (id: string) => void;
+  onCloseSprintClick?: () => void;
 }
 
 /**
@@ -41,6 +47,12 @@ export function BoardToolbar({
   isPersonalProject = false,
   sortBy = "dueDate",
   onSortChange = () => {},
+  activeSprintName = null,
+  activeSprintEndDate = null,
+  sprints = [],
+  selectedSprintId = "active",
+  setSelectedSprintId = () => {},
+  onCloseSprintClick,
 }: BoardToolbarProps) {
   // Popover State
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -62,9 +74,71 @@ export function BoardToolbar({
     (!isPersonalProject && !!selectedAssignee) ||
     hasAnyFilterActive;
 
+  const getSprintDaysLeft = (endDateStr: string | null) => {
+    if (!endDateStr) return null;
+    const endDate = new Date(endDateStr);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const target = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    const diffTime = target.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return "Đã quá hạn";
+    if (diffDays === 0) return "Hôm nay kết thúc";
+    return `Còn ${diffDays} ngày`;
+  };
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-[#2c3338] select-none">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Sprint Filter Dropdown */}
+        <div className="relative mr-1 select-none">
+          <select
+            value={selectedSprintId}
+            onChange={(e) => setSelectedSprintId(e.target.value)}
+            className="appearance-none pl-8 pr-8 py-1.5 rounded-[4px] bg-indigo-50/60 hover:bg-indigo-100/70 dark:bg-indigo-950/10 dark:hover:bg-indigo-900/20 border border-indigo-150 dark:border-indigo-900/30 text-xs font-bold text-indigo-700 dark:text-indigo-300 focus:outline-none transition-all cursor-pointer"
+          >
+            <option value="active" className="bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] font-semibold">
+              Sprint đang hoạt động {activeSprintName ? `(${activeSprintName})` : "(Trống)"}
+            </option>
+            <option value="00000000-0000-0000-0000-000000000000" className="bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff]">
+              Product Backlog (Danh sách tồn đọng)
+            </option>
+            {sprints && sprints.length > 0 && (
+              <optgroup label="Danh sách Sprint" className="bg-white dark:bg-[#22272b] text-slate-400 dark:text-slate-500 font-bold">
+                {sprints
+                  .filter((s) => s.status !== "Active")
+                  .map((s) => (
+                    <option key={s.id} value={s.id} className="text-[#292a2e] dark:text-[#deebff] font-medium">
+                      {s.name} {s.status === "Closed" ? "(Đã đóng)" : "(Chưa chạy)"}
+                    </option>
+                  ))
+                }
+              </optgroup>
+            )}
+          </select>
+          <div className="absolute left-2.5 top-1.5 text-xs pointer-events-none select-none">
+            {selectedSprintId === "active" ? "🏃" : selectedSprintId === "00000000-0000-0000-0000-000000000000" ? "📅" : sprints.find(s => s.id === selectedSprintId)?.status === "Closed" ? "📁" : "🔮"}
+          </div>
+          <svg className="absolute right-2 top-2 h-3.5 w-3.5 text-indigo-500 pointer-events-none select-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
+        {/* Complete Sprint Button (only visible for active sprint view) */}
+        {selectedSprintId === "active" && activeSprintName && !readOnly && onCloseSprintClick && (
+          <button
+            onClick={onCloseSprintClick}
+            className="px-3 py-1.5 text-xs font-bold border border-red-200 dark:border-red-900/30 text-red-650 dark:text-red-400 bg-red-50/20 dark:bg-red-950/10 hover:bg-red-50 dark:hover:bg-red-950/35 hover:border-red-300 dark:hover:border-red-900/50 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5"
+            title="Kết thúc Sprint này và xử lý các công việc dở dang"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <span>Kết thúc Sprint</span>
+          </button>
+        )}
+
         {/* Search */}
         <div className="relative">
           <input
@@ -331,19 +405,7 @@ export function BoardToolbar({
         )}
       </div>
 
-      {/* Create Task Button */}
-      {!readOnly && (
-        <button
-          onClick={onCreateTaskClick}
-          className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 text-white dark:text-[#1d2125] text-xs font-bold px-3 py-1.5 rounded-[4px] cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs whitespace-nowrap shrink-0"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>Tạo công việc</span>
-        </button>
-      )}
+      {/* Create Task Button removed as requested */}
     </div>
   );
 }

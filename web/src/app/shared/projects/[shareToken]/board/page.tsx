@@ -34,6 +34,10 @@ export default function SharedBoardPage({ params }: PageProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
+  const [selectedSprintId, setSelectedSprintId] = React.useState<string>("active");
+  const [sprints, setSprints] = React.useState<any[]>([]);
+  const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
+  const [activeSprintEndDate, setActiveSprintEndDate] = React.useState<string | null>(null);
 
   const {
     searchQuery, setSearchQuery,
@@ -49,7 +53,12 @@ export default function SharedBoardPage({ params }: PageProps) {
       setIsLoading(true);
       setError(null);
 
-      const boardData = await api.get(`/shared/projects/${shareToken}/board`);
+      let boardUrl = `/shared/projects/${shareToken}/board`;
+      if (selectedSprintId !== "active") {
+        boardUrl += `?sprintId=${selectedSprintId}`;
+      }
+
+      const boardData = await api.get(boardUrl);
       if (boardData) {
         setColumns(boardData.boardColumns || []);
         const allTasks: TaskItem[] = [];
@@ -57,6 +66,9 @@ export default function SharedBoardPage({ params }: PageProps) {
           if (col.taskItems) allTasks.push(...col.taskItems);
         });
         setTasks(allTasks);
+        setSprints(boardData.sprints || []);
+        setActiveSprintName(boardData.activeSprintName || null);
+        setActiveSprintEndDate(boardData.activeSprintEndDate || null);
       }
 
       const overviewData = await api.get(`/shared/projects/${shareToken}/overview`);
@@ -74,7 +86,7 @@ export default function SharedBoardPage({ params }: PageProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [shareToken]);
+  }, [shareToken, selectedSprintId]);
 
   React.useEffect(() => { fetchBoardData(); }, [fetchBoardData]);
 
@@ -132,6 +144,11 @@ export default function SharedBoardPage({ params }: PageProps) {
         isPersonalProject={isPersonalProject}
         sortBy={sortBy}
         onSortChange={setSortBy}
+        activeSprintName={activeSprintName}
+        activeSprintEndDate={activeSprintEndDate}
+        sprints={sprints}
+        selectedSprintId={selectedSprintId}
+        setSelectedSprintId={setSelectedSprintId}
       />
 
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-stretch min-h-[450px] scrollbar-thin">

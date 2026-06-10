@@ -69,7 +69,8 @@ builder.Services.AddProblemDetails();
 // 5. Đăng ký HttpClient cho AIAssistant Webhook Client
 builder.Services.AddHttpClient<PM.Application.Contracts.IAIAssistantServiceClient, PM.Infrastructure.Services.AIAssistantServiceClient>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5003");
+    var aiAssistantUrl = Environment.GetEnvironmentVariable("AI_ASSISTANT_SERVICE_URL") ?? "http://localhost:5003";
+    client.BaseAddress = new Uri(aiAssistantUrl);
     // Nếu Python service không phản hồi trong 5 giây, bỏ qua
     client.Timeout = TimeSpan.FromSeconds(5);
 });
@@ -85,6 +86,30 @@ app.MapControllers();
 
 // 4. Map endpoint cho Hub
 app.MapHub<PM.API.Hubs.NotificationHub>("/hubs/notifications");
+
+// Apply migrations on startup with retry logic
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<PMDbContext>();
+    int retryCount = 10;
+    int delaySeconds = 3;
+    for (int i = 1; i <= retryCount; i++)
+    {
+        try
+        {
+            Console.WriteLine($"[Migration] Applying PM DB migrations (Attempt {i}/{retryCount})...");
+            context.Database.Migrate();
+            Console.WriteLine("[Migration] PM DB migrations applied successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Migration] Error on attempt {i}: {ex.Message}");
+            if (i == retryCount) throw;
+            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(delaySeconds));
+        }
+    }
+}
 
 app.Run();
 

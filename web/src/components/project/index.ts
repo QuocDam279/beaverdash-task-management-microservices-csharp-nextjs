@@ -25,3 +25,7 @@ export { TaskSubtaskDrawer } from "./TaskSubtaskDrawer";
 export { TaskSubtaskDrawerProperties } from "./TaskSubtaskDrawerProperties";
 export { TaskSubtaskDrawerTitle } from "./TaskSubtaskDrawerTitle";
 export { ListToolbar } from "./ListToolbar";
+export { CreateSprintModal } from "./CreateSprintModal";
+export { CloseSprintModal } from "./CloseSprintModal";
+export { BacklogTaskRow } from "./BacklogTaskRow";
+export { SprintSection } from "./SprintSection";

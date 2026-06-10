@@ -75,6 +75,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   const tabs: { name: string; href: string; exact: boolean; disabled?: boolean }[] = [
     { name: "Tổng quan", href: `/projects/${projectId}`, exact: true },
     { name: "Bảng công việc", href: `/projects/${projectId}/board`, exact: false },
+    { name: "Backlog", href: `/projects/${projectId}/backlog`, exact: false },
     { name: "Lịch", href: `/projects/${projectId}/calendar`, exact: false },
     { name: "Danh sách", href: `/projects/${projectId}/list`, exact: false },
     { name: "Sơ đồ gantt", href: `/projects/${projectId}/gantt`, exact: false },

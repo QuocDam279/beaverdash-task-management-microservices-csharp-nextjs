@@ -8,7 +8,7 @@
 import * as React from "react";
 import { TaskItem, BoardColumn } from "@/types/task";
 import { Avatar } from "@/components/ui/Avatar";
-import { getTaskPriorityLabel, getSubtaskPriorityLabel } from "@/lib/utils";
+import { getTaskPriorityLabel, getSubtaskPriorityLabel, toUtcLocalDate } from "@/lib/utils";
 
 interface ProjectListTableProps {
   tasks: TaskItem[];
@@ -80,7 +80,8 @@ export function ProjectListTable({
 
   const renderDate = (dateStr: string | null, isDueDate = false, isCompleted = false) => {
     if (!dateStr) return null;
-    const date = new Date(dateStr);
+    const date = toUtcLocalDate(dateStr);
+    if (!date) return null;
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const text = `${day}/${month}`;

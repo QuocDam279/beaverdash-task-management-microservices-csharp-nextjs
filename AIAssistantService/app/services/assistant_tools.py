@@ -24,7 +24,8 @@ class AIAssistantTools:
         priority: str = "Important",
         start_date: str = None,
         due_date: str = None,
-        status: str = None
+        status: str = None,
+        sprint_id: str = None
     ) -> str:
         """
         Tạo một công việc (Task) chính mới cho dự án hiện tại.
@@ -35,6 +36,7 @@ class AIAssistantTools:
             start_date: Ngày bắt đầu công việc (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             due_date: Ngày hạn hoàn thành (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             status: Trạng thái/Cột muốn tạo công việc (ví dụ: 'Chưa thực hiện', 'Đang thực hiện', 'Hoàn thành').
+            sprint_id: ID (UUID) của Sprint muốn gán công việc vào. Để đưa vào Product Backlog, hãy truyền chuỗi '00000000-0000-0000-0000-000000000000'. Nếu không truyền, hệ thống sẽ tự động gán vào Sprint đang hoạt động (Active Sprint) của dự án.
         """
         try:
             # Map priority from Vietnamese/English to backend enum
@@ -101,6 +103,12 @@ class AIAssistantTools:
                     "DueDate": due_date,
                     "StartDate": start_date
                 }
+                
+                if sprint_id is not None:
+                    s_id = sprint_id.strip()
+                    if not s_id or s_id.lower() == "backlog":
+                        s_id = "00000000-0000-0000-0000-000000000000"
+                    task_payload["SprintId"] = s_id
                 
                 create_url = f"{self.pm_base_url}/api/Tasks"
                 logger.info(f"Creating task via PM Service: {create_url} with payload: {task_payload}")
@@ -243,7 +251,8 @@ class AIAssistantTools:
         priority: str = None,
         start_date: str = None,
         due_date: str = None,
-        status: str = None
+        status: str = None,
+        sprint_id: str = None
     ) -> str:
         """
         Cập nhật thông tin của một công việc chính (Task) đã tồn tại.
@@ -255,6 +264,7 @@ class AIAssistantTools:
             start_date: Ngày bắt đầu mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             due_date: Ngày hạn hoàn thành mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             status: Trạng thái/Cột trạng thái mới muốn chuyển công việc tới (ví dụ: 'Chưa thực hiện', 'Đang thực hiện', 'Hoàn thành').
+            sprint_id: ID (UUID) của Sprint mới muốn di chuyển công việc vào. Để di chuyển vào Backlog, truyền chuỗi '00000000-0000-0000-0000-000000000000'.
         """
         try:
             async with httpx.AsyncClient() as client:
@@ -294,6 +304,23 @@ class AIAssistantTools:
                             return f"Lỗi: Không tìm thấy cột trạng thái '{status}' trong dự án hiện tại."
                     else:
                          return f"Lỗi: Không lấy được danh sách cột để cập nhật trạng thái (HTTP {board_response.status_code})."
+
+                # 1.5. Handle sprint_id update (Move task to another sprint or backlog)
+                if sprint_id is not None:
+                    target_sprint_id = sprint_id.strip()
+                    if not target_sprint_id or target_sprint_id.lower() == "backlog" or target_sprint_id == "00000000-0000-0000-0000-000000000000":
+                        target_sprint_id = None
+                    
+                    move_sprint_payload = {
+                        "TaskIds": [task_id],
+                        "SprintId": target_sprint_id,
+                        "ProjectId": self.project_id_str
+                    }
+                    move_sprint_url = f"{self.pm_base_url}/api/Sprints/move-tasks"
+                    logger.info(f"Moving task {task_id} to sprint {target_sprint_id}")
+                    move_response = await client.post(move_sprint_url, json=move_sprint_payload, headers=self.headers, timeout=10.0)
+                    if move_response.status_code not in [200, 204]:
+                        return f"Lỗi từ ProjectManagement Service khi di chuyển công việc sang Sprint mới: {move_response.status_code} - {move_response.text}"
 
                 # 2. Map priority if provided
                 mapped_priority = None
@@ -420,4 +447,44 @@ class AIAssistantTools:
         except Exception as ex:
             logger.exception("Error executing update_subtask tool")
             return f"Lỗi ngoại lệ khi cập nhật công việc con: {str(ex)}"
+
+    async def get_project_sprints(self) -> str:
+        """
+        Lấy danh sách tất cả các Sprint trong dự án hiện tại bao gồm tên, ID và trạng thái của từng Sprint (Active/Đang hoạt động, Future/Tương lai, Closed/Đã đóng).
+        Dùng công cụ này để biết các Sprint hiện có để gán công việc vào hoặc xem thông tin các Sprint của dự án.
+        """
+        try:
+            board_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/board"
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Fetching board for sprints list from: {board_url} with X-User-Id: {self.user_id_str}")
+                response = await client.get(board_url, headers=self.headers, timeout=10.0)
+                
+                if response.status_code != 200:
+                    return f"Lỗi: Không lấy được danh sách Sprint của dự án (HTTP {response.status_code})."
+                
+                board_data = response.json()
+                sprints = board_data.get("sprints", [])
+                
+                if not sprints:
+                    return "Dự án hiện tại chưa có Sprint nào được tạo."
+                
+                res_lines = ["Danh sách Sprint trong dự án:"]
+                for s in sprints:
+                    status_raw = s.get("status")
+                    if status_raw == "Active":
+                        status_vi = "Đang hoạt động (Active)"
+                    elif status_raw == "Future":
+                        status_vi = "Tương lai (Future)"
+                    elif status_raw == "Closed":
+                        status_vi = "Đã đóng (Closed)"
+                    else:
+                        status_vi = status_raw
+                    
+                    res_lines.append(f"- Tên Sprint: '{s.get('name')}' | ID: {s.get('id')} | Trạng thái: {status_vi}")
+                
+                return "\n".join(res_lines)
+        except Exception as ex:
+            logger.exception("Error executing get_project_sprints tool")
+            return f"Lỗi ngoại lệ khi lấy danh sách Sprint: {str(ex)}"
+
 

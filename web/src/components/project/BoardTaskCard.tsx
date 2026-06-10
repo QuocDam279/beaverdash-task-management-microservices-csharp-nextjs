@@ -136,8 +136,8 @@ export function BoardTaskCard({
           e.preventDefault();
           return;
         }
-        e.dataTransfer.setData("taskId", task.id);
-        e.dataTransfer.setData("sourceColumnId", column.id);
+        e.dataTransfer.setData("taskid", task.id);
+        e.dataTransfer.setData("sourcecolumnid", column.id);
       }}
       className={`border border-slate-200/80 dark:border-[#353e47] bg-white dark:bg-[#2c3338] hover:border-slate-300/80 dark:hover:border-slate-500 hover:shadow-md transition-all duration-150 rounded-[6px] ${
         canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"

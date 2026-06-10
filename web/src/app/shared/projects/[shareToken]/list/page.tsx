@@ -18,6 +18,9 @@ export default function SharedListPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
+  const [selectedSprintId, setSelectedSprintId] = React.useState<string>("active");
+  const [sprints, setSprints] = React.useState<any[]>([]);
+  const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
 
   const fetchListData = React.useCallback(async () => {
     try {
@@ -25,14 +28,24 @@ export default function SharedListPage({ params }: PageProps) {
       setError(null);
 
       // Load columns and tasks
-      const boardData = await api.get(`/shared/projects/${shareToken}/board`);
+      let boardUrl = `/shared/projects/${shareToken}/board`;
+      if (selectedSprintId !== "active") {
+        boardUrl += `?sprintId=${selectedSprintId}`;
+      }
+
+      const boardData = await api.get(boardUrl);
       if (boardData) {
         setColumns(boardData.boardColumns || []);
+        setSprints(boardData.sprints || []);
+        setActiveSprintName(boardData.activeSprintName || null);
         
         const allTasks: TaskItem[] = [];
         (boardData.boardColumns || []).forEach((col: any) => {
           if (col.taskItems) {
-            allTasks.push(...col.taskItems);
+            allTasks.push(...col.taskItems.map((t: any) => ({
+              ...t,
+              columnName: col.name
+            })));
           }
         });
         setTasks(allTasks);
@@ -57,7 +70,7 @@ export default function SharedListPage({ params }: PageProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [shareToken]);
+  }, [shareToken, selectedSprintId]);
 
   React.useEffect(() => {
     fetchListData();
@@ -89,6 +102,10 @@ export default function SharedListPage({ params }: PageProps) {
         assignees={assignees}
         readOnly={true}
         isPersonalProject={isPersonalProject}
+        sprints={sprints}
+        selectedSprintId={selectedSprintId}
+        setSelectedSprintId={setSelectedSprintId}
+        activeSprintName={activeSprintName}
       />
     </div>
   );

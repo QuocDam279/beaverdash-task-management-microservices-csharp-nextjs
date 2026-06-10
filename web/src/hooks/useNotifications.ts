@@ -61,8 +61,9 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
 
     const startConnection = async () => {
       try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
         connection = new HubConnectionBuilder()
-          .withUrl("http://localhost:5000/hubs/notifications", {
+          .withUrl(`${apiBaseUrl}/hubs/notifications`, {
             accessTokenFactory: () => token,
           })
           .configureLogging(LogLevel.Warning)

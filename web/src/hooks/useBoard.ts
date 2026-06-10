@@ -4,13 +4,15 @@ import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { TaskItem, BoardColumn } from "@/types/task";
-import type { BoardColumnDto, BoardTaskItemDto, SubTaskBoardDto, TeamMemberInfo, TeamMemberDto } from "@/types/api";
+import type { BoardColumnDto, BoardTaskItemDto, SubTaskBoardDto, TeamMemberInfo, TeamMemberDto, SprintLookupDto } from "@/types/api";
 import { api } from "@/lib/api";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 
 export function useBoard(projectId: string) {
   const { user: currentUser } = useAuth();
   const { alert } = useAlertConfirm();
+  const { success: showSuccessToast, error: showErrorToast } = useToast();
 
   const [columns, setColumns] = React.useState<BoardColumn[]>([]);
   const [tasks, setTasks] = React.useState<TaskItem[]>([]);
@@ -19,6 +21,11 @@ export function useBoard(projectId: string) {
   const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
   const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
+  const [activeSprintId, setActiveSprintId] = React.useState<string | null>(null);
+  const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
+  const [activeSprintEndDate, setActiveSprintEndDate] = React.useState<string | null>(null);
+  const [selectedSprintId, setSelectedSprintId] = React.useState<string>("active");
+  const [sprints, setSprints] = React.useState<SprintLookupDto[]>([]);
 
   const [searchQuery, setSearchQuery] = React.useState("");
 
@@ -35,12 +42,19 @@ export function useBoard(projectId: string) {
   const [wipModalColumn, setWipModalColumn] = React.useState<BoardColumn | null>(null);
   const [deleteModalColumn, setDeleteModalColumn] = React.useState<BoardColumn | null>(null);
 
-  const fetchBoardData = React.useCallback(async () => {
+  const fetchBoardData = React.useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       setError(null);
       const overview = await api.get(`/projects/${projectId}/overview`);
-      const board = await api.get(`/projects/${projectId}/board`);
+      
+      let boardUrl = `/projects/${projectId}/board`;
+      if (selectedSprintId !== "active") {
+        boardUrl += `?sprintId=${selectedSprintId}`;
+      }
+      const board = await api.get(boardUrl);
       
       if (overview) {
         setProjectStartDate(overview.startDate || null);
@@ -49,6 +63,10 @@ export function useBoard(projectId: string) {
       }
       
       if (board) {
+        setActiveSprintId(board.activeSprintId || null);
+        setActiveSprintName(board.activeSprintName || null);
+        setActiveSprintEndDate(board.activeSprintEndDate || null);
+        setSprints(board.sprints || []);
         const cols = board.boardColumns || [];
         setColumns(cols);
         
@@ -91,7 +109,7 @@ export function useBoard(projectId: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, currentUser]);
+  }, [projectId, currentUser, selectedSprintId]);
 
   React.useEffect(() => {
     fetchBoardData();
@@ -256,7 +274,7 @@ export function useBoard(projectId: string) {
       setIsAddingColumn(false);
       setNewColName("");
       setNewColWip(null);
-      fetchBoardData();
+      fetchBoardData(true);
     } catch (err) {
       console.error("Failed to create board column:", err);
     }
@@ -287,9 +305,52 @@ export function useBoard(projectId: string) {
           isDone: colB.isDone
         })
       ]);
-      fetchBoardData();
+      fetchBoardData(true);
     } catch (err) {
       console.error("Failed to move column:", err);
+    }
+  };
+
+  const handleSwapColumns = async (sourceColId: string, targetColId: string) => {
+    if (sourceColId === targetColId) return;
+    const colA = columns.find((c) => c.id === sourceColId);
+    const colB = columns.find((c) => c.id === targetColId);
+    if (!colA || !colB) return;
+
+    // Optimistic UI updates
+    const originalColumns = [...columns];
+    const updatedColumns = columns.map(c => {
+      if (c.id === sourceColId) {
+        return { ...c, position: colB.position };
+      }
+      if (c.id === targetColId) {
+        return { ...c, position: colA.position };
+      }
+      return c;
+    }).sort((a, b) => a.position - b.position);
+
+    setColumns(updatedColumns);
+
+    try {
+      await Promise.all([
+        api.patch(`/boardcolumns/${colA.id}`, {
+          name: colA.name,
+          position: colB.position,
+          wipLimit: colA.wipLimit,
+          isDone: colA.isDone
+        }),
+        api.patch(`/boardcolumns/${colB.id}`, {
+          name: colB.name,
+          position: colA.position,
+          wipLimit: colB.wipLimit,
+          isDone: colB.isDone
+        })
+      ]);
+      fetchBoardData(true);
+    } catch (err) {
+      console.error("Failed to swap columns:", err);
+      // Rollback
+      setColumns(originalColumns);
     }
   };
 
@@ -307,7 +368,7 @@ export function useBoard(projectId: string) {
         isDone: wipModalColumn.isDone
       });
       setWipModalColumn(null);
-      fetchBoardData();
+      fetchBoardData(true);
     } catch (err) {
       console.error("Failed to update WIP limit:", err);
     }
@@ -323,7 +384,7 @@ export function useBoard(projectId: string) {
         wipLimit: col.wipLimit,
         isDone: true
       });
-      fetchBoardData();
+      fetchBoardData(true);
     } catch (err) {
       console.error("Failed to set column as done:", err);
     }
@@ -342,7 +403,7 @@ export function useBoard(projectId: string) {
         await api.delete(`/boardcolumns/${deleteModalColumn.id}?moveTasksToColumnId=${targetColumnId}`);
       }
       setDeleteModalColumn(null);
-      fetchBoardData();
+      fetchBoardData(true);
     } catch (err) {
       console.error("Failed to delete column:", err);
     }
@@ -360,11 +421,26 @@ export function useBoard(projectId: string) {
         newBoardColumnId: targetColumnId,
         newSortOrder: newSortOrder,
       });
-      fetchBoardData();
+      fetchBoardData(true);
     } catch (err: unknown) {
       console.error("Failed to move task:", err);
       const message = err instanceof Error ? err.message : String(err);
       alert(message || "Không thể di chuyển công việc. Có thể cột đích đã đạt giới hạn WIP.", "Thất bại", "danger");
+    }
+  };
+
+  const handleCloseSprint = async (sprintId: string, action: "MoveToBacklog" | "MoveToNextSprint", moveToSprintId?: string) => {
+    try {
+      await api.post(`/sprints/${sprintId}/close`, {
+        action,
+        moveToSprintId: moveToSprintId || null
+      });
+      showSuccessToast("Đã kết thúc Sprint thành công.", "Thành công");
+      fetchBoardData(true);
+    } catch (err: any) {
+      console.error("Failed to close sprint:", err);
+      showErrorToast(err.message || "Đóng Sprint thất bại.", "Lỗi");
+      throw err;
     }
   };
 
@@ -471,6 +547,12 @@ export function useBoard(projectId: string) {
     projectDueDate,
     assignees,
     isPersonalProject,
+    activeSprintId,
+    activeSprintName,
+    activeSprintEndDate,
+    sprints,
+    selectedSprintId,
+    setSelectedSprintId,
     searchQuery,
     setSearchQuery,
     selectedAssignee,
@@ -498,12 +580,14 @@ export function useBoard(projectId: string) {
     handleTaskClick,
     handleCreateColumn,
     handleMoveColumn,
+    handleSwapColumns,
     handleOpenWipLimitModal,
     handleSaveWipLimit,
     handleOpenDeleteModal,
     handleConfirmDelete,
     handleMoveTask,
     handleSetColumnDone,
+    handleCloseSprint,
     filteredTasks: sortedTasks,
     sortBy,
     setSortBy: handleSetSortBy,

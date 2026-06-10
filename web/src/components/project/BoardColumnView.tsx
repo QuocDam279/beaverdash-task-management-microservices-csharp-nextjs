@@ -16,6 +16,7 @@ interface BoardColumnViewProps {
   isLast: boolean;
   onMoveLeft: () => void;
   onMoveRight: () => void;
+  onMoveColumn?: (sourceColumnId: string, targetColumnId: string) => void;
   onSetWipLimit: () => void;
   onDeleteColumn: () => void;
   onMoveTask: (taskId: string, targetColumnId: string) => Promise<void>;
@@ -36,6 +37,7 @@ export function BoardColumnView({
   isLast,
   onMoveLeft,
   onMoveRight,
+  onMoveColumn,
   onSetWipLimit,
   onDeleteColumn,
   onMoveTask,
@@ -55,24 +57,41 @@ export function BoardColumnView({
   const [isAdding, setIsAdding] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isDraggingOver, setIsDraggingOver] = React.useState(false);
+  const [isColumnDraggingOver, setIsColumnDraggingOver] = React.useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     if (readOnly) return;
     e.preventDefault();
-    setIsDraggingOver(true);
+    
+    if (e.dataTransfer.types.includes("columnid")) {
+      setIsColumnDraggingOver(true);
+    } else if (e.dataTransfer.types.includes("taskid") || e.dataTransfer.types.includes("text/plain")) {
+      setIsDraggingOver(true);
+    }
   };
 
   const handleDragLeave = () => {
     if (readOnly) return;
     setIsDraggingOver(false);
+    setIsColumnDraggingOver(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     if (readOnly) return;
     e.preventDefault();
     setIsDraggingOver(false);
-    const taskId = e.dataTransfer.getData("taskId");
-    const sourceColumnId = e.dataTransfer.getData("sourceColumnId");
+    setIsColumnDraggingOver(false);
+
+    const draggedColId = e.dataTransfer.getData("columnid");
+    if (draggedColId) {
+      if (draggedColId !== column.id && onMoveColumn) {
+        onMoveColumn(draggedColId, column.id);
+      }
+      return;
+    }
+
+    const taskId = e.dataTransfer.getData("taskid");
+    const sourceColumnId = e.dataTransfer.getData("sourcecolumnid");
     
     if (taskId && sourceColumnId !== column.id) {
       await onMoveTask(taskId, column.id);
@@ -113,18 +132,29 @@ export function BoardColumnView({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`flex flex-col rounded-lg p-3 min-h-[300px] h-full transition-all duration-200 border-2 ${
-        isDraggingOver 
-          ? "bg-slate-200 dark:bg-[#2c3338]/50 border-dashed border-[#1868db] dark:border-[#579dff] scale-[1.01]" 
-          : isWipExceeded
-            ? "bg-[#fff5f5] dark:bg-red-950/10 border-red-200/60 dark:border-red-900/30 border-t-4 border-t-red-500"
-            : "bg-[#f4f5f7] dark:bg-[#22272b] border-transparent"
+        isColumnDraggingOver
+          ? "bg-slate-150/50 dark:bg-[#2c3338]/30 border-solid border-blue-500 dark:border-[#579dff] scale-[1.01]"
+          : isDraggingOver 
+            ? "bg-slate-200 dark:bg-[#2c3338]/50 border-dashed border-[#1868db] dark:border-[#579dff] scale-[1.01]" 
+            : isWipExceeded
+              ? "bg-[#fff5f5] dark:bg-red-950/10 border-red-200/60 dark:border-red-900/30 border-t-4 border-t-red-500"
+              : "bg-[#f4f5f7] dark:bg-[#22272b] border-transparent"
       }`}
     >
-      <div className={`flex items-center justify-between mb-3 px-2 py-1.5 rounded-md transition-all border ${
-        isWipExceeded 
-          ? "bg-red-50/80 dark:bg-red-950/20 border-red-200/80 dark:border-red-900/40 text-red-700 dark:text-red-400" 
-          : "bg-transparent border-transparent text-[#505258] dark:text-slate-350"
-      }`}>
+      <div 
+        draggable={!readOnly}
+        onDragStart={(e) => {
+          if (readOnly) return;
+          e.dataTransfer.setData("columnid", column.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        className={`flex items-center justify-between mb-3 px-2 py-1.5 rounded-md transition-all border cursor-grab active:cursor-grabbing ${
+          isWipExceeded 
+            ? "bg-red-50/80 dark:bg-red-950/20 border-red-200/80 dark:border-red-900/40 text-red-700 dark:text-red-400" 
+            : "bg-transparent border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700 text-[#505258] dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-[#1d2125]"
+        }`}
+        title="Kéo thả tiêu đề cột để thay đổi vị trí"
+      >
         <div className="flex items-center gap-1.5 min-w-0">
           {column.isDone && (
             <span className={`rounded-[4px] px-1 flex items-center justify-center scale-90 select-none font-bold ${

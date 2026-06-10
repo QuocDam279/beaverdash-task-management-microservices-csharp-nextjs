@@ -69,26 +69,7 @@ export function TaskSidebarProperties({
 
   return (
     <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-100 dark:border-[#2c3338] bg-[#fafbfc] dark:bg-[#1d2125] overflow-y-auto p-6 space-y-5">
-      {/* Status Field */}
-      <div className="space-y-1">
-        <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
-          Trạng thái (Cột)
-        </label>
-        <select
-          value={task.boardColumnId}
-          onChange={(e) => onStatusChange(e.target.value)}
-          disabled={!canModifyProperties}
-          className={`w-full px-2.5 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all ${
-            !canModifyProperties ? "cursor-not-allowed opacity-75" : "cursor-pointer"
-          }`}
-        >
-          {columns.map((col) => (
-            <option key={col.id} value={col.id}>
-              {col.name}
-            </option>
-          ))}
-        </select>
-      </div>
+
 
 
 

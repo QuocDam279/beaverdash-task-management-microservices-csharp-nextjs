@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PM.Application.Features.Projects.Project.Queries.GetProjectBoard;
 
-public record GetProjectBoardQuery(Guid ProjectId) : IRequest<ProjectBoardDto?>;
+public record GetProjectBoardQuery(Guid ProjectId, Guid? SprintId = null) : IRequest<ProjectBoardDto?>;
 
 public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery, ProjectBoardDto?>
 {
@@ -47,6 +47,54 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                 throw new UnauthorizedAccessException("Bạn không có quyền xem Project này.");
         }
 
+        // 2.5. Xác định Sprint lọc
+        var activeSprint = await _dbContext.Sprints
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.ProjectId == request.ProjectId && s.Status == PM.Domain.Enums.SprintStatus.Active, cancellationToken);
+        
+        var activeSprintId = activeSprint?.Id;
+
+        bool filterByNullSprint = false;
+        Guid? targetSprintId = null;
+
+        if (request.SprintId.HasValue)
+        {
+            if (request.SprintId.Value == Guid.Empty)
+            {
+                filterByNullSprint = true;
+            }
+            else
+            {
+                targetSprintId = request.SprintId.Value;
+            }
+        }
+        else
+        {
+            if (activeSprintId.HasValue)
+            {
+                targetSprintId = activeSprintId.Value;
+            }
+            else
+            {
+                targetSprintId = Guid.Empty;
+            }
+        }
+
+        // 2.7. Lấy danh sách tất cả các Sprint trong dự án để hiển thị ở Dropdown bộ lọc
+        var allSprints = await _dbContext.Sprints
+            .AsNoTracking()
+            .Where(s => s.ProjectId == request.ProjectId)
+            .OrderByDescending(s => s.Status == PM.Domain.Enums.SprintStatus.Active)
+            .ThenByDescending(s => s.Status == PM.Domain.Enums.SprintStatus.Future)
+            .ThenByDescending(s => s.CreatedAt)
+            .Select(s => new SprintLookupDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Status = s.Status.ToString()
+            })
+            .ToListAsync(cancellationToken);
+
         // 3. Thực hiện truy vấn Board Columns và Task Items trực tiếp qua Database Projection Select
         var columns = await _dbContext.BoardColumns
             .AsNoTracking()
@@ -61,6 +109,7 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                 WipLimit = c.WipLimit,
                 IsDone = c.IsDone,
                 TaskItems = c.TaskItems
+                    .Where(t => filterByNullSprint ? t.SprintId == null : t.SprintId == targetSprintId)
                     .OrderBy(t => t.SortOrder)
                     .Select(t => new TaskItemDto
                     {
@@ -94,7 +143,11 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
             Id = projectInfo.Id,
             Name = projectInfo.Name,
             Description = projectInfo.Description,
-            BoardColumns = columns
+            BoardColumns = columns,
+            ActiveSprintId = activeSprintId,
+            ActiveSprintName = activeSprint?.Name,
+            ActiveSprintEndDate = activeSprint?.EndDate,
+            Sprints = allSprints
         };
     }
 }

@@ -77,6 +77,16 @@ export interface ProjectBoardDto {
   name: string;
   description: string | null;
   boardColumns: BoardColumnDto[];
+  activeSprintId: string | null;
+  activeSprintName: string | null;
+  activeSprintEndDate: string | null;
+  sprints: SprintLookupDto[];
+}
+
+export interface SprintLookupDto {
+  id: string;
+  name: string;
+  status: string;
 }
 
 export interface BoardColumnDto {
@@ -187,4 +197,36 @@ export interface TeamMemberSummaryDto {
   userId: string;
   displayName: string;
   avatar: string | null;
+}
+
+/** DTO dữ liệu Sprint */
+export interface SprintDto {
+  id: string;
+  projectId: string;
+  name: string;
+  goal: string | null;
+  status: 'Future' | 'Active' | 'Closed';
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  taskCount: number;
+  completedTaskCount: number;
+  tasks: BacklogTaskDto[];
+}
+
+export interface BacklogTaskDto {
+  id: string;
+  title: string;
+  priority: string | null;
+  startDate: string | null;
+  dueDate: string | null;
+  boardColumnId: string;
+  columnName: string;
+  subTasksCount: number;
+  completedSubTasksCount: number;
+}
+
+export interface BacklogDto {
+  sprints: SprintDto[];
+  backlogTasks: BacklogTaskDto[];
 }

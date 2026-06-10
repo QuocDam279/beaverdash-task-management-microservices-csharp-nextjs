@@ -23,6 +23,10 @@ interface ProjectListViewProps {
   isPersonalProject?: boolean;
   projectStartDate?: string | null;
   projectDueDate?: string | null;
+  sprints?: any[];
+  selectedSprintId?: string;
+  setSelectedSprintId?: (id: string) => void;
+  activeSprintName?: string | null;
 }
 
 export function ProjectListView({
@@ -36,6 +40,10 @@ export function ProjectListView({
   isPersonalProject = false,
   projectStartDate = null,
   projectDueDate = null,
+  sprints = [],
+  selectedSprintId = "active",
+  setSelectedSprintId = () => {},
+  activeSprintName = null,
 }: ProjectListViewProps) {
   const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -163,6 +171,10 @@ export function ProjectListView({
         onCreateTaskClick={() => setIsCreateTaskModalOpen(true)}
         readOnly={readOnly}
         isPersonalProject={isPersonalProject}
+        sprints={sprints}
+        selectedSprintId={selectedSprintId}
+        setSelectedSprintId={setSelectedSprintId}
+        activeSprintName={activeSprintName}
       />
 
       {/* TASK LIST TABLE */}

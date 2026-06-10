@@ -35,6 +35,15 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .HasForeignKey(t => t.BoardColumnId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(t => t.SprintId)
+            .HasColumnName("sprint_id")
+            .HasColumnType("uuid")
+            .IsRequired(false);
+
+        builder.HasOne(t => t.Sprint)
+            .WithMany(s => s.TaskItems)
+            .HasForeignKey(t => t.SprintId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(t => t.CreatedByUser)
             .WithMany()
@@ -45,5 +54,8 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 
         builder.HasIndex(t => new { t.BoardColumnId, t.SortOrder })
             .HasDatabaseName("ix_tasks_board_column_id_sort_order");
+
+        builder.HasIndex(t => t.SprintId)
+            .HasDatabaseName("ix_tasks_sprint_id");
     }
 }

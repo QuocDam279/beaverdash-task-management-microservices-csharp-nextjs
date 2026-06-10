@@ -28,6 +28,9 @@ export default function ProjectListPage({ params }: PageProps) {
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
   const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
   const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
+  const [selectedSprintId, setSelectedSprintId] = React.useState<string>("active");
+  const [sprints, setSprints] = React.useState<any[]>([]);
+  const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
   const isInitialLoad = React.useRef(true);
 
   const fetchListTasks = React.useCallback(async () => {
@@ -36,12 +39,18 @@ export default function ProjectListPage({ params }: PageProps) {
         setIsLoading(true);
       }
       setError(null);
+      let boardUrl = `/projects/${projectId}/board`;
+      if (selectedSprintId !== "active") {
+        boardUrl += `?sprintId=${selectedSprintId}`;
+      }
       const [board, overview] = await Promise.all([
-        api.get(`/projects/${projectId}/board`),
+        api.get(boardUrl),
         api.get(`/projects/${projectId}/overview`),
       ]);
 
       if (board) {
+        setSprints(board.sprints || []);
+        setActiveSprintName(board.activeSprintName || null);
         const cols = board.boardColumns || [];
         setColumns(cols);
         const allTasks: TaskItem[] = cols.flatMap((col: any) =>
@@ -88,7 +97,7 @@ export default function ProjectListPage({ params }: PageProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, currentUser]);
+  }, [projectId, currentUser, selectedSprintId]);
 
   React.useEffect(() => {
     fetchListTasks();
@@ -125,6 +134,10 @@ export default function ProjectListPage({ params }: PageProps) {
         isPersonalProject={isPersonalProject}
         projectStartDate={projectStartDate}
         projectDueDate={projectDueDate}
+        sprints={sprints}
+        selectedSprintId={selectedSprintId}
+        setSelectedSprintId={setSelectedSprintId}
+        activeSprintName={activeSprintName}
       />
     </div>
   );

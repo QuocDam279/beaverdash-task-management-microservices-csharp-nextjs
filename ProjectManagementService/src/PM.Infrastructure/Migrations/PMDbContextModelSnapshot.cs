@@ -411,6 +411,55 @@ namespace PM.Infrastructure.Migrations
                     b.ToTable("project_documents", (string)null);
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Status")
+                        .HasDatabaseName("ix_sprints_project_id_status");
+
+                    b.ToTable("sprints", (string)null);
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -513,6 +562,10 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("sort_order");
 
+                    b.Property<Guid?>("SprintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sprint_id");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
@@ -529,6 +582,9 @@ namespace PM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("SprintId")
+                        .HasDatabaseName("ix_tasks_sprint_id");
 
                     b.HasIndex("BoardColumnId", "SortOrder")
                         .HasDatabaseName("ix_tasks_board_column_id_sort_order");
@@ -744,6 +800,17 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("UploadedByUser");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany("Sprints")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
                 {
                     b.HasOne("PM.Domain.Entities.User", "AssigneeUser")
@@ -776,9 +843,16 @@ namespace PM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("PM.Domain.Entities.Sprint", "Sprint")
+                        .WithMany("TaskItems")
+                        .HasForeignKey("SprintId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("BoardColumn");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Sprint");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Team", b =>
@@ -826,6 +900,13 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("BoardColumns");
 
                     b.Navigation("ProjectDocuments");
+
+                    b.Navigation("Sprints");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
+                {
+                    b.Navigation("TaskItems");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>

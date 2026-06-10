@@ -34,9 +34,9 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id}/board")]
-    public async Task<IActionResult> GetProjectBoard(Guid id)
+    public async Task<IActionResult> GetProjectBoard(Guid id, [FromQuery] Guid? sprintId = null)
     {
-        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectBoard.GetProjectBoardQuery(id);
+        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectBoard.GetProjectBoardQuery(id, sprintId);
         var result = await _mediator.Send(query);
 
         if (result == null)

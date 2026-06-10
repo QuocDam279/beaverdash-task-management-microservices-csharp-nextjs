@@ -17,7 +17,8 @@ export default async function SharedProjectOverviewPage({ params }: PageProps) {
   let error: string | null = null;
 
   try {
-    const res = await fetch(`http://localhost:5000/api/shared/projects/${shareToken}/overview`, {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const res = await fetch(`${apiBaseUrl}/api/shared/projects/${shareToken}/overview`, {
       next: { revalidate: 15 },
     });
     if (res.ok) {

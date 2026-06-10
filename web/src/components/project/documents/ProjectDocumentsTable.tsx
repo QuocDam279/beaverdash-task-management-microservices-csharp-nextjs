@@ -40,7 +40,8 @@ export function ProjectDocumentsTable({
 }: ProjectDocumentsTableProps) {
   const getAbsoluteFileUrl = (relativeUrl: string) => {
     if (relativeUrl.startsWith("http")) return relativeUrl;
-    return `http://localhost:5000${relativeUrl}`;
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    return `${apiBaseUrl}${relativeUrl}`;
   };
 
   return (
