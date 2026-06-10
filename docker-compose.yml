@@ -42,6 +42,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
+      - Kestrel__Endpoints__Http__Url=http://*:5001
       - IDENTITY_DB_CONNECTION=Host=postgres;Port=5432;Database=beaverdash_identity_db;Username=postgres;Password=${POSTGRES_PASSWORD:-password}
       - JWT_SECRET=${JWT_SECRET}
       - RABBITMQ_HOST=rabbitmq
@@ -64,6 +65,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5002
+      - Kestrel__Endpoints__Http__Url=http://*:5002
       - PM_DB_CONNECTION=Host=postgres;Port=5432;Database=beaverdash_pm_db;Username=postgres;Password=${POSTGRES_PASSWORD:-password}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
@@ -116,6 +118,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
+      - Kestrel__Endpoints__Http__Url=http://*:5000
       - JWT_SECRET=${JWT_SECRET}
       - ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address=http://identity-service:5001
       - ReverseProxy__Clusters__pm-cluster__Destinations__destination1__Address=http://pm-service:5002
