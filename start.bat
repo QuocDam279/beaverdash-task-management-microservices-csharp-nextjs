@@ -1,5 +1,5 @@
 @echo off
-title Khởi động Beaverdash System
+title Khoi dong Beaverdash System
 echo ==========================================
 echo   KHOI DONG HE THONG BEAVERDASH LOCAL
 echo ==========================================
@@ -19,3 +19,4 @@ echo [2/2] Dang khoi dong Cloudflare Tunnel (api.beaverdash.xyz)...
 echo Giu nguyen cua so nay de duy tri ket noi. Nhan Ctrl+C de dung tunnel.
 echo.
 cloudflared tunnel run --url http://localhost:5000 beaverdash-backend
+pause
