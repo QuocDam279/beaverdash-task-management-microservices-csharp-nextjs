@@ -57,7 +57,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        var origins = new List<string> { "http://localhost:3000", "https://beaverdash.xyz", "https://www.beaverdash.xyz" };
+        var envOrigin = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL");
+        if (!string.IsNullOrEmpty(envOrigin))
+        {
+            origins.Add(envOrigin.Trim());
+        }
+        policy.WithOrigins(origins.ToArray())
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
