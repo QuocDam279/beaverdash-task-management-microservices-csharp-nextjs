@@ -233,13 +233,33 @@ export function useBoard(projectId: string) {
             const fullTask = await api.get(`/tasks/${taskIdParam}`);
             if (fullTask) {
               const taskId = fullTask.id || fullTask.Id || taskIdParam;
+              
+              // Map subTasks to include assigneeUser and comments.user properties
+              const mappedSubTasks = (fullTask.subTasks || []).map((st: any) => ({
+                ...st,
+                assigneeUser: st.assigneeUserId ? {
+                  id: st.assigneeUserId,
+                  displayName: st.assigneeName,
+                  avatar: st.assigneeAvatar
+                } : null,
+                comments: (st.comments || []).map((c: any) => ({
+                  ...c,
+                  user: c.userId ? {
+                    id: c.userId,
+                    displayName: c.userName,
+                    avatar: c.userAvatar
+                  } : null
+                }))
+              }));
+
               setSelectedTaskState({
                 ...fullTask,
                 id: taskId,
                 createdByUser: fullTask.createdByName ? {
                   displayName: fullTask.createdByName,
                   avatar: fullTask.createdByAvatar
-                } : null
+                } : null,
+                subTasks: mappedSubTasks
               });
             }
           } catch (err) {
