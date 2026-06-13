@@ -68,7 +68,7 @@ public class SignalRNotificationService : INotificationService
                 }
 
                 // Tạo link đầy đủ tới frontend
-                var frontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "http://localhost:3000";
+                var frontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "https://www.beaverdash.xyz";
                 var fullActionUrl = !string.IsNullOrEmpty(actionUrl) ? $"{frontendBaseUrl}{actionUrl}" : frontendBaseUrl;
 
                 // Tạo tiêu đề email dựa trên loại thông báo

@@ -80,7 +80,7 @@ public class ShareProjectCommandHandler : IRequestHandler<ShareProjectCommand, b
             .FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
         var senderName = senderUser?.DisplayName ?? "Một trưởng nhóm";
 
-        var frontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "http://localhost:3000";
+        var frontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "https://www.beaverdash.xyz";
         var logoUrl = Environment.GetEnvironmentVariable("EMAIL_LOGO_URL") ?? "";
         var actionUrl = $"{frontendBaseUrl}/shared/projects/{project.ShareToken}";
 
