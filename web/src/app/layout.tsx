@@ -42,6 +42,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+      { url: "/logo.svg", type: "image/svg+xml" }
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "BeaverDash - Quản lý dự án",
     description: "Hệ thống quản lý công việc và bảng Kanban thông minh giúp tối ưu hóa hiệu suất làm việc nhóm.",
