@@ -104,6 +104,16 @@ export function useNotifications(isOpen: boolean, setIsOpen: (open: boolean) => 
           });
         });
 
+        connection.on("ReceiveGlobalChatNotification", (data: { projectId?: string; ProjectId?: string; createdAt?: string; CreatedAt?: string }) => {
+          const projectId = data.projectId || data.ProjectId;
+          const createdAt = data.createdAt || data.CreatedAt;
+          if (projectId) {
+            window.dispatchEvent(new CustomEvent("beaverdash-new-chat-message", { 
+              detail: { projectId, createdAt } 
+            }));
+          }
+        });
+
         await connection.start();
         console.log("Connected to SignalR Notification Hub.");
 

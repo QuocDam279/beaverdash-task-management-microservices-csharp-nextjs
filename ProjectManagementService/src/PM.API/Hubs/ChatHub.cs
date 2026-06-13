@@ -11,10 +11,12 @@ namespace PM.API.Hubs;
 public class ChatHub : Hub
 {
     private readonly IPMDbContext _dbContext;
+    private readonly IHubContext<NotificationHub> _notificationHubContext;
 
-    public ChatHub(IPMDbContext dbContext)
+    public ChatHub(IPMDbContext dbContext, IHubContext<NotificationHub> notificationHubContext)
     {
         _dbContext = dbContext;
+        _notificationHubContext = notificationHubContext;
     }
 
     public async Task JoinRoom(string roomType, Guid roomId)
@@ -110,6 +112,28 @@ public class ChatHub : Hub
             ProjectId = chatMessage.ProjectId,
             TeamId = chatMessage.TeamId
         });
+
+        // Notify other team members globally via NotificationHub
+        if (roomType.Equals("project", StringComparison.OrdinalIgnoreCase))
+        {
+            var project = await _dbContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == roomId);
+            if (project != null && project.TeamId.HasValue)
+            {
+                var memberIds = await _dbContext.TeamMembers
+                    .Where(tm => tm.TeamId == project.TeamId.Value && tm.UserId != userId)
+                    .Select(tm => tm.UserId.ToString())
+                    .ToListAsync();
+
+                if (memberIds.Any())
+                {
+                    await _notificationHubContext.Clients.Users(memberIds).SendAsync("ReceiveGlobalChatNotification", new
+                    {
+                        ProjectId = project.Id,
+                        CreatedAt = chatMessage.CreatedAt
+                    });
+                }
+            }
+        }
     }
 
     public async Task DeleteMessage(string roomType, Guid roomId, Guid messageId)
