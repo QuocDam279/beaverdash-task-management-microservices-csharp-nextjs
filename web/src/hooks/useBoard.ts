@@ -495,10 +495,11 @@ export function useBoard(projectId: string) {
 
     return tasks.filter((task) => {
       // 1. Search Query
+      const query = searchQuery.toLowerCase();
       const matchesSearch =
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (task.description &&
-          task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        task.title.toLowerCase().includes(query) ||
+        (task.description && task.description.toLowerCase().includes(query)) ||
+        (task.subTasks && task.subTasks.some((st) => st.title.toLowerCase().includes(query)));
 
       // 2. Assignee (Including subtasks)
       let matchesAssignee = true;

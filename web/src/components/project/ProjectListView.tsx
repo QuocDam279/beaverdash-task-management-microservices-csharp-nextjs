@@ -64,9 +64,12 @@ export function ProjectListView({
     const doneColumnIds = columns.filter(c => c.isDone).map(c => c.id);
 
     return tasks.filter((t) => {
+      const query = searchQuery.toLowerCase();
       const matchSearch =
         !searchQuery.trim() ||
-        t.title.toLowerCase().includes(searchQuery.toLowerCase());
+        t.title.toLowerCase().includes(query) ||
+        (t.description && t.description.toLowerCase().includes(query)) ||
+        (t.subTasks && t.subTasks.some((st) => st.title.toLowerCase().includes(query)));
       
       const matchAssignee =
         selectedAssignee === "all" ||

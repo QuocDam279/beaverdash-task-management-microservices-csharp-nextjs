@@ -127,7 +127,7 @@ export function TopHeader({ currentUser }: TopHeaderProps) {
                       <span className={`px-2 py-0.5 rounded-[4px] text-[9px] font-extrabold uppercase border shrink-0 mt-0.5 ${badgeStyle}`}>
                         {result.type === "team" ? "Nhóm" :
                          result.type === "project" ? "Dự án" :
-                         result.type === "task" ? "Chính" : "Phụ"}
+                         result.type === "task" ? "Công việc" : "Nhiệm vụ"}
                       </span>
 
                       <div className="flex-1 min-w-0">
