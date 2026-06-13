@@ -99,7 +99,7 @@ export default function Error({
 
         {/* Footer hint */}
         <p className="text-[10px] text-slate-400 mt-10 uppercase tracking-widest font-semibold">
-          Beaverdash · Quản lý công việc thông minh
+          BeaverDash · Quản lý dự án
         </p>
       </div>
     </div>

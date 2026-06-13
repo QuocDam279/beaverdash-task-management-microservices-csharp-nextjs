@@ -147,7 +147,7 @@ export default function GlobalError({
               letterSpacing: "0.1em",
               fontWeight: 600,
             }}>
-              Beaverdash · Quản lý công việc thông minh
+              BeaverDash · Quản lý dự án
             </p>
           </div>
         </div>

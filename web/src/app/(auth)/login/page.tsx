@@ -203,7 +203,7 @@ function LoginContent() {
           </div>
 
           <div className="space-y-0.5 mb-4 animate-fade-slide-up delay-200 text-center">
-            <h1 className="text-xl font-bold tracking-tight text-[#292a2e]">Đăng nhập Beaverdash</h1>
+            <h1 className="text-xl font-bold tracking-tight text-[#292a2e]">Đăng nhập BeaverDash</h1>
             <p className="text-xs text-[#505258] leading-relaxed">
               Truy cập nhanh không gian làm việc của bạn bằng tài khoản Google.
             </p>
