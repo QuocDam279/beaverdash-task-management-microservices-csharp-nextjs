@@ -208,35 +208,31 @@ export function useBoard(projectId: string) {
         }
       }
       setSelectedTaskState(null);
-    } else {
-      justClosedRef.current = null;
-      setSelectedTaskState(task);
     }
   }, [selectedTaskState, pathname, router]);
 
   // Sync state from URL to selectedTask
   React.useEffect(() => {
-    console.log("useBoard sync effect:", { taskIdParam, tasksLength: tasks.length, selectedTaskStateId: selectedTaskState?.id });
-    if (taskIdParam && tasks.length > 0) {
+    console.log("useBoard sync effect:", { taskIdParam, selectedTaskStateId: selectedTaskState?.id });
+    if (taskIdParam) {
       if (justClosedRef.current === taskIdParam) {
         console.log("sync effect skipped: justClosedRef matches");
         return;
       }
-      const task = tasks.find((t) => t.id === taskIdParam);
-      if (task && (!selectedTaskState || selectedTaskState.id !== taskIdParam)) {
+      if (!selectedTaskState || selectedTaskState.id !== taskIdParam) {
         if (fetchingTaskIdRef.current === taskIdParam) {
           console.log("sync effect skipped: already fetching this task ID");
           return;
         }
-        console.log("sync effect triggering fetch for task:", task.id);
+        console.log("sync effect triggering fetch for task:", taskIdParam);
         fetchingTaskIdRef.current = taskIdParam;
         
         // Fetch details asynchronously within the effect
         (async () => {
           try {
-            const fullTask = await api.get(`/tasks/${task.id}`);
+            const fullTask = await api.get(`/tasks/${taskIdParam}`);
             if (fullTask) {
-              const taskId = fullTask.id || fullTask.Id || task.id;
+              const taskId = fullTask.id || fullTask.Id || taskIdParam;
               setSelectedTaskState({
                 ...fullTask,
                 id: taskId,
@@ -248,6 +244,8 @@ export function useBoard(projectId: string) {
             }
           } catch (err) {
             console.error("Failed to load task details in sync effect:", err);
+          } finally {
+            fetchingTaskIdRef.current = null;
           }
         })();
       }
@@ -259,7 +257,7 @@ export function useBoard(projectId: string) {
         setSelectedTaskState(null);
       }
     }
-  }, [taskIdParam, tasks, selectedTaskState]);
+  }, [taskIdParam, selectedTaskState]);
 
   const handleTaskClick = React.useCallback((task: TaskItem) => {
     console.log("handleTaskClick called (updating URL only):", task.id);

@@ -54,10 +54,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!hasToken && !isAuthPage) {
       // Redirect to login if trying to access any page without token
-      routerRef.current.push(`/login?redirect=${encodeURIComponent(pathname || "")}`);
+      const currentPath = window.location.pathname + window.location.search;
+      routerRef.current.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
     } else if (hasToken && isAuthPage) {
       // Redirect to default page if already logged in and visiting login
-      routerRef.current.push("/tasks");
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get("redirect") || "/tasks";
+      routerRef.current.push(redirectUrl);
     }
   }, [token, pathname, isLoading]);
 
