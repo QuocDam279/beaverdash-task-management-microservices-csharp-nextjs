@@ -80,6 +80,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     if (pathname === `/projects/${projectId}/chat`) {
       setHasUnreadChat(false);
       localStorage.setItem(`beaverdash_chat_last_viewed_project_${projectId}`, new Date().toISOString());
+      window.dispatchEvent(new CustomEvent("beaverdash-chat-read", { detail: { projectId } }));
     }
   }, [pathname, projectId]);
 
@@ -105,8 +106,10 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
           if (isStopped) return;
           if (pathname !== `/projects/${projectId}/chat`) {
             setHasUnreadChat(true);
+            window.dispatchEvent(new CustomEvent("beaverdash-new-chat-message", { detail: { projectId, createdAt: message.createdAt } }));
           } else {
             localStorage.setItem(`beaverdash_chat_last_viewed_project_${projectId}`, new Date().toISOString());
+            window.dispatchEvent(new CustomEvent("beaverdash-chat-read", { detail: { projectId } }));
           }
         });
 

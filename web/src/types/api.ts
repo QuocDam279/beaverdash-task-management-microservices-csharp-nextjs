@@ -69,6 +69,7 @@ export interface MyProjectDto {
   name: string;
   teamId: string | null;
   createdByUserId: string;
+  lastChatMessageCreatedAt?: string | null;
 }
 
 /** DTO dữ liệu board project từ API */

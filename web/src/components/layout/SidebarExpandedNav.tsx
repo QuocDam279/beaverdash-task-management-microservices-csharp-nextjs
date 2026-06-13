@@ -15,6 +15,7 @@ interface ExpandedNavProps {
   pathname: string;
   activeProjectId: string | null;
   projects: Project[];
+  unreadProjects?: Set<string>;
   onOpenCreateProject: () => void;
 }
 
@@ -108,6 +109,7 @@ export function SidebarExpandedNav({
   pathname,
   activeProjectId,
   projects,
+  unreadProjects = new Set(),
   onOpenCreateProject,
 }: ExpandedNavProps) {
   return (
@@ -243,6 +245,7 @@ export function SidebarExpandedNav({
           {projects.length > 0 ? (
             projects.map((p) => {
               const isActiveProject = activeProjectId === p.id;
+              const hasUnread = unreadProjects.has(p.id);
               return (
                 <ProjectTooltip key={p.id} text={p.name}>
                   <Link
@@ -250,11 +253,16 @@ export function SidebarExpandedNav({
                     className={`flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] text-xs font-semibold min-w-0 ${
                       isActiveProject
                         ? "bg-white border border-slate-300 text-[#1868db] font-bold shadow-sm"
+                        : hasUnread
+                        ? "text-red-600 hover:bg-slate-200/50 hover:text-red-700 font-bold"
                         : "text-[#505258] hover:bg-slate-200/50 hover:text-[#1868db]"
                     }`}
                   >
                     {renderProjectIcon(p.id)}
                     <span className="truncate flex-1 text-left">{p.name}</span>
+                    {hasUnread && (
+                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0 animate-pulse" />
+                    )}
                   </Link>
                 </ProjectTooltip>
               );

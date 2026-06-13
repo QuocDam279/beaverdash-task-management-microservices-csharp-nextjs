@@ -8,6 +8,7 @@ interface CollapsedNavProps {
   pathname: string;
   activeProjectId: string | null;
   onExpand: () => void;
+  hasUnreadProjects?: boolean;
 }
 
 /**
@@ -18,6 +19,7 @@ export function SidebarCollapsedNav({
   pathname,
   activeProjectId,
   onExpand,
+  hasUnreadProjects = false,
 }: CollapsedNavProps) {
   return (
     <nav className="flex-1 py-4 flex flex-col items-center gap-5 overflow-y-auto overflow-x-hidden">
@@ -128,7 +130,7 @@ export function SidebarCollapsedNav({
       <SidebarTooltip text="Dự án">
         <button
           onClick={onExpand}
-          className={`flex h-10 w-10 items-center justify-center rounded-[4px] transition-all duration-150 cursor-pointer ${
+          className={`relative flex h-10 w-10 items-center justify-center rounded-[4px] transition-all duration-150 cursor-pointer ${
             pathname.startsWith("/projects/")
               ? "bg-[#1868db]/10 text-[#1868db]"
               : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
@@ -144,6 +146,9 @@ export function SidebarCollapsedNav({
           >
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
           </svg>
+          {hasUnreadProjects && (
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
+          )}
         </button>
       </SidebarTooltip>
     </nav>

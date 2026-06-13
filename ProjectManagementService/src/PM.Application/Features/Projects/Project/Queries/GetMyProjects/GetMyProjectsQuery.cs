@@ -15,6 +15,7 @@ public class MyProjectDto
     public string Name { get; set; } = null!;
     public Guid? TeamId { get; set; }
     public Guid CreatedByUserId { get; set; }
+    public DateTime? LastChatMessageCreatedAt { get; set; }
 }
 
 public record GetMyProjectsQuery : IRequest<List<MyProjectDto>>;
@@ -51,7 +52,12 @@ public class GetMyProjectsQueryHandler : IRequestHandler<GetMyProjectsQuery, Lis
                 Id = p.Id,
                 Name = p.Name,
                 TeamId = p.TeamId,
-                CreatedByUserId = p.CreatedByUserId
+                CreatedByUserId = p.CreatedByUserId,
+                LastChatMessageCreatedAt = _dbContext.ChatMessages
+                    .Where(cm => cm.ProjectId == p.Id)
+                    .OrderByDescending(cm => cm.CreatedAt)
+                    .Select(cm => (DateTime?)cm.CreatedAt)
+                    .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 

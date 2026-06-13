@@ -26,6 +26,7 @@ export function Sidebar() {
 
   const [projects, setProjects] = React.useState<MyProjectDto[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [unreadProjects, setUnreadProjects] = React.useState<Set<string>>(new Set());
 
   // Active project ID matching /projects/[projectId]
   const projectMatch = pathname.match(/\/projects\/([^\/]+)/);
@@ -59,6 +60,57 @@ export function Sidebar() {
       window.removeEventListener("projects-updated", handleProjectsUpdated);
     };
   }, [currentUser, activeProjectId]);
+
+  // Recalculate unread projects whenever projects list is loaded
+  React.useEffect(() => {
+    if (typeof window === "undefined" || projects.length === 0) return;
+    const unread = new Set<string>();
+    projects.forEach((p) => {
+      if (p.lastChatMessageCreatedAt) {
+        const lastViewedStr = localStorage.getItem(`beaverdash_chat_last_viewed_project_${p.id}`);
+        const lastViewed = lastViewedStr ? new Date(lastViewedStr).getTime() : 0;
+        const latestTime = new Date(p.lastChatMessageCreatedAt).getTime();
+        if (latestTime > lastViewed) {
+          unread.add(p.id);
+        }
+      }
+    });
+    setUnreadProjects(unread);
+  }, [projects]);
+
+  // Listen to real-time read/new message events
+  React.useEffect(() => {
+    const handleChatRead = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const readProjectId = customEvent.detail?.projectId;
+      if (readProjectId) {
+        setUnreadProjects((prev) => {
+          const next = new Set(prev);
+          next.delete(readProjectId);
+          return next;
+        });
+      }
+    };
+
+    const handleNewChatMessage = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const msgProjectId = customEvent.detail?.projectId;
+      if (msgProjectId && (msgProjectId !== activeProjectId || pathname !== `/projects/${msgProjectId}/chat`)) {
+        setUnreadProjects((prev) => {
+          const next = new Set(prev);
+          next.add(msgProjectId);
+          return next;
+        });
+      }
+    };
+
+    window.addEventListener("beaverdash-chat-read", handleChatRead);
+    window.addEventListener("beaverdash-new-chat-message", handleNewChatMessage);
+    return () => {
+      window.removeEventListener("beaverdash-chat-read", handleChatRead);
+      window.removeEventListener("beaverdash-new-chat-message", handleNewChatMessage);
+    };
+  }, [activeProjectId, pathname]);
 
   // Lọc chỉ giữ lại dự án có nhóm làm việc (Team Projects)
   const teamProjects = React.useMemo(() => {
@@ -147,6 +199,7 @@ export function Sidebar() {
         <SidebarCollapsedNav
           pathname={pathname}
           activeProjectId={activeProjectId}
+          hasUnreadProjects={unreadProjects.size > 0}
           onExpand={() => setIsCollapsed(false)}
         />
       ) : (
@@ -154,6 +207,7 @@ export function Sidebar() {
           pathname={pathname}
           activeProjectId={activeProjectId}
           projects={teamProjects}
+          unreadProjects={unreadProjects}
           onOpenCreateProject={() => setIsCreateProjectModalOpen(true)}
         />
       )}
