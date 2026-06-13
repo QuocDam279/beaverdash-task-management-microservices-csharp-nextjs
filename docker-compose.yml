@@ -78,6 +78,7 @@ services:
       - SMTP_SENDER_NAME=${SMTP_SENDER_NAME}
       - SMTP_SENDER_EMAIL=${SMTP_SENDER_EMAIL}
       - EMAIL_LOGO_URL=${EMAIL_LOGO_URL}
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
     ports:
       - "5002:5002"
     depends_on:
@@ -123,6 +124,7 @@ services:
       - ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address=http://identity-service:5001
       - ReverseProxy__Clusters__pm-cluster__Destinations__destination1__Address=http://pm-service:5002
       - ReverseProxy__Clusters__assistant-cluster__Destinations__destination1__Address=http://ai-assistant-service:5003
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
     ports:
       - "5000:5000"
     depends_on:
