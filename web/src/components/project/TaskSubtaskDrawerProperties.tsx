@@ -7,7 +7,7 @@ import { getSubtaskPriorityLabel } from "@/lib/utils";
 
 /**
  * @component TaskSubtaskDrawerProperties
- * @description Thành phần con của TaskSubtaskDrawer hiển thị và cập nhật các thuộc tính của công việc con.
+ * @description Thành phần con của TaskSubtaskDrawer hiển thị và cập nhật các thuộc tính của nhiệm vụ.
  */
 
 interface TaskSubtaskDrawerPropertiesProps {
@@ -43,7 +43,7 @@ export function TaskSubtaskDrawerProperties({
   return (
     <div className="bg-slate-50/50 dark:bg-[#22272b]/50 border border-slate-100 dark:border-[#2c3338] rounded-lg p-3 space-y-3.5">
       <h4 className="text-[10px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider">
-        Thuộc tính công việc con
+        Thuộc tính nhiệm vụ
       </h4>
       
       <div className="grid grid-cols-1 gap-3 text-xs">

@@ -60,6 +60,7 @@ export interface SubTask {
   id: string; // UUID
   taskId: string; // UUID
   task?: TaskItem | null;
+  boardColumnId?: string | null; // UUID
   assigneeUserId: string | null; // UUID
   assigneeUser?: User | null;
   title: string;

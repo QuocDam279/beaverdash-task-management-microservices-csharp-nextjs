@@ -173,7 +173,7 @@ export function BacklogTaskRow({
 
         {/* Subtasks progress */}
         {subTasksCount > 0 && (
-          <div className="flex items-center gap-1.5" title="Tiến độ công việc con">
+          <div className="flex items-center gap-1.5" title="Tiến độ nhiệm vụ">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
               {completedSubTasksCount}/{subTasksCount}
             </span>

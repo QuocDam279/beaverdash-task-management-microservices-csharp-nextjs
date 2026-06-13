@@ -166,7 +166,7 @@ export function ProjectListTable({
                 Hạn chót
               </th>
               {!hideSubTasksColumn && (
-                <th className="py-2.5 px-3 w-[8%] min-w-[75px] text-center whitespace-nowrap">Việc con</th>
+                <th className="py-2.5 px-3 w-[8%] min-w-[75px] text-center whitespace-nowrap">Nhiệm vụ</th>
               )}
             </tr>
           </thead>
@@ -237,7 +237,7 @@ export function ProjectListTable({
                               return (
                                 <span 
                                   className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 px-1 py-[1px] rounded text-[9px] font-bold flex items-center" 
-                                  title={`Có ${unassignedCount} công việc con chưa phân công`}
+                                  title={`Có ${unassignedCount} nhiệm vụ chưa phân công`}
                                 >
                                   ⚠️ {unassignedCount}
                                 </span>

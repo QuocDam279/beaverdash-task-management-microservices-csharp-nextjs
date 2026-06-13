@@ -172,8 +172,8 @@ export function ActivityHistoryModal({ projectId, shareToken, isOpen, onClose }:
               <div className="text-slate-500 dark:text-[#8c9bab] font-semibold leading-relaxed">
                 <span className="text-[#292a2e] dark:text-[#deebff] font-bold">{event.displayName}</span>{" "}
                 <span className={actionColor}>{actionStr}</span>{" "}
-                <span className="text-[#1868db] dark:text-[#579dff] font-bold">{count} công việc con</span>{" "}
-                của đầu việc{" "}
+                <span className="text-[#1868db] dark:text-[#579dff] font-bold">{count} nhiệm vụ</span>{" "}
+                của công việc{" "}
                 {href ? (
                   <Link href={href} onClick={onClose} className="text-[#1868db] dark:text-[#579dff] font-bold hover:underline">
                     '{event.parentTaskTitle}'

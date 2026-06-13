@@ -127,18 +127,20 @@ export function TrashTable({
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2.5">
                       {/* Khôi phục */}
-                      <button
-                        onClick={() => onRestore(task.id)}
-                        className="text-slate-500 dark:text-[#a5adba] hover:text-[#1868db] dark:hover:text-[#579dff] hover:bg-slate-100/80 dark:hover:bg-[#2c3338]/60 px-2 py-1 rounded transition-colors cursor-pointer text-xs font-bold flex items-center gap-1 border border-transparent hover:border-slate-200 dark:hover:border-[#353e47]"
-                        title="Khôi phục công việc về bảng"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <polyline points="23 4 23 10 17 10"></polyline>
-                          <polyline points="1 20 1 14 7 14"></polyline>
-                          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
-                        Khôi phục
-                      </button>
+                      {task.canRestore !== false && (
+                        <button
+                          onClick={() => onRestore(task.id)}
+                          className="text-slate-500 dark:text-[#a5adba] hover:text-[#1868db] dark:hover:text-[#579dff] hover:bg-slate-100/80 dark:hover:bg-[#2c3338]/60 px-2 py-1 rounded transition-colors cursor-pointer text-xs font-bold flex items-center gap-1 border border-transparent hover:border-slate-200 dark:hover:border-[#353e47]"
+                          title="Khôi phục công việc về bảng"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                          </svg>
+                          Khôi phục
+                        </button>
+                      )}
 
                       {/* Xóa vĩnh viễn */}
                       {task.canPermanentDelete && (

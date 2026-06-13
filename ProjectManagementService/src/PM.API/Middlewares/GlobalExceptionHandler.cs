@@ -15,6 +15,7 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         var statusCode = exception switch
         {
+            UnauthorizedAccessException when exception.Message == "Bạn chưa đăng nhập." => StatusCodes.Status401Unauthorized,
             UnauthorizedAccessException => StatusCodes.Status403Forbidden,
             InvalidOperationException => StatusCodes.Status400BadRequest,
             ArgumentException => StatusCodes.Status400BadRequest,

@@ -11,6 +11,7 @@ import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { AIAssistantContainer } from "@/components/features/ai-assistant";
 import { useToast } from "@/components/providers/ToastProvider";
 import { toUtcLocalDate } from "@/lib/utils";
+import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   const { projectId } = React.use(params);
   const pathname = usePathname();
   const router = useRouter();
-  const { user: currentUser } = useAuth();
+  const { token, user: currentUser } = useAuth();
   const { success: showSuccessToast } = useToast();
 
   const [project, setProject] = React.useState<any>(null);
@@ -29,6 +30,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isShareOpen, setIsShareOpen] = React.useState(false);
   const [isActionPending, setIsActionPending] = React.useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = React.useState(false);
   const { alert, confirm } = useAlertConfirm();
 
   const fetchProjectDetails = React.useCallback(async () => {
@@ -48,6 +50,89 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   React.useEffect(() => {
     fetchProjectDetails();
   }, [fetchProjectDetails]);
+
+  // Check database for unread messages since last view on load/route change
+  React.useEffect(() => {
+    if (!projectId || !token) return;
+
+    const checkUnread = async () => {
+      try {
+        const lastViewedStr = localStorage.getItem(`beaverdash_chat_last_viewed_project_${projectId}`);
+        const lastViewed = lastViewedStr ? new Date(lastViewedStr).getTime() : 0;
+
+        const chatHistory = await api.get(`/projects/${projectId}/chat?limit=1`);
+        if (chatHistory && chatHistory.length > 0) {
+          const latestMessageTime = new Date(chatHistory[0].createdAt).getTime();
+          if (latestMessageTime > lastViewed && pathname !== `/projects/${projectId}/chat`) {
+            setHasUnreadChat(true);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check unread chat:", err);
+      }
+    };
+
+    checkUnread();
+  }, [projectId, token, pathname]);
+
+  // Automatically clear unread badge and update last viewed timestamp when entering chat tab
+  React.useEffect(() => {
+    if (pathname === `/projects/${projectId}/chat`) {
+      setHasUnreadChat(false);
+      localStorage.setItem(`beaverdash_chat_last_viewed_project_${projectId}`, new Date().toISOString());
+    }
+  }, [pathname, projectId]);
+
+  // Connect to SignalR in layout to receive real-time message notification while on other tabs
+  React.useEffect(() => {
+    if (!token || !projectId) return;
+
+    let isStopped = false;
+    let connection: HubConnection | null = null;
+
+    const startSignalR = async () => {
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        connection = new HubConnectionBuilder()
+          .withUrl(`${apiBaseUrl}/hubs/chat`, {
+            accessTokenFactory: () => token,
+          })
+          .configureLogging(LogLevel.Warning)
+          .withAutomaticReconnect()
+          .build();
+
+        connection.on("ReceiveMessage", (message: any) => {
+          if (isStopped) return;
+          if (pathname !== `/projects/${projectId}/chat`) {
+            setHasUnreadChat(true);
+          } else {
+            localStorage.setItem(`beaverdash_chat_last_viewed_project_${projectId}`, new Date().toISOString());
+          }
+        });
+
+        await connection.start();
+        if (isStopped) {
+          await connection.stop();
+          return;
+        }
+
+        await connection.invoke("JoinRoom", "project", projectId);
+      } catch (err) {
+        console.error("[Chat Layout Hub] failed to start:", err);
+      }
+    };
+
+    startSignalR();
+
+    return () => {
+      isStopped = true;
+      if (connection) {
+        if (connection.state === "Connected") {
+          connection.stop().catch((err) => console.error("Layout clean disconnect error:", err));
+        }
+      }
+    };
+  }, [token, projectId, pathname]);
 
   const handleDeleteProject = async () => {
     const confirmDelete = await confirm(
@@ -81,6 +166,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
     { name: "Sơ đồ gantt", href: `/projects/${projectId}/gantt`, exact: false },
     { name: "Tài liệu", href: `/projects/${projectId}/documents`, exact: false },
     { name: "AI Trợ lý", href: `/projects/${projectId}/assistant`, exact: false },
+    { name: "Trò chuyện", href: `/projects/${projectId}/chat`, exact: false },
   ];
 
   if (isLoading || !project) {
@@ -231,13 +317,16 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
               <Link
                 key={tab.name}
                 href={tab.href}
-                className={`pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+                className={`pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                   isTabActive
                     ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff]"
                     : "border-transparent text-[#505258] dark:text-[#8c9bab] hover:text-[#1868db] dark:hover:text-[#579dff] hover:border-slate-300 dark:hover:border-slate-500"
                 }`}
               >
-                {tab.name}
+                <span>{tab.name}</span>
+                {tab.name === "Trò chuyện" && hasUnreadChat && (
+                  <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                )}
               </Link>
             );
           })}

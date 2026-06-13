@@ -2,8 +2,8 @@
 
 /**
  * @component TaskSubtasks
- * @description Quản lý danh sách các công việc con (subtasks), bao gồm hiển thị tiến độ hoàn thành,
- * cho phép tích chọn hoàn thành nhanh, thêm mới, xóa công việc con và bình luận trong công việc con.
+ * @description Quản lý danh sách các nhiệm vụ (subtasks), bao gồm hiển thị tiến độ hoàn thành,
+ * cho phép tích chọn hoàn thành nhanh, thêm mới, xóa nhiệm vụ và bình luận trong nhiệm vụ.
  */
 
 import * as React from "react";
@@ -91,7 +91,7 @@ export function TaskSubtasks({
             <path d="m9 11-4 4 4 4m6-14 4 4-4 4" />
           </svg>
           <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
-            Công việc con (Subtasks)
+            Nhiệm vụ (Subtasks)
           </label>
         </div>
         {totalCount > 0 && (
@@ -116,7 +116,7 @@ export function TaskSubtasks({
         <form onSubmit={handleSubmit} className="flex gap-2 pt-1.5 flex-shrink-0">
           <input
             type="text"
-            placeholder="Thêm công việc con..."
+            placeholder="Thêm nhiệm vụ..."
             value={newSubtaskTitle}
             onChange={(e) => setNewSubtaskTitle(e.target.value)}
             className="flex-1 px-3 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
@@ -177,7 +177,7 @@ export function TaskSubtasks({
           ))
         ) : (
           <div className="text-center py-6 border-2 border-dashed border-slate-200/50 dark:border-[#353e47]/50 rounded-lg text-slate-400 dark:text-slate-500 text-xs font-medium animate-in fade-in duration-200 flex-shrink-0">
-            {canManageSubtasks ? "Chưa có công việc con nào. Nhập tiêu đề ở trên để tạo!" : "Chưa có công việc con nào."}
+            {canManageSubtasks ? "Chưa có nhiệm vụ nào. Nhập tiêu đề ở trên để tạo!" : "Chưa có nhiệm vụ nào."}
           </div>
         )}
       </div>

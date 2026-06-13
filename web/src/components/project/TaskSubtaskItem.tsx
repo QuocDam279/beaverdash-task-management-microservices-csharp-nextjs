@@ -2,7 +2,7 @@
 
 /**
  * @component TaskSubtaskItem
- * @description Quản lý hiển thị và tương tác của một công việc con (subtask) riêng lẻ,
+ * @description Quản lý hiển thị và tương tác của một nhiệm vụ (subtask) riêng lẻ,
  * bao gồm gán người thực hiện, hoàn thành nhanh, xóa subtask và hệ thống bình luận (comments) mở rộng.
  */
 
@@ -133,7 +133,7 @@ export function TaskSubtaskItem({
           className={`flex items-center gap-1 bg-slate-50 dark:bg-[#2c3338] border border-slate-200/70 dark:border-[#353e47] rounded px-1.5 py-0.5 transition-all ${
             canManage ? "hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-[#353e47]/50 cursor-pointer" : "opacity-60"
           }`}
-          title="Hạn chót công việc con"
+          title="Hạn chót nhiệm vụ"
         >
           <svg
             width="10"
@@ -182,7 +182,7 @@ export function TaskSubtaskItem({
             className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
               canManage ? "cursor-pointer" : "cursor-not-allowed"
             }`}
-            title={canManage ? "Thay đổi độ ưu tiên công việc con" : "Độ ưu tiên"}
+            title={canManage ? "Thay đổi độ ưu tiên nhiệm vụ" : "Độ ưu tiên"}
           >
             <option value="">Không có</option>
             <option value="High">Cao</option>
@@ -284,9 +284,9 @@ export function TaskSubtaskItem({
             onClick={async (e) => {
               e.stopPropagation();
               const confirmDelete = await confirm(
-                "Bạn có chắc chắn muốn xóa công việc con này?",
+                "Bạn có chắc chắn muốn xóa nhiệm vụ này?",
                 {
-                  title: "Xóa công việc con",
+                  title: "Xóa nhiệm vụ",
                   confirmLabel: "Xóa",
                   variant: "danger",
                 }
@@ -296,7 +296,7 @@ export function TaskSubtaskItem({
               }
             }}
             className="opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-[#353e47] transition-all cursor-pointer"
-            title="Xóa công việc con"
+            title="Xóa nhiệm vụ"
           >
             <svg
               width="13"

@@ -86,6 +86,7 @@ app.MapControllers();
 
 // 4. Map endpoint cho Hub
 app.MapHub<PM.API.Hubs.NotificationHub>("/hubs/notifications");
+app.MapHub<PM.API.Hubs.ChatHub>("/hubs/chat");
 
 // Apply migrations on startup with retry logic
 using (var scope = app.Services.CreateScope())

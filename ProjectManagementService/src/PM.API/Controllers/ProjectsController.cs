@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PM.Application.Features.Projects.Project.Commands;
+using PM.Application.Features.Projects.Project.Queries;
 using System;
 using System.Threading.Tasks;
 
@@ -135,5 +136,73 @@ public class ProjectsController : ControllerBase
             return NotFound(new { Message = "Tài liệu không tồn tại." });
         return NoContent();
     }
+
+    [HttpGet("shared-with-me")]
+    public async Task<IActionResult> GetProjectsSharedWithMe()
+    {
+        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectsSharedWithMeQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/share")]
+    public async Task<IActionResult> ShareProject(Guid id, [FromBody] ShareProjectDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Email))
+            return BadRequest(new { Message = "Email không hợp lệ." });
+
+        var command = new ShareProjectCommand(id, request.Email);
+        var result = await _mediator.Send(command);
+        return Ok(new { Success = result });
+    }
+
+    [HttpDelete("{id}/share")]
+    public async Task<IActionResult> RevokeProjectShare(Guid id, [FromQuery] string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { Message = "Email không hợp lệ." });
+
+        var command = new RevokeProjectShareCommand(id, email);
+        var result = await _mediator.Send(command);
+        if (!result)
+            return NotFound(new { Message = "Không tìm thấy thông tin chia sẻ cho email này." });
+
+        return Ok(new { Success = result });
+    }
+
+    [HttpGet("{id}/shares")]
+    public async Task<IActionResult> GetProjectShares(Guid id)
+    {
+        var query = new GetProjectSharesQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/chat")]
+    public async Task<IActionResult> GetProjectChatHistory(Guid id, [FromQuery] int limit = 100)
+    {
+        var query = new PM.Application.Features.Chats.Queries.GetChatMessagesQuery(ProjectId: id, TeamId: null, Limit: limit);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/chat/upload")]
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> UploadProjectChatFile(Guid id, [FromForm] Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        var command = new PM.Application.Features.Chats.Commands.UploadChatFileCommand
+        {
+            RoomId = id,
+            RoomType = "project",
+            File = file
+        };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+}
+
+public class ShareProjectDto
+{
+    public string Email { get; set; } = null!;
 }
 

@@ -186,6 +186,33 @@ export function SidebarExpandedNav({
           </svg>
           <span>Thùng rác</span>
         </Link>
+
+        {/* Dự án được chia sẻ Menu */}
+        <Link
+          href="/shared-projects"
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-[4px] text-sm font-semibold transition-all duration-150 cursor-pointer ${
+            pathname.startsWith("/shared-projects")
+              ? "bg-[#1868db]/10 text-[#1868db]"
+              : "text-[#505258] hover:bg-slate-200/60 hover:text-[#1868db]"
+          }`}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            className="shrink-0"
+          >
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          <span>Dự án được chia sẻ</span>
+        </Link>
       </div>
 
       {/* Dự án Category Section */}

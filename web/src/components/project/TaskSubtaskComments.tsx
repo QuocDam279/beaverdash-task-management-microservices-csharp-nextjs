@@ -65,7 +65,7 @@ export function TaskSubtaskComments({
         </div>
       ) : (
         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic py-1 px-1 flex-shrink-0">
-          Chưa có thảo luận nào cho công việc con này.
+          Chưa có thảo luận nào cho nhiệm vụ này.
         </p>
       )}
     </div>

@@ -21,6 +21,8 @@ public interface IPMDbContext
     DbSet<Notification> Notifications { get; }
     DbSet<OutboxMessage> OutboxMessages { get; }
     DbSet<Sprint> Sprints { get; }
+    DbSet<ProjectShare> ProjectShares { get; }
+    DbSet<ChatMessage> ChatMessages { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

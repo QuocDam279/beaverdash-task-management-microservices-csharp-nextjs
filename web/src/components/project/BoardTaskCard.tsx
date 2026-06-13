@@ -164,7 +164,7 @@ export function BoardTaskCard({
         {subtaskCount > 0 && (
           <div className="space-y-0.5">
             <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 dark:text-slate-400">
-              <span>Tiến độ công việc con</span>
+              <span>Tiến độ nhiệm vụ</span>
               <div className="flex items-center gap-1.5">
                 {(() => {
                   const unassignedCount = task.subTasks
@@ -174,7 +174,7 @@ export function BoardTaskCard({
                     return (
                       <span 
                         className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded px-1 py-[1px] text-[8px] flex items-center gap-0.5 font-bold" 
-                        title={`Có ${unassignedCount} công việc con chưa được phân công`}
+                        title={`Có ${unassignedCount} nhiệm vụ chưa được phân công`}
                       >
                         ⚠️ {unassignedCount} chưa giao
                       </span>
@@ -199,13 +199,13 @@ export function BoardTaskCard({
           <div className="flex items-center justify-end pt-1.5 border-t border-slate-100 dark:border-[#353e47]">
             <div className="flex items-center gap-1.5">
               {/* Stack avatar công việc phụ (subtasks) */}
-              <div className="flex -space-x-1.5 items-center mr-1" title="Những người thực hiện công việc con">
+              <div className="flex -space-x-1.5 items-center mr-1" title="Những người thực hiện nhiệm vụ">
                 {subtaskAssignees.map((user) => (
                   <Avatar
                     key={user.id}
                     src={user.avatar}
                     alt={user.displayName}
-                    title={`Người thực hiện công việc con: ${user.displayName}`}
+                    title={`Người thực hiện nhiệm vụ: ${user.displayName}`}
                     className="h-5 w-5 rounded-full border border-white dark:border-[#2c3338] hover:z-10 transition-all scale-95"
                   />
                 ))}

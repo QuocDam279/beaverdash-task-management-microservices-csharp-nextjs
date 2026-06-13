@@ -129,6 +129,27 @@ export function AIAssistantInput({
             </svg>
           </button>
 
+          {/* Download Project Plan Template Button */}
+          <div className="relative group shrink-0">
+            <a
+              href="/templates/project_plan_template.docx"
+              download="Mau_Ke_Hoach_Du_An_Nhom_BeaverDash.docx"
+              title="Tải file mẫu kế hoạch dự án nhóm (.docx)"
+              className="p-1.5 rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center justify-center cursor-pointer border-0 bg-transparent"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </a>
+            {/* Tooltip */}
+            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-slate-800 dark:bg-[#22272b] text-[10px] text-white dark:text-slate-200 font-semibold leading-snug whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-lg border border-slate-700/40 dark:border-[#353e47] z-50">
+              Tải file mẫu kế hoạch dự án nhóm (.docx)
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-800 dark:border-t-[#22272b]" />
+            </div>
+          </div>
+
           {/* Attachment Trigger Button */}
           <button
             type="button"

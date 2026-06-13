@@ -218,7 +218,7 @@ export function AIAssistantChatViewport({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full pt-2">
           <button
             onClick={() => onSuggestionClick("Giúp tôi tạo công việc cho dự án")}
             className="p-3.5 rounded-xl border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50/50 dark:hover:bg-[#2c3338] text-left text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
@@ -231,6 +231,14 @@ export function AIAssistantChatViewport({
           >
             📅 Hỗ trợ tôi lập kế hoạch cho dự án
           </button>
+          <a
+            href="/templates/project_plan_template.docx"
+            download="Mau_Ke_Hoach_Du_An_Nhom_BeaverDash.docx"
+            className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/15 hover:border-emerald-300 dark:hover:border-emerald-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/25 text-left text-xs font-bold text-emerald-700 dark:text-emerald-400 transition-colors cursor-pointer no-underline"
+          >
+            📄 Tải file mẫu kế hoạch dự án nhóm
+            <span className="block text-[10px] font-medium text-emerald-600/70 dark:text-emerald-500/60 mt-1">Điền thông tin → đính kèm → AI tự lập kế hoạch</span>
+          </a>
         </div>
         <div ref={messagesEndRef} />
       </div>

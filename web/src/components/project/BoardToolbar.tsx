@@ -25,6 +25,8 @@ export interface BoardToolbarProps {
   selectedSprintId?: string;
   setSelectedSprintId?: (id: string) => void;
   onCloseSprintClick?: () => void;
+  groupBy?: string;
+  onGroupByChange?: (val: string) => void;
 }
 
 /**
@@ -53,15 +55,19 @@ export function BoardToolbar({
   selectedSprintId = "active",
   setSelectedSprintId = () => {},
   onCloseSprintClick,
+  groupBy = "none",
+  onGroupByChange = () => {},
 }: BoardToolbarProps) {
   // Popover State
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [isSortOpen, setIsSortOpen] = React.useState(false);
+  const [isGroupByOpen, setIsGroupByOpen] = React.useState(false);
   const [activeSubMenu, setActiveSubMenu] = React.useState<string | null>(null);
 
   const closePopovers = () => {
     setIsFilterOpen(false);
     setIsSortOpen(false);
+    setIsGroupByOpen(false);
     setActiveSubMenu(null);
   };
 
@@ -336,6 +342,62 @@ export function BoardToolbar({
                   >
                     <span>{item.label}</span>
                     {sortBy === item.value && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 3. Group By Button */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setIsGroupByOpen(!isGroupByOpen);
+              setIsFilterOpen(false);
+              setIsSortOpen(false);
+              setActiveSubMenu(null);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white dark:bg-[#22272b] cursor-pointer transition-all ${
+              groupBy !== "none"
+                ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff] bg-blue-50/30 dark:bg-blue-950/20"
+                : "border-slate-200 dark:border-[#353e47] text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500"
+            }`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            <span>
+              Nhóm:{" "}
+              {groupBy === "none"
+                ? "Bình thường"
+                : groupBy === "assignee"
+                ? "Người được giao"
+                : "Nhiệm vụ"}
+            </span>
+          </button>
+
+          {isGroupByOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={closePopovers} />
+              <div className="absolute left-0 mt-1.5 w-44 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e] dark:text-[#deebff]">
+                {[
+                  { value: "none", label: "Bình thường" },
+                  { value: "assignee", label: "Theo người được giao" },
+                  { value: "subtask", label: "Theo nhiệm vụ" },
+                ].map((item) => (
+                  <div
+                    key={item.value}
+                    onClick={() => {
+                      onGroupByChange(item.value);
+                      closePopovers();
+                    }}
+                    className={`px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#2c3338] text-left cursor-pointer flex items-center justify-between ${
+                      groupBy === item.value ? "text-[#1868db] dark:text-[#579dff] bg-blue-50/20 dark:bg-blue-950/10 font-bold" : "text-slate-600 dark:text-slate-400 font-medium"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {groupBy === item.value && <span className="text-[#1868db] dark:text-[#579dff]">✓</span>}
                   </div>
                 ))}
               </div>

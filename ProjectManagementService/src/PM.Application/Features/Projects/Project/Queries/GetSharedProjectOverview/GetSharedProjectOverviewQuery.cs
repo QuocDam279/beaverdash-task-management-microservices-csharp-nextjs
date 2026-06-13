@@ -16,17 +16,21 @@ public record GetSharedProjectOverviewQuery(string ShareToken) : IRequest<Projec
 public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedProjectOverviewQuery, ProjectOverviewDto?>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetSharedProjectOverviewQueryHandler(IPMDbContext dbContext)
+    public GetSharedProjectOverviewQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ProjectOverviewDto?> Handle(GetSharedProjectOverviewQuery request, CancellationToken cancellationToken)
     {
-        var project = await _dbContext.Projects
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ShareToken == request.ShareToken && p.IsPublic, cancellationToken);
+        var project = await SharedProjectAccessHelper.GetSharedProjectAndVerifyAccessAsync(
+            _dbContext,
+            _currentUserService,
+            request.ShareToken,
+            cancellationToken);
 
         if (project == null) return null;
 

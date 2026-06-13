@@ -17,6 +17,7 @@ public class SubTaskConfiguration : IEntityTypeConfiguration<SubTask>
         builder.Property(s => s.AssigneeUserId).HasColumnName("assignee_user_id").HasColumnType("uuid").IsRequired(false);
         builder.Property(s => s.Title).HasColumnName("title").HasColumnType("varchar").IsRequired();
         builder.Property(s => s.IsCompleted).HasColumnName("is_completed").HasColumnType("boolean").HasDefaultValue(false);
+        builder.Property(s => s.BoardColumnId).HasColumnName("board_column_id").HasColumnType("uuid").IsRequired(false);
         builder.Property(s => s.DueDate).HasColumnName("due_date").HasColumnType("timestamp with time zone");
         builder.Property(s => s.Priority)
             .HasColumnName("priority")
@@ -36,6 +37,11 @@ public class SubTaskConfiguration : IEntityTypeConfiguration<SubTask>
         builder.HasOne(s => s.AssigneeUser)
             .WithMany()
             .HasForeignKey(s => s.AssigneeUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(s => s.BoardColumn)
+            .WithMany()
+            .HasForeignKey(s => s.BoardColumnId)
             .OnDelete(DeleteBehavior.SetNull);
             
         builder.HasQueryFilter(x => x.DeletedAt == null);

@@ -100,7 +100,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
                   <line x1="2" y1="12" x2="22" y2="12" />
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-                Chia sẻ công khai (Chỉ xem)
+                Chia sẻ (Chỉ xem)
               </span>
             </div>
             {/* Project Title */}
@@ -108,6 +108,18 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
               {project.name}
             </h1>
           </div>
+
+          {/* Back Button */}
+          <Link
+            href="/shared-projects"
+            className="px-3.5 py-1.5 text-xs font-bold text-[#505258] hover:text-[#1868db] hover:border-[#1868db]/30 bg-white hover:bg-slate-50 border border-slate-200 rounded shadow-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Quay lại trang chính
+          </Link>
         </div>
 
         {/* Project Description */}

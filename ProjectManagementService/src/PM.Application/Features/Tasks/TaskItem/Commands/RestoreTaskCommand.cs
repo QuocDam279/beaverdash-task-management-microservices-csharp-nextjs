@@ -43,9 +43,23 @@ public class RestoreTaskCommandHandler : IRequestHandler<RestoreTaskCommand, boo
             throw new UnauthorizedAccessException("Bạn không có quyền khôi phục công việc này.");
         }
 
-        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-        if (!isMember)
+        var requestingMember = await _dbContext.TeamMembers
+            .FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+
+        if (requestingMember == null)
             throw new UnauthorizedAccessException("Bạn không có quyền khôi phục công việc này.");
+
+        bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
+
+        var lastDeleteLog = await _dbContext.ActivityLogs
+            .Where(al => al.EntityType == "task" && al.EntityId == request.TaskId && al.ActionType == "deleted")
+            .OrderByDescending(al => al.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        bool isDeleter = lastDeleteLog != null && lastDeleteLog.UserId == currentUserId;
+
+        if (!isLeader && !isDeleter)
+            throw new UnauthorizedAccessException("Chỉ có người xóa công việc hoặc trưởng nhóm mới có quyền khôi phục.");
 
         task.DeletedAt = null;
 

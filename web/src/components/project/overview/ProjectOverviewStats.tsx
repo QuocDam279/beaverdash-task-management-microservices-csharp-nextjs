@@ -46,7 +46,7 @@ export function ProjectOverviewStats({
     if (total === 0) {
       return (
         <span className="text-[10px] text-slate-400 dark:text-[#8c9bab] block mt-2.5 pt-0.5 border-t border-slate-100 dark:border-[#2c3338]">
-          Không có công việc con
+          Không có nhiệm vụ
         </span>
       );
     }
@@ -54,7 +54,7 @@ export function ProjectOverviewStats({
     return (
       <div className="space-y-1.5 mt-2.5 pt-2 border-t border-slate-100 dark:border-[#2c3338]">
         <div className="flex justify-between items-center text-[10px] text-[#505258] dark:text-[#a5adba] font-medium">
-          <span>{done}/{total} công việc con</span>
+          <span>{done}/{total} nhiệm vụ</span>
           <span className="font-bold">{percent}%</span>
         </div>
         <div className="w-full bg-slate-100 dark:bg-[#2c3338] h-1.5 rounded-full overflow-hidden">
@@ -79,7 +79,7 @@ export function ProjectOverviewStats({
                   Hoàn thành (7 ngày)
                 </span>
                 <span className="text-3xl font-extrabold text-[#10b981] dark:text-[#4ade80] leading-none block">
-                  {completedCount} <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">chính</span>
+                  {completedCount} <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">công việc</span>
                 </span>
               </div>
               <div className={`h-9 w-9 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all shrink-0
@@ -107,7 +107,7 @@ export function ProjectOverviewStats({
                   Công việc mới (7 ngày)
                 </span>
                 <span className="text-3xl font-extrabold text-[#1868db] dark:text-[#579dff] leading-none block">
-                  {createdCount} <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">chính</span>
+                  {createdCount} <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">công việc</span>
                 </span>
               </div>
               <div className="h-9 w-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1868db] group-hover:scale-105 transition-transform shrink-0">
@@ -132,7 +132,7 @@ export function ProjectOverviewStats({
                   Sắp đến hạn (7 ngày)
                 </span>
                 <span className="text-3xl font-extrabold text-orange-600 dark:text-orange-400 leading-none block">
-                  {upcomingDueCount} <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">chính</span>
+                  {upcomingDueCount} <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">công việc</span>
                 </span>
               </div>
               <div className={`h-9 w-9 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all shrink-0

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
+using PM.Application.Features.Projects.Project.Queries;
 using System;
 using System.Linq;
 using System.Threading;
@@ -13,10 +14,12 @@ public record GetSharedTaskDetailsQuery(Guid TaskId, string ShareToken) : IReque
 public class GetSharedTaskDetailsQueryHandler : IRequestHandler<GetSharedTaskDetailsQuery, TaskDetailsDto?>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetSharedTaskDetailsQueryHandler(IPMDbContext dbContext)
+    public GetSharedTaskDetailsQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<TaskDetailsDto?> Handle(GetSharedTaskDetailsQuery request, CancellationToken cancellationToken)
@@ -89,11 +92,13 @@ public class GetSharedTaskDetailsQueryHandler : IRequestHandler<GetSharedTaskDet
         if (taskDto == null)
             return null;
 
-        var project = await _dbContext.Projects
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == taskDto.ProjectId, cancellationToken);
+        var project = await SharedProjectAccessHelper.GetSharedProjectAndVerifyAccessAsync(
+            _dbContext,
+            _currentUserService,
+            request.ShareToken,
+            cancellationToken);
 
-        if (project == null || project.ShareToken != request.ShareToken || !project.IsPublic)
+        if (project == null || project.Id != taskDto.ProjectId)
             return null;
 
         taskDto.ProjectStartDate = project.StartDate;

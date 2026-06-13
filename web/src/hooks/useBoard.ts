@@ -128,6 +128,7 @@ export function useBoard(projectId: string) {
   const selectedDueDateFilter = searchParams ? searchParams.get("dueDate") : null;
   const selectedAssignee = searchParams ? searchParams.get("assigneeId") : null;
   const sortBy = (searchParams && searchParams.get("sortBy")) || "manual";
+  const groupBy = (searchParams && searchParams.get("groupBy")) || "none";
 
   const handleSetPriority = React.useCallback((val: string | null) => {
     if (typeof window !== "undefined") {
@@ -164,6 +165,16 @@ export function useBoard(projectId: string) {
       const params = new URLSearchParams(window.location.search);
       if (val && val !== "manual") params.set("sortBy", val);
       else params.delete("sortBy");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [pathname, router]);
+
+  const handleSetGroupBy = React.useCallback((val: string) => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (val && val !== "none") params.set("groupBy", val);
+      else params.delete("groupBy");
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname);
     }
@@ -429,6 +440,19 @@ export function useBoard(projectId: string) {
     }
   };
 
+  const handleMoveSubTask = async (subTaskId: string, targetColumnId: string) => {
+    try {
+      await api.patch(`/subtasks/${subTaskId}/column`, {
+        boardColumnId: targetColumnId,
+      });
+      fetchBoardData(true);
+    } catch (err: unknown) {
+      console.error("Failed to move subtask:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message || "Không thể di chuyển nhiệm vụ.", "Thất bại", "danger");
+    }
+  };
+
   const handleCloseSprint = async (sprintId: string, action: "MoveToBacklog" | "MoveToNextSprint", moveToSprintId?: string) => {
     try {
       await api.post(`/sprints/${sprintId}/close`, {
@@ -586,10 +610,13 @@ export function useBoard(projectId: string) {
     handleOpenDeleteModal,
     handleConfirmDelete,
     handleMoveTask,
+    handleMoveSubTask,
     handleSetColumnDone,
     handleCloseSprint,
     filteredTasks: sortedTasks,
     sortBy,
     setSortBy: handleSetSortBy,
+    groupBy,
+    setGroupBy: handleSetGroupBy,
   };
 }

@@ -30,6 +30,7 @@ export default function RootLayout({
     <html
       lang="vi"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <script
@@ -46,7 +47,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
         <AuthProvider>
           <AlertConfirmProvider>

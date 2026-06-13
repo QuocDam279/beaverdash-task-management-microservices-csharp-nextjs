@@ -47,11 +47,11 @@ export const getActionDetails = (
 
   if (ent === "task") {
     if (act === "create" || act === "created") {
-      actionText = "đã tạo mới đầu việc";
-      targetText = data?.title ? `"${data.title}"` : "đầu việc";
+      actionText = "đã tạo mới công việc";
+      targetText = data?.title ? `"${data.title}"` : "công việc";
       iconBg = "bg-[#1868db]";
     } else if (act === "assign" || act === "assigned") {
-      actionText = "đã giao đầu việc";
+      actionText = "đã giao công việc";
       targetText = data ? `"${data.task_title}" cho ${data.assignee_name}` : "thành viên";
       iconBg = "bg-[#4f46e5]";
       icon = (
@@ -61,7 +61,7 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "moved") {
-      actionText = "đã chuyển đầu việc";
+      actionText = "đã chuyển công việc";
       targetText = data ? `"${data.task_title}" từ cột "${data.old_column_name}" sang "${data.new_column_name}"` : "cột";
       iconBg = "bg-[#ffab00]";
       icon = (
@@ -70,7 +70,7 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_title") {
-      actionText = "đã đổi tên đầu việc";
+      actionText = "đã đổi tên công việc";
       targetText = data ? `từ "${data.old_title}" thành "${data.title}"` : "tiêu đề";
       iconBg = "bg-blue-400";
       icon = (
@@ -80,7 +80,7 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_description") {
-      actionText = "đã cập nhật mô tả của đầu việc";
+      actionText = "đã cập nhật mô tả của công việc";
       targetText = data ? `"${data.title}"` : "";
       iconBg = "bg-blue-400";
       icon = (
@@ -89,7 +89,7 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_due_date") {
-      actionText = "đã cập nhật hạn hoàn thành của đầu việc";
+      actionText = "đã cập nhật hạn hoàn thành của công việc";
       const dateStr = data?.due_date ? new Date(data.due_date).toLocaleDateString("vi-VN") : "Chưa đặt";
       targetText = data ? `"${data.title}" thành ngày ${dateStr}` : "ngày";
       iconBg = "bg-blue-400";
@@ -101,7 +101,7 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_start_date") {
-      actionText = "đã cập nhật ngày bắt đầu của đầu việc";
+      actionText = "đã cập nhật ngày bắt đầu của công việc";
       const dateStr = data?.start_date ? new Date(data.start_date).toLocaleDateString("vi-VN") : "Chưa đặt";
       targetText = data ? `"${data.title}" thành ngày ${dateStr}` : "ngày";
       iconBg = "bg-blue-400";
@@ -113,7 +113,7 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_priority") {
-      actionText = "đã cập nhật độ ưu tiên của đầu việc";
+      actionText = "đã cập nhật độ ưu tiên của công việc";
       if (data) {
         const oldP = data.old_priority ? getTaskPriorityLabel(data.old_priority) : null;
         const newP = data.priority ? getTaskPriorityLabel(data.priority) : "Không xác định";
@@ -128,8 +128,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "delete" || act === "deleted") {
-      actionText = "đã đưa đầu việc vào thùng rác";
-      targetText = data?.title ? `"${data.title}"` : "đầu việc";
+      actionText = "đã đưa công việc vào thùng rác";
+      targetText = data?.title ? `"${data.title}"` : "công việc";
       iconBg = "bg-red-500";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -138,8 +138,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "restored") {
-      actionText = "đã khôi phục đầu việc";
-      targetText = data?.title ? `"${data.title}"` : "đầu việc";
+      actionText = "đã khôi phục công việc";
+      targetText = data?.title ? `"${data.title}"` : "công việc";
       iconBg = "bg-[#10b981]";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -148,8 +148,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "permanently_deleted") {
-      actionText = "đã xóa vĩnh viễn đầu việc";
-      targetText = data?.title ? `"${data.title}"` : "đầu việc";
+      actionText = "đã xóa vĩnh viễn công việc";
+      targetText = data?.title ? `"${data.title}"` : "công việc";
       iconBg = "bg-red-600";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -160,12 +160,12 @@ export const getActionDetails = (
     }
   } else if (ent === "subtask") {
     if (act === "create" || act === "created") {
-      actionText = "đã tạo công việc con";
-      targetText = data ? `"${data.title}" cho đầu việc "${data.parent_task_title}"` : "công việc con";
+      actionText = "đã tạo nhiệm vụ";
+      targetText = data ? `"${data.title}" cho công việc "${data.parent_task_title}"` : "nhiệm vụ";
       iconBg = "bg-[#1868db]";
     } else if (act === "delete" || act === "deleted") {
-      actionText = "đã xóa công việc con";
-      targetText = data ? `"${data.title}" khỏi đầu việc "${data.parent_task_title}"` : "công việc con";
+      actionText = "đã xóa nhiệm vụ";
+      targetText = data ? `"${data.title}" khỏi công việc "${data.parent_task_title}"` : "nhiệm vụ";
       iconBg = "bg-red-500";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -174,8 +174,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "complete" || act === "completed" || act === "done") {
-      actionText = "đã hoàn thành công việc con";
-      targetText = data ? `"${data.title}" của đầu việc "${data.parent_task_title}"` : "công việc con";
+      actionText = "đã hoàn thành nhiệm vụ";
+      targetText = data ? `"${data.title}" của công việc "${data.parent_task_title}"` : "nhiệm vụ";
       iconBg = "bg-[#10b981]";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
@@ -183,8 +183,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "incomplete") {
-      actionText = "đã mở lại công việc con";
-      targetText = data ? `"${data.title}" của đầu việc "${data.parent_task_title}"` : "công việc con";
+      actionText = "đã mở lại nhiệm vụ";
+      targetText = data ? `"${data.title}" của công việc "${data.parent_task_title}"` : "nhiệm vụ";
       iconBg = "bg-slate-400";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -192,8 +192,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "assign" || act === "assigned") {
-      actionText = "đã giao công việc con";
-      targetText = data ? `"${data.title}" (của đầu việc "${data.parent_task_title}") cho ${data.assignee_name}` : "thành viên";
+      actionText = "đã giao nhiệm vụ";
+      targetText = data ? `"${data.title}" (của công việc "${data.parent_task_title}") cho ${data.assignee_name}` : "thành viên";
       iconBg = "bg-[#4f46e5]";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -202,9 +202,9 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_deadline") {
-      actionText = "đã cập nhật hạn hoàn thành công việc con";
+      actionText = "đã cập nhật hạn hoàn thành nhiệm vụ";
       const dateStr = data?.due_date ? new Date(data.due_date).toLocaleDateString("vi-VN") : "Chưa đặt";
-      targetText = data ? `"${data.title}" (của đầu việc "${data.parent_task_title}") thành ngày ${dateStr}` : "ngày";
+      targetText = data ? `"${data.title}" (của công việc "${data.parent_task_title}") thành ngày ${dateStr}` : "ngày";
       iconBg = "bg-blue-400";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -214,8 +214,8 @@ export const getActionDetails = (
         </svg>
       );
     } else if (act === "updated_title") {
-      actionText = "đã đổi tên công việc con";
-      targetText = data ? `từ "${data.old_title}" thành "${data.title}" (của đầu việc "${data.parent_task_title}")` : "tên";
+      actionText = "đã đổi tên nhiệm vụ";
+      targetText = data ? `từ "${data.old_title}" thành "${data.title}" (của công việc "${data.parent_task_title}")` : "tên";
       iconBg = "bg-blue-400";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -227,7 +227,7 @@ export const getActionDetails = (
   } else if (ent === "comment") {
     if (act === "create" || act === "created") {
       actionText = "đã bình luận";
-      targetText = data ? `"${data.content}" trong công việc con "${data.subtask_title}" (thuộc "${data.task_title}")` : "bình luận";
+      targetText = data ? `"${data.content}" trong nhiệm vụ "${data.subtask_title}" (thuộc "${data.task_title}")` : "bình luận";
       iconBg = "bg-[#ffab00]";
       icon = (
         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -376,7 +376,7 @@ export const groupActivities = (rawActivities: any[]): any[] => {
     // same user, same actionType, same parentTaskId, within 1 minute
     const groupItems: any[] = [{
       id: current.id,
-      subtaskTitle: currentData.title || "Công việc con",
+      subtaskTitle: currentData.title || "Nhiệm vụ",
       newValue: current.newValue,
       oldValue: current.oldValue,
       createdAt: current.createdAt
@@ -402,7 +402,7 @@ export const groupActivities = (rawActivities: any[]): any[] => {
           if (diffMs <= 60000) { // 1 minute
             groupItems.push({
               id: next.id,
-              subtaskTitle: nextData.title || "Công việc con",
+              subtaskTitle: nextData.title || "Nhiệm vụ",
               newValue: next.newValue,
               oldValue: next.oldValue,
               createdAt: next.createdAt

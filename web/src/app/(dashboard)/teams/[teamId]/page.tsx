@@ -15,6 +15,8 @@ import {
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Project } from "@/types/project";
+import { ChatContainer } from "@/components/chat/ChatContainer";
+import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -27,12 +29,13 @@ interface PageProps {
 export default function TeamDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { teamId } = React.use(params);
-  const { user: currentUser } = useAuth();
+  const { token, user: currentUser } = useAuth();
 
   const [team, setTeam] = React.useState<any>(null);
   const [members, setMembers] = React.useState<any[]>([]);
   const [projects, setProjects] = React.useState<Project[]>([]);
-  const [activeTab, setActiveTab] = React.useState<"members" | "projects">("members");
+  const [activeTab, setActiveTab] = React.useState<"members" | "projects" | "chat">("members");
+  const [hasUnreadChat, setHasUnreadChat] = React.useState(false);
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -62,6 +65,89 @@ export default function TeamDetailPage({ params }: PageProps) {
   React.useEffect(() => {
     fetchTeamDetails();
   }, [fetchTeamDetails]);
+
+  // Check database for unread messages since last view on load/tab change
+  React.useEffect(() => {
+    if (!teamId || !token) return;
+
+    const checkUnread = async () => {
+      try {
+        const lastViewedStr = localStorage.getItem(`beaverdash_chat_last_viewed_team_${teamId}`);
+        const lastViewed = lastViewedStr ? new Date(lastViewedStr).getTime() : 0;
+
+        const chatHistory = await api.get(`/teams/${teamId}/chat?limit=1`);
+        if (chatHistory && chatHistory.length > 0) {
+          const latestMessageTime = new Date(chatHistory[0].createdAt).getTime();
+          if (latestMessageTime > lastViewed && activeTab !== "chat") {
+            setHasUnreadChat(true);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check unread team chat:", err);
+      }
+    };
+
+    checkUnread();
+  }, [teamId, token, activeTab]);
+
+  // Automatically clear unread badge and update last viewed timestamp when entering chat tab
+  React.useEffect(() => {
+    if (activeTab === "chat") {
+      setHasUnreadChat(false);
+      localStorage.setItem(`beaverdash_chat_last_viewed_team_${teamId}`, new Date().toISOString());
+    }
+  }, [activeTab, teamId]);
+
+  // Connect to SignalR at page level to receive real-time message notification while on other tabs
+  React.useEffect(() => {
+    if (!token || !teamId) return;
+
+    let isStopped = false;
+    let connection: HubConnection | null = null;
+
+    const startSignalR = async () => {
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        connection = new HubConnectionBuilder()
+          .withUrl(`${apiBaseUrl}/hubs/chat`, {
+            accessTokenFactory: () => token,
+          })
+          .configureLogging(LogLevel.Warning)
+          .withAutomaticReconnect()
+          .build();
+
+        connection.on("ReceiveMessage", (message: any) => {
+          if (isStopped) return;
+          if (activeTab !== "chat") {
+            setHasUnreadChat(true);
+          } else {
+            localStorage.setItem(`beaverdash_chat_last_viewed_team_${teamId}`, new Date().toISOString());
+          }
+        });
+
+        await connection.start();
+        if (isStopped) {
+          await connection.stop();
+          return;
+        }
+
+        await connection.invoke("JoinRoom", "team", teamId);
+      } catch (err) {
+        console.error("[Team Page Chat Hub] failed to start:", err);
+      }
+    };
+
+    startSignalR();
+
+    return () => {
+      isStopped = true;
+      if (connection) {
+        if (connection.state === "Connected") {
+          connection.stop().catch((err) => console.error("Team page clean disconnect error:", err));
+        }
+      }
+    };
+  }, [token, teamId, activeTab]);
 
   if (isLoading && !team) {
     return (
@@ -192,6 +278,19 @@ export default function TeamDetailPage({ params }: PageProps) {
           >
             Danh sách dự án ({projects.length})
           </button>
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "chat"
+                ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff]"
+                : "border-transparent text-[#505258] dark:text-[#a5adba] hover:text-[#1868db] dark:hover:text-[#579dff] hover:border-slate-300 dark:hover:border-[#353e47]"
+            }`}
+          >
+            <span>Trò chuyện</span>
+            {hasUnreadChat && (
+              <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -209,6 +308,12 @@ export default function TeamDetailPage({ params }: PageProps) {
         )}
 
         {activeTab === "projects" && <TeamProjectsGrid projects={projects} />}
+
+        {activeTab === "chat" && (
+          <div className="h-[calc(100vh-260px)] min-h-[400px] border border-slate-200 dark:border-[#2c3338] rounded-xl overflow-hidden shadow-xs">
+            <ChatContainer roomId={teamId} roomType="team" roomName={team.name} />
+          </div>
+        )}
       </div>
 
       {/* 4. Modals */}

@@ -57,9 +57,9 @@ export function ProjectOverviewPriorityChart({
   return (
     <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] flex flex-col w-full">
       <CardHeader className="p-5 pb-3 border-b border-slate-100 dark:border-[#2c3338] flex items-center justify-between">
-        <h3 className="text-sm font-bold text-[#292a2e] dark:text-[#deebff]">Mức độ ưu tiên công việc con</h3>
+        <h3 className="text-sm font-bold text-[#292a2e] dark:text-[#deebff]">Mức độ ưu tiên nhiệm vụ</h3>
         <span className="text-[10px] font-bold text-slate-500 dark:text-[#8c9bab] bg-slate-100 dark:bg-[#2c3338] px-2 py-0.5 rounded-full uppercase tracking-wider">
-          {totalCount} việc con
+          {totalCount} nhiệm vụ
         </span>
       </CardHeader>
       
@@ -104,7 +104,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(requiredSubTasksHighCount / reqTotal) * 100}%` }}
                   className="bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Bắt buộc - Cao: ${requiredSubTasksHighCount} việc con`}
+                  title={`Bắt buộc - Cao: ${requiredSubTasksHighCount} nhiệm vụ`}
                 >
                   {(requiredSubTasksHighCount / reqTotal) >= 0.12 && requiredSubTasksHighCount}
                 </div>
@@ -114,7 +114,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(requiredSubTasksMediumCount / reqTotal) * 100}%` }}
                   className="bg-amber-500 hover:bg-amber-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Bắt buộc - Trung bình: ${requiredSubTasksMediumCount} việc con`}
+                  title={`Bắt buộc - Trung bình: ${requiredSubTasksMediumCount} nhiệm vụ`}
                 >
                   {(requiredSubTasksMediumCount / reqTotal) >= 0.12 && requiredSubTasksMediumCount}
                 </div>
@@ -124,7 +124,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(requiredSubTasksLowCount / reqTotal) * 100}%` }}
                   className="bg-emerald-500 hover:bg-emerald-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Bắt buộc - Thấp: ${requiredSubTasksLowCount} việc con`}
+                  title={`Bắt buộc - Thấp: ${requiredSubTasksLowCount} nhiệm vụ`}
                 >
                   {(requiredSubTasksLowCount / reqTotal) >= 0.12 && requiredSubTasksLowCount}
                 </div>
@@ -151,7 +151,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(importantSubTasksHighCount / impTotal) * 100}%` }}
                   className="bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Quan trọng - Cao: ${importantSubTasksHighCount} việc con`}
+                  title={`Quan trọng - Cao: ${importantSubTasksHighCount} nhiệm vụ`}
                 >
                   {(importantSubTasksHighCount / impTotal) >= 0.12 && importantSubTasksHighCount}
                 </div>
@@ -161,7 +161,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(importantSubTasksMediumCount / impTotal) * 100}%` }}
                   className="bg-amber-500 hover:bg-amber-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Quan trọng - Trung bình: ${importantSubTasksMediumCount} việc con`}
+                  title={`Quan trọng - Trung bình: ${importantSubTasksMediumCount} nhiệm vụ`}
                 >
                   {(importantSubTasksMediumCount / impTotal) >= 0.12 && importantSubTasksMediumCount}
                 </div>
@@ -171,7 +171,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(importantSubTasksLowCount / impTotal) * 100}%` }}
                   className="bg-emerald-500 hover:bg-emerald-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Quan trọng - Thấp: ${importantSubTasksLowCount} việc con`}
+                  title={`Quan trọng - Thấp: ${importantSubTasksLowCount} nhiệm vụ`}
                 >
                   {(importantSubTasksLowCount / impTotal) >= 0.12 && importantSubTasksLowCount}
                 </div>
@@ -198,7 +198,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(extendedSubTasksHighCount / extTotal) * 100}%` }}
                   className="bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Mở rộng - Cao: ${extendedSubTasksHighCount} việc con`}
+                  title={`Mở rộng - Cao: ${extendedSubTasksHighCount} nhiệm vụ`}
                 >
                   {(extendedSubTasksHighCount / extTotal) >= 0.12 && extendedSubTasksHighCount}
                 </div>
@@ -208,7 +208,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(extendedSubTasksMediumCount / extTotal) * 100}%` }}
                   className="bg-amber-500 hover:bg-amber-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Mở rộng - Trung bình: ${extendedSubTasksMediumCount} việc con`}
+                  title={`Mở rộng - Trung bình: ${extendedSubTasksMediumCount} nhiệm vụ`}
                 >
                   {(extendedSubTasksMediumCount / extTotal) >= 0.12 && extendedSubTasksMediumCount}
                 </div>
@@ -218,7 +218,7 @@ export function ProjectOverviewPriorityChart({
                 <div 
                   style={{ height: `${(extendedSubTasksLowCount / extTotal) * 100}%` }}
                   className="bg-emerald-500 hover:bg-emerald-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Mở rộng - Thấp: ${extendedSubTasksLowCount} việc con`}
+                  title={`Mở rộng - Thấp: ${extendedSubTasksLowCount} nhiệm vụ`}
                 >
                   {(extendedSubTasksLowCount / extTotal) >= 0.12 && extendedSubTasksLowCount}
                 </div>

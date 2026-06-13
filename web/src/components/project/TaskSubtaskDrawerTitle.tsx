@@ -4,7 +4,7 @@ import * as React from "react";
 
 /**
  * @component TaskSubtaskDrawerTitle
- * @description Trình chỉnh sửa tiêu đề công việc con trực tiếp (inline editor), xử lý chế độ chỉnh sửa, phím tắt và blur.
+ * @description Trình chỉnh sửa tiêu đề nhiệm vụ trực tiếp (inline editor), xử lý chế độ chỉnh sửa, phím tắt và blur.
  */
 
 interface TaskSubtaskDrawerTitleProps {

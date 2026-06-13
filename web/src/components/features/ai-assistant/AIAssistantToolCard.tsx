@@ -35,7 +35,7 @@ export function AIAssistantToolCard({ toolCall, toolResults }: ToolCardProps) {
           />
         </svg>
         <span>
-          Đang tạo {isTask ? "công việc" : "công việc con"}: <strong className="text-slate-700 dark:text-slate-300">{toolCall.args.title}</strong>
+          Đang tạo {isTask ? "công việc" : "nhiệm vụ"}: <strong className="text-slate-700 dark:text-slate-300">{toolCall.args.title}</strong>
         </span>
       </div>
     );
@@ -48,7 +48,7 @@ export function AIAssistantToolCard({ toolCall, toolResults }: ToolCardProps) {
         <path d="M20 6L9 17l-5-5" />
       </svg>
       <span>
-        Đã tạo {isTask ? "công việc" : "công việc con"}: <strong className="dark:text-[#deebff]">{toolCall.args.title}</strong>
+        Đã tạo {isTask ? "công việc" : "nhiệm vụ"}: <strong className="dark:text-[#deebff]">{toolCall.args.title}</strong>
       </span>
     </div>
   );

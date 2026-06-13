@@ -117,4 +117,26 @@ public class TeamsController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    [HttpGet("{id}/chat")]
+    public async Task<IActionResult> GetTeamChatHistory(Guid id, [FromQuery] int limit = 100)
+    {
+        var query = new PM.Application.Features.Chats.Queries.GetChatMessagesQuery(ProjectId: null, TeamId: id, Limit: limit);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/chat/upload")]
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> UploadTeamChatFile(Guid id, [FromForm] Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        var command = new PM.Application.Features.Chats.Commands.UploadChatFileCommand
+        {
+            RoomId = id,
+            RoomType = "team",
+            File = file
+        };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
 }

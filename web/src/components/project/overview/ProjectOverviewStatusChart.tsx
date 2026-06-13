@@ -106,7 +106,7 @@ export function ProjectOverviewStatusChart({
                 {totalCount}
               </span>
               <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-[#8c9bab] tracking-wider leading-none mt-1">
-                công việc con
+                nhiệm vụ
               </span>
             </div>
           </div>

@@ -20,17 +20,21 @@ public record GetSharedProjectActivitiesQuery(
 public class GetSharedProjectActivitiesQueryHandler : IRequestHandler<GetSharedProjectActivitiesQuery, List<ActivityLogDto>>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetSharedProjectActivitiesQueryHandler(IPMDbContext dbContext)
+    public GetSharedProjectActivitiesQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<ActivityLogDto>> Handle(GetSharedProjectActivitiesQuery request, CancellationToken cancellationToken)
     {
-        var project = await _dbContext.Projects
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ShareToken == request.ShareToken && p.IsPublic, cancellationToken);
+        var project = await SharedProjectAccessHelper.GetSharedProjectAndVerifyAccessAsync(
+            _dbContext,
+            _currentUserService,
+            request.ShareToken,
+            cancellationToken);
 
         if (project == null)
             return new List<ActivityLogDto>();

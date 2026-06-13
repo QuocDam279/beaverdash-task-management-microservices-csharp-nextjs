@@ -23,7 +23,8 @@ async function request(endpoint: string, options: RequestInit = {}) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("beaverdash_token");
       localStorage.removeItem("beaverdash_user");
-      window.location.href = "/login";
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
     }
     throw new Error("Phiên làm việc hết hạn.");
   }

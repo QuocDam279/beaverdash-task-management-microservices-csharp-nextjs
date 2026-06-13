@@ -29,3 +29,6 @@ export { CreateSprintModal } from "./CreateSprintModal";
 export { CloseSprintModal } from "./CloseSprintModal";
 export { BacklogTaskRow } from "./BacklogTaskRow";
 export { SprintSection } from "./SprintSection";
+export { BoardGroupedView } from "./BoardGroupedView";
+export { SubTaskBoardCard } from "./SubTaskBoardCard";
+

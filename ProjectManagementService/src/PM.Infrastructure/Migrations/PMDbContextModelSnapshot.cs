@@ -158,6 +158,65 @@ namespace PM.Infrastructure.Migrations
                     b.ToTable("board_columns", (string)null);
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("file_name");
+
+                    b.Property<long?>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size");
+
+                    b.Property<string>("FileType")
+                        .HasColumnType("text")
+                        .HasColumnName("file_type");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("file_url");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sender_id");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("ProjectId", "CreatedAt");
+
+                    b.HasIndex("TeamId", "CreatedAt");
+
+                    b.ToTable("chat_messages", (string)null);
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -411,6 +470,46 @@ namespace PM.Infrastructure.Migrations
                     b.ToTable("project_documents", (string)null);
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ProjectShare", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("recipient_email");
+
+                    b.Property<Guid>("SharedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shared_by_user_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientEmail");
+
+                    b.HasIndex("SharedByUserId");
+
+                    b.HasIndex("ProjectId", "RecipientEmail")
+                        .IsUnique();
+
+                    b.ToTable("project_shares", (string)null);
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
                 {
                     b.Property<Guid>("Id")
@@ -471,6 +570,10 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("assignee_user_id");
 
+                    b.Property<Guid?>("BoardColumnId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("board_column_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -513,6 +616,8 @@ namespace PM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssigneeUserId");
+
+                    b.HasIndex("BoardColumnId");
 
                     b.HasIndex("TaskId");
 
@@ -725,6 +830,31 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("PM.Domain.Entities.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PM.Domain.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("PM.Domain.Entities.SubTask", "SubTask")
@@ -800,6 +930,25 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("UploadedByUser");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ProjectShare", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PM.Domain.Entities.User", "SharedByUser")
+                        .WithMany()
+                        .HasForeignKey("SharedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("SharedByUser");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
                 {
                     b.HasOne("PM.Domain.Entities.Project", "Project")
@@ -818,6 +967,11 @@ namespace PM.Infrastructure.Migrations
                         .HasForeignKey("AssigneeUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("PM.Domain.Entities.BoardColumn", "BoardColumn")
+                        .WithMany()
+                        .HasForeignKey("BoardColumnId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PM.Domain.Entities.TaskItem", "Task")
                         .WithMany("SubTasks")
                         .HasForeignKey("TaskId")
@@ -825,6 +979,8 @@ namespace PM.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AssigneeUser");
+
+                    b.Navigation("BoardColumn");
 
                     b.Navigation("Task");
                 });

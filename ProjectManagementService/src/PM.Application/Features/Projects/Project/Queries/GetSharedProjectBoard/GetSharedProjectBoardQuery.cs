@@ -14,19 +14,22 @@ public record GetSharedProjectBoardQuery(string ShareToken, Guid? SprintId = nul
 public class GetSharedProjectBoardQueryHandler : IRequestHandler<GetSharedProjectBoardQuery, ProjectBoardDto?>
 {
     private readonly IPMDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetSharedProjectBoardQueryHandler(IPMDbContext dbContext)
+    public GetSharedProjectBoardQueryHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ProjectBoardDto?> Handle(GetSharedProjectBoardQuery request, CancellationToken cancellationToken)
     {
         // 1. Lấy thông tin cơ bản của Project qua ShareToken
-        var projectInfo = await _dbContext.Projects
-            .AsNoTracking()
-            .Select(p => new { p.Id, p.Name, p.Description, p.ShareToken, p.IsPublic })
-            .FirstOrDefaultAsync(p => p.ShareToken == request.ShareToken && p.IsPublic, cancellationToken);
+        var projectInfo = await SharedProjectAccessHelper.GetSharedProjectAndVerifyAccessAsync(
+            _dbContext,
+            _currentUserService,
+            request.ShareToken,
+            cancellationToken);
 
         if (projectInfo == null)
             return null;
@@ -114,6 +117,7 @@ public class GetSharedProjectBoardQueryHandler : IRequestHandler<GetSharedProjec
                             TaskId = st.TaskId,
                             Title = st.Title,
                             IsCompleted = st.IsCompleted,
+                            BoardColumnId = st.BoardColumnId,
                             AssigneeUserId = st.AssigneeUserId,
                             AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
                             AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,

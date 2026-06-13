@@ -131,7 +131,8 @@ class AIAssistantTools:
         task_id: str,
         title: str,
         priority: str = "Medium",
-        due_date: str = None
+        due_date: str = None,
+        assignee_id: str = None
     ) -> str:
         """
         Tạo một công việc con (Subtask) cho một công việc cha đã tồn tại.
@@ -141,6 +142,7 @@ class AIAssistantTools:
             title: Tiêu đề công việc con. Không được để trống.
             priority: Độ ưu tiên của công việc con (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Thấp/Low, Trung bình/Medium, Cao/High). Mặc định là 'Trung bình'.
             due_date: Hạn hoàn thành của công việc con (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
+            assignee_id: ID (UUID) của thành viên dự án được phân công thực hiện công việc con này. Nếu không phân công ai, hãy để trống hoặc truyền None.
         """
         try:
             # Map priority from Vietnamese/English to backend enum
@@ -189,6 +191,9 @@ class AIAssistantTools:
                 "Priority": mapped_priority
             }
             
+            if assignee_id:
+                subtask_payload["AssigneeUserId"] = assignee_id.strip()
+            
             create_url = f"{self.pm_base_url}/api/SubTasks"
             async with httpx.AsyncClient() as client:
                 logger.info(f"Creating subtask via PM Service: {create_url} with payload: {subtask_payload}")
@@ -208,7 +213,7 @@ class AIAssistantTools:
 
     async def get_project_details(self) -> str:
         """
-        Lấy thông tin chi tiết của dự án hiện tại bao gồm: Tên dự án, mô tả, trạng thái, ngày bắt đầu, ngày kết thúc và các cột trạng thái hiện tại.
+        Lấy thông tin chi tiết của dự án hiện tại bao gồm: Tên dự án, mô tả, trạng thái, ngày bắt đầu, ngày kết thúc, các cột trạng thái hiện tại và danh sách thành viên dự án kèm vai trò, ID của họ.
         """
         try:
             overview_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/overview"
@@ -230,6 +235,13 @@ class AIAssistantTools:
                 cols = data.get("columnStatusCounts", [])
                 cols_str = ", ".join([f"'{c.get('columnName')}'" for c in cols])
                 
+                # Format project member workloads list
+                members = data.get("memberWorkloads", [])
+                member_lines = []
+                for m in members:
+                    member_lines.append(f"- Tên: {m.get('displayName')} | Vai trò: {m.get('role')} | ID người dùng: {m.get('userId')}")
+                members_str = "\n".join(member_lines) if member_lines else "Không có thành viên"
+                
                 res_str = (
                     f"Thông tin dự án:\n"
                     f"- Tên dự án: {name}\n"
@@ -237,7 +249,8 @@ class AIAssistantTools:
                     f"- Trạng thái: {status}\n"
                     f"- Ngày bắt đầu: {start_date}\n"
                     f"- Ngày kết thúc/Hạn hoàn thành: {due_date}\n"
-                    f"- Các cột trạng thái trong dự án: {cols_str}"
+                    f"- Các cột trạng thái trong dự án: {cols_str}\n"
+                    f"- Danh sách thành viên trong dự án:\n{members_str}"
                 )
                 return res_str
         except Exception as ex:
@@ -363,7 +376,8 @@ class AIAssistantTools:
         title: str = None,
         priority: str = None,
         due_date: str = None,
-        completed: bool = None
+        completed: bool = None,
+        assignee_id: str = None
     ) -> str:
         """
         Cập nhật thông tin của một công việc con (Subtask) đã tồn tại.
@@ -374,6 +388,7 @@ class AIAssistantTools:
             priority: Độ ưu tiên mới (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Thấp/Low, Trung bình/Medium, Cao/High).
             due_date: Hạn hoàn thành mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             completed: Trạng thái hoàn thành (True nếu đã hoàn thành, False nếu chưa).
+            assignee_id: ID (UUID) của thành viên dự án mới được gán cho công việc con này. Truyền chuỗi '00000000-0000-0000-0000-000000000000' hoặc 'none' để hủy phân công (unassign).
         """
         try:
             # 1. Fetch current board to get subtask's current state as fallback (required fields in DTO)
@@ -426,10 +441,19 @@ class AIAssistantTools:
                 final_completed = completed if completed is not None else current_completed
                 final_due_date = due_date if due_date is not None else current_due_date
 
+                # Determine final assignee
+                final_assignee = current_assignee
+                if assignee_id is not None:
+                    val = assignee_id.strip().lower()
+                    if val in ["00000000-0000-0000-0000-000000000000", "none", "null", ""]:
+                        final_assignee = None
+                    else:
+                        final_assignee = assignee_id.strip()
+
                 # Build PATCH payload
                 patch_payload = {
                     "Title": final_title,
-                    "AssigneeUserId": current_assignee, # Keep current assignee
+                    "AssigneeUserId": final_assignee,
                     "DueDate": final_due_date,
                     "IsCompleted": final_completed,
                     "Priority": mapped_priority

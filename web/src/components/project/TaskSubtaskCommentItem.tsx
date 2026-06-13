@@ -2,7 +2,7 @@
 
 /**
  * @component TaskSubtaskCommentItem
- * @description Hiển thị một bình luận của công việc con, kết xuất các tệp đính kèm và liên kết đi kèm.
+ * @description Hiển thị một bình luận của nhiệm vụ, kết xuất các tệp đính kèm và liên kết đi kèm.
  */
 
 import * as React from "react";
@@ -39,7 +39,8 @@ export function TaskSubtaskCommentItem({
 
   const getAttachmentUrl = (url: string) => {
     if (url && url.startsWith("/uploads/")) {
-      return `http://localhost:5002${url}`;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      return `${apiBaseUrl}${url}`;
     }
     return url;
   };

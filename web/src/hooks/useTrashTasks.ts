@@ -15,6 +15,7 @@ export interface TrashTask {
   deletedAt: string;
   isCompleted: boolean;
   canPermanentDelete?: boolean;
+  canRestore?: boolean;
 }
 
 export interface Project {

@@ -119,6 +119,7 @@ export interface SubTaskBoardDto {
   taskId: string;
   title: string;
   isCompleted: boolean;
+  boardColumnId?: string | null;
   assigneeUserId: string | null;
   assigneeAvatar: string | null;
   assigneeName: string | null;

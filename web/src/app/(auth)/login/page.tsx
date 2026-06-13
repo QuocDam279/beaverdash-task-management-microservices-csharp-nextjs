@@ -7,7 +7,7 @@
  */
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { LoginShowcase } from "./components/LoginShowcase";
@@ -18,8 +18,10 @@ interface NavSection {
   icon: React.ReactNode;
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/tasks";
   const { login, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -59,9 +61,9 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (isAuthenticated) {
-      router.push("/tasks");
+      router.push(redirect);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirect]);
 
   React.useEffect(() => {
     const lastScrollTime = { current: 0 };
@@ -122,14 +124,14 @@ export default function LoginPage() {
         }
 
         const data = await res.json();
-        login(data.token, data.user);
+        login(data.token, data.user, redirect);
       } catch (err: any) {
         console.error("Google Auth Error:", err);
         setError(err.message || "Đã xảy ra lỗi kết nối với máy chủ.");
         setIsLoading(false);
       }
     },
-    [login]
+    [login, redirect]
   );
 
   const callbackRef = React.useRef(handleGoogleCredentialResponse);
@@ -282,5 +284,23 @@ export default function LoginPage() {
       {/* RIGHT PANEL: Showcase dynamically rendered based on activeSection */}
       <LoginShowcase activeSection={activeSection} />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex min-h-screen w-full items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-2 select-none">
+          <svg className="animate-spin h-6 w-6 text-[#1868db]" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span className="text-[10px] text-slate-400 font-bold">Đang tải trang đăng nhập...</span>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </React.Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 /**
  * @component TaskSubtaskCommentForm
- * @description Form soạn thảo bình luận cho công việc con, hỗ trợ đính kèm tệp và liên kết.
+ * @description Form soạn thảo bình luận cho nhiệm vụ, hỗ trợ đính kèm tệp và liên kết.
  */
 
 import * as React from "react";

@@ -319,7 +319,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         • <strong>Ràng buộc thời gian Dự án & Công việc:</strong> Hạn hoàn thành của Công việc cha (Task) không bao giờ được phép vượt quá hạn hoàn thành của Dự án chứa nó.
                       </p>
                       <p>
-                        • <strong>Công việc con (SubTask):</strong> Toàn bộ thời gian chạy (Ngày bắt đầu & Hạn chót) của các Công việc con phải nằm gọn trong khoảng thời gian chạy của Công việc cha. Hệ thống sẽ kiểm tra và nhắc nhở nếu thời hạn công việc con vượt quá phạm vi này.
+                        • <strong>Nhiệm vụ (SubTask):</strong> Toàn bộ thời gian chạy (Ngày bắt đầu & Hạn chót) của các Nhiệm vụ phải nằm gọn trong khoảng thời gian chạy của Công việc cha. Hệ thống sẽ kiểm tra và nhắc nhở nếu thời hạn nhiệm vụ vượt quá phạm vi này.
                       </p>
                     </div>
                   )}

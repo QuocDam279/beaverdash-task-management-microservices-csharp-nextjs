@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { BoardColumnView, BoardToolbar } from "@/components/project";
+import { BoardColumnView, BoardToolbar, BoardGroupedView } from "@/components/project";
 import { api } from "@/lib/api";
 import dynamic from "next/dynamic";
 
@@ -46,6 +46,7 @@ export default function SharedBoardPage({ params }: PageProps) {
     selectedDueDateFilter, setSelectedDueDateFilter,
     filteredTasks, handleResetFilters,
     sortBy, setSortBy,
+    groupBy, setGroupBy,
   } = useSharedBoardFilters(tasks, columns);
 
   const fetchBoardData = React.useCallback(async () => {
@@ -63,7 +64,20 @@ export default function SharedBoardPage({ params }: PageProps) {
         setColumns(boardData.boardColumns || []);
         const allTasks: TaskItem[] = [];
         (boardData.boardColumns || []).forEach((col: any) => {
-          if (col.taskItems) allTasks.push(...col.taskItems);
+          if (col.taskItems) {
+            const mappedTasks = col.taskItems.map((t: any) => ({
+              ...t,
+              subTasks: (t.subTasks || []).map((st: any) => ({
+                ...st,
+                assigneeUser: st.assigneeUserId ? {
+                  id: st.assigneeUserId,
+                  displayName: st.assigneeName,
+                  avatar: st.assigneeAvatar
+                } : null
+              }))
+            }));
+            allTasks.push(...mappedTasks);
+          }
         });
         setTasks(allTasks);
         setSprints(boardData.sprints || []);
@@ -149,30 +163,49 @@ export default function SharedBoardPage({ params }: PageProps) {
         sprints={sprints}
         selectedSprintId={selectedSprintId}
         setSelectedSprintId={setSelectedSprintId}
+        groupBy={groupBy}
+        onGroupByChange={setGroupBy}
       />
 
-      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-stretch min-h-[450px] scrollbar-thin">
-        {columns.map((column, index) => (
-          <div key={column.id} className="w-80 shrink-0 flex flex-col">
-            <BoardColumnView
-              column={column}
-              tasks={filteredTasks.filter((t) => t.boardColumnId === column.id)}
-              onTaskClick={(task) => setSelectedTask(task)}
-              onRefresh={fetchBoardData}
-              isFirst={index === 0}
-              isLast={index === columns.length - 1}
-              onMoveLeft={() => {}}
-              onMoveRight={() => {}}
-              onSetWipLimit={() => {}}
-              onDeleteColumn={() => {}}
-              onMoveTask={async () => {}}
-              assignees={assignees}
-              readOnly={true}
-              isPersonalProject={isPersonalProject}
-            />
-          </div>
-        ))}
-      </div>
+      {groupBy !== "none" ? (
+        <div className="flex-1 overflow-y-auto pb-4 pr-1">
+          <BoardGroupedView
+            columns={columns}
+            tasks={filteredTasks}
+            groupBy={groupBy}
+            onMoveTask={async () => {}}
+            onMoveSubTask={async () => {}}
+            onTaskClick={(task) => setSelectedTask(task)}
+            currentUser={null}
+            assignees={assignees}
+            readOnly={true}
+            isPersonalProject={isPersonalProject}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 flex gap-4 overflow-x-auto pb-4 items-stretch min-h-[450px] scrollbar-thin">
+          {columns.map((column, index) => (
+            <div key={column.id} className="w-80 shrink-0 flex flex-col">
+              <BoardColumnView
+                column={column}
+                tasks={filteredTasks.filter((t) => t.boardColumnId === column.id)}
+                onTaskClick={(task) => setSelectedTask(task)}
+                onRefresh={fetchBoardData}
+                isFirst={index === 0}
+                isLast={index === columns.length - 1}
+                onMoveLeft={() => {}}
+                onMoveRight={() => {}}
+                onSetWipLimit={() => {}}
+                onDeleteColumn={() => {}}
+                onMoveTask={async () => {}}
+                assignees={assignees}
+                readOnly={true}
+                isPersonalProject={isPersonalProject}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {selectedTask && (
         <TaskDetailModal
