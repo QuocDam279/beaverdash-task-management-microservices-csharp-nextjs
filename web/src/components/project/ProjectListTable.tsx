@@ -31,7 +31,7 @@ export function ProjectListTable({
   hideAssigneeColumn = false,
   showParentTaskColumn = false,
   hideSubTasksColumn = false,
-  titleColumnName = "Tiêu đề",
+  titleColumnName = "Công việc",
 }: ProjectListTableProps) {
   const getStatusName = (columnId: string): string => {
     return columns.find((c) => c.id === columnId)?.name || "Chưa rõ";

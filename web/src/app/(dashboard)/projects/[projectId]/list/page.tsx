@@ -31,6 +31,7 @@ export default function ProjectListPage({ params }: PageProps) {
   const [selectedSprintId, setSelectedSprintId] = React.useState<string>("active");
   const [sprints, setSprints] = React.useState<any[]>([]);
   const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
+  const [activeSprintEndDate, setActiveSprintEndDate] = React.useState<string | null>(null);
   const isInitialLoad = React.useRef(true);
 
   const fetchListTasks = React.useCallback(async () => {
@@ -51,6 +52,7 @@ export default function ProjectListPage({ params }: PageProps) {
       if (board) {
         setSprints(board.sprints || []);
         setActiveSprintName(board.activeSprintName || null);
+        setActiveSprintEndDate(board.activeSprintEndDate || null);
         const cols = board.boardColumns || [];
         setColumns(cols);
         const allTasks: TaskItem[] = cols.flatMap((col: any) =>
@@ -138,6 +140,7 @@ export default function ProjectListPage({ params }: PageProps) {
         selectedSprintId={selectedSprintId}
         setSelectedSprintId={setSelectedSprintId}
         activeSprintName={activeSprintName}
+        activeSprintEndDate={activeSprintEndDate}
       />
     </div>
   );

@@ -108,7 +108,7 @@ export default function MyTasksPage() {
             hideAssigneeColumn={true}
             showParentTaskColumn={false}
             hideSubTasksColumn={true}
-            titleColumnName="Công việc"
+            titleColumnName="Nhiệm vụ"
           />
 
           {/* 5. Pagination Toolbar */}

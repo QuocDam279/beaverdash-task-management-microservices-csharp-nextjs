@@ -7,7 +7,6 @@
 
 import * as React from "react";
 import { TaskItem, BoardColumn } from "@/types/task";
-import { useAuth } from "@/components/providers/AuthProvider";
 import { ProjectListTable } from "./ProjectListTable";
 import { TaskDetailModal, CreateTaskModal } from "@/components/project";
 import { ListToolbar } from "./ListToolbar";
@@ -18,22 +17,25 @@ interface ProjectListViewProps {
   columns: BoardColumn[];
   projectId: string;
   onRefresh: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   assignees: any[];
   readOnly?: boolean;
   isPersonalProject?: boolean;
   projectStartDate?: string | null;
   projectDueDate?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sprints?: any[];
   selectedSprintId?: string;
   setSelectedSprintId?: (id: string) => void;
   activeSprintName?: string | null;
+  activeSprintEndDate?: string | null;
 }
 
 export function ProjectListView({
   tasks,
   setTasks,
   columns,
-  projectId,
+  projectId: _projectId,
   onRefresh,
   assignees,
   readOnly = false,
@@ -44,8 +46,8 @@ export function ProjectListView({
   selectedSprintId = "active",
   setSelectedSprintId = () => {},
   activeSprintName = null,
+  activeSprintEndDate = null,
 }: ProjectListViewProps) {
-  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedAssignee, setSelectedAssignee] = React.useState<string>("all");
   const [selectedPriority, setSelectedPriority] = React.useState<string>("all");
@@ -178,6 +180,7 @@ export function ProjectListView({
         selectedSprintId={selectedSprintId}
         setSelectedSprintId={setSelectedSprintId}
         activeSprintName={activeSprintName}
+        activeSprintEndDate={activeSprintEndDate}
       />
 
       {/* TASK LIST TABLE */}

@@ -21,6 +21,7 @@ export default function SharedListPage({ params }: PageProps) {
   const [selectedSprintId, setSelectedSprintId] = React.useState<string>("active");
   const [sprints, setSprints] = React.useState<any[]>([]);
   const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
+  const [activeSprintEndDate, setActiveSprintEndDate] = React.useState<string | null>(null);
 
   const fetchListData = React.useCallback(async () => {
     try {
@@ -38,6 +39,7 @@ export default function SharedListPage({ params }: PageProps) {
         setColumns(boardData.boardColumns || []);
         setSprints(boardData.sprints || []);
         setActiveSprintName(boardData.activeSprintName || null);
+        setActiveSprintEndDate(boardData.activeSprintEndDate || null);
         
         const allTasks: TaskItem[] = [];
         (boardData.boardColumns || []).forEach((col: any) => {
@@ -106,6 +108,7 @@ export default function SharedListPage({ params }: PageProps) {
         selectedSprintId={selectedSprintId}
         setSelectedSprintId={setSelectedSprintId}
         activeSprintName={activeSprintName}
+        activeSprintEndDate={activeSprintEndDate}
       />
     </div>
   );

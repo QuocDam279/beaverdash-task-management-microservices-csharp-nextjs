@@ -31,4 +31,6 @@ export { BacklogTaskRow } from "./BacklogTaskRow";
 export { SprintSection } from "./SprintSection";
 export { BoardGroupedView } from "./BoardGroupedView";
 export { SubTaskBoardCard } from "./SubTaskBoardCard";
+export { ListToolbarFilters } from "./ListToolbarFilters";
+
 
