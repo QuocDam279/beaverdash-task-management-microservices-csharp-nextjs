@@ -62,7 +62,7 @@ export default function NotFound() {
 
         {/* Footer hint */}
         <p className="text-[10px] text-slate-400 mt-10 uppercase tracking-widest font-semibold">
-          BeaverDash · Quản lý dự án
+          BeaverDash · Quản lý dự án sinh viên
         </p>
       </div>
     </div>

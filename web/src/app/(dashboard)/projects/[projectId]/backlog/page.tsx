@@ -244,16 +244,22 @@ export default function BacklogPage({ params }: PageProps) {
       </div>
 
       {/* Task Detail Modal */}
-      {selectedTask && (
-        <TaskDetailModal
-          isOpen={!!selectedTask}
-          onClose={() => { setSelectedTask(null); b.fetchBacklogData(); }}
-          task={selectedTask}
-          columns={b.columns as any}
-          onUpdateTask={(updated) => setSelectedTask(updated)}
-          assignees={b.assignees}
-        />
-      )}
+      {selectedTask && (() => {
+        const isTaskSprintClosed = selectedTask.sprintId && b.backlogData?.sprints
+          ? b.backlogData.sprints.find((s: any) => s.id === selectedTask.sprintId)?.status === "Closed" 
+          : false;
+        return (
+          <TaskDetailModal
+            isOpen={!!selectedTask}
+            onClose={() => { setSelectedTask(null); b.fetchBacklogData(); }}
+            task={selectedTask}
+            columns={b.columns as any}
+            onUpdateTask={(updated) => setSelectedTask(updated)}
+            assignees={b.assignees}
+            readOnly={isTaskSprintClosed}
+          />
+        );
+      })()}
 
       {/* Create Task Modal */}
       {createTaskSprintId !== undefined && (

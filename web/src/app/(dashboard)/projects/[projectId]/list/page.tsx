@@ -124,6 +124,9 @@ export default function ProjectListPage({ params }: PageProps) {
     );
   }
 
+  const selectedSprint = sprints.find((s) => s.id === selectedSprintId);
+  const isSprintClosed = selectedSprint ? selectedSprint.status === "Closed" : false;
+
   return (
     <div className="p-6 h-full flex flex-col bg-white dark:bg-[#1d2125]">
       <ProjectListView
@@ -141,6 +144,7 @@ export default function ProjectListPage({ params }: PageProps) {
         setSelectedSprintId={setSelectedSprintId}
         activeSprintName={activeSprintName}
         activeSprintEndDate={activeSprintEndDate}
+        readOnly={isSprintClosed}
       />
     </div>
   );

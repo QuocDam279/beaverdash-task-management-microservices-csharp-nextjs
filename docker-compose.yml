@@ -81,6 +81,8 @@ services:
       - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
     ports:
       - "5002:5002"
+    volumes:
+      - pm_uploads:/app/wwwroot/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -134,3 +136,4 @@ services:
 
 volumes:
   postgres_data:
+  pm_uploads:
