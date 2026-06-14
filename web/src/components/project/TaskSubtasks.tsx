@@ -20,8 +20,7 @@ interface TaskSubtasksProps {
   onToggleSubtask: (subTaskId: string) => void;
   onSubtaskAssigneeChange: (subTaskId: string, assigneeId: string) => void;
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
-  onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
-  onAddSubtask: (title: string, priority: string | null) => void;
+  onAddSubtask: (title: string) => void;
   onDeleteSubtask: (subTaskId: string) => void;
   currentUser: User | null;
   assignees: any[];
@@ -39,7 +38,6 @@ export function TaskSubtasks({
   onToggleSubtask,
   onSubtaskAssigneeChange,
   onSubtaskDueDateChange,
-  onSubtaskPriorityChange,
   onAddSubtask,
   onDeleteSubtask,
   currentUser,
@@ -51,7 +49,6 @@ export function TaskSubtasks({
   onSelectSubtask,
 }: TaskSubtasksProps) {
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState("");
-  const [newSubtaskPriority, setNewSubtaskPriority] = React.useState("");
 
   const sortedSubtasks = React.useMemo(() => {
     return [...subtasks].sort((a, b) => {
@@ -69,9 +66,8 @@ export function TaskSubtasks({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubtaskTitle.trim()) return;
-    onAddSubtask(newSubtaskTitle.trim(), newSubtaskPriority || null);
+    onAddSubtask(newSubtaskTitle.trim());
     setNewSubtaskTitle("");
-    setNewSubtaskPriority("");
   };
 
   return (
@@ -121,16 +117,7 @@ export function TaskSubtasks({
             onChange={(e) => setNewSubtaskTitle(e.target.value)}
             className="flex-1 px-3 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-[#292a2e] dark:text-[#deebff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] dark:focus-visible:ring-[#579dff] focus-visible:border-transparent transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
-          <select
-            value={newSubtaskPriority}
-            onChange={(e) => setNewSubtaskPriority(e.target.value)}
-            className="px-2 py-1.5 text-xs border border-slate-200 dark:border-[#353e47] rounded-[4px] bg-white dark:bg-[#22272b] text-slate-700 dark:text-slate-300 font-semibold focus:outline-none cursor-pointer"
-          >
-            <option value="">Độ ưu tiên</option>
-            <option value="High">Cao</option>
-            <option value="Medium">Trung bình</option>
-            <option value="Low">Thấp</option>
-          </select>
+
           <button
             type="submit"
             disabled={!newSubtaskTitle.trim()}
@@ -164,7 +151,6 @@ export function TaskSubtasks({
               onToggleSubtask={onToggleSubtask}
               onSubtaskAssigneeChange={onSubtaskAssigneeChange}
               onSubtaskDueDateChange={onSubtaskDueDateChange}
-              onSubtaskPriorityChange={onSubtaskPriorityChange}
               onDeleteSubtask={onDeleteSubtask}
               currentUser={currentUser}
               allUsers={assignees}

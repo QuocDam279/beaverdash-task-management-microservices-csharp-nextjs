@@ -64,22 +64,6 @@ export function ProjectOverviewPriorityChart({
       </CardHeader>
       
       <CardBody className="p-5 flex-1 flex flex-col justify-end min-h-[220px]">
-        {/* Legend in the top right of the chart body */}
-        <div className="flex justify-end gap-3.5 text-[10px] font-bold text-[#6b6e76] dark:text-[#8c9bab] mb-3.5 select-none shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-[3px] bg-red-500 shadow-xs" />
-            <span>Cao ({totalHigh})</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-[3px] bg-amber-500 shadow-xs" />
-            <span>Trung bình ({totalMedium})</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-[3px] bg-emerald-500 shadow-xs" />
-            <span>Thấp ({totalLow})</span>
-          </div>
-        </div>
-
         {/* Chart Area with Grid Lines */}
         <div className="relative h-40 border-b border-slate-200 dark:border-[#353e47] pb-2 px-4 w-full flex items-end justify-around">
           {/* Subtle horizontal grid lines */}
@@ -99,35 +83,11 @@ export function ProjectOverviewPriorityChart({
               style={{ height: getBarHeight(reqTotal) }} 
               className="w-10 flex flex-col min-h-[4px] relative rounded-t-[4px] overflow-hidden shadow-[0_2px_8px_rgba(239,68,68,0.1)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.25)] transition-all duration-300 hover:-translate-y-[1px]"
             >
-              {/* Top: High (Red) */}
-              {requiredSubTasksHighCount > 0 && (
+              {reqTotal > 0 && (
                 <div 
-                  style={{ height: `${(requiredSubTasksHighCount / reqTotal) * 100}%` }}
-                  className="bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Bắt buộc - Cao: ${requiredSubTasksHighCount} nhiệm vụ`}
-                >
-                  {(requiredSubTasksHighCount / reqTotal) >= 0.12 && requiredSubTasksHighCount}
-                </div>
-              )}
-              {/* Middle: Medium (Amber) */}
-              {requiredSubTasksMediumCount > 0 && (
-                <div 
-                  style={{ height: `${(requiredSubTasksMediumCount / reqTotal) * 100}%` }}
-                  className="bg-amber-500 hover:bg-amber-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Bắt buộc - Trung bình: ${requiredSubTasksMediumCount} nhiệm vụ`}
-                >
-                  {(requiredSubTasksMediumCount / reqTotal) >= 0.12 && requiredSubTasksMediumCount}
-                </div>
-              )}
-              {/* Bottom: Low (Emerald) */}
-              {requiredSubTasksLowCount > 0 && (
-                <div 
-                  style={{ height: `${(requiredSubTasksLowCount / reqTotal) * 100}%` }}
-                  className="bg-emerald-500 hover:bg-emerald-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Bắt buộc - Thấp: ${requiredSubTasksLowCount} nhiệm vụ`}
-                >
-                  {(requiredSubTasksLowCount / reqTotal) >= 0.12 && requiredSubTasksLowCount}
-                </div>
+                  className="bg-red-500 hover:bg-red-600 transition-colors flex-1"
+                  title={`Bắt buộc: ${reqTotal} nhiệm vụ`}
+                />
               )}
 
               {/* Count on top */}
@@ -146,35 +106,11 @@ export function ProjectOverviewPriorityChart({
               style={{ height: getBarHeight(impTotal) }} 
               className="w-10 flex flex-col min-h-[4px] relative rounded-t-[4px] overflow-hidden shadow-[0_2px_8px_rgba(24,104,219,0.1)] hover:shadow-[0_4px_12px_rgba(24,104,219,0.25)] transition-all duration-300 hover:-translate-y-[1px]"
             >
-              {/* Top: High (Red) */}
-              {importantSubTasksHighCount > 0 && (
+              {impTotal > 0 && (
                 <div 
-                  style={{ height: `${(importantSubTasksHighCount / impTotal) * 100}%` }}
-                  className="bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Quan trọng - Cao: ${importantSubTasksHighCount} nhiệm vụ`}
-                >
-                  {(importantSubTasksHighCount / impTotal) >= 0.12 && importantSubTasksHighCount}
-                </div>
-              )}
-              {/* Middle: Medium (Amber) */}
-              {importantSubTasksMediumCount > 0 && (
-                <div 
-                  style={{ height: `${(importantSubTasksMediumCount / impTotal) * 100}%` }}
-                  className="bg-amber-500 hover:bg-amber-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Quan trọng - Trung bình: ${importantSubTasksMediumCount} nhiệm vụ`}
-                >
-                  {(importantSubTasksMediumCount / impTotal) >= 0.12 && importantSubTasksMediumCount}
-                </div>
-              )}
-              {/* Bottom: Low (Emerald) */}
-              {importantSubTasksLowCount > 0 && (
-                <div 
-                  style={{ height: `${(importantSubTasksLowCount / impTotal) * 100}%` }}
-                  className="bg-emerald-500 hover:bg-emerald-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Quan trọng - Thấp: ${importantSubTasksLowCount} nhiệm vụ`}
-                >
-                  {(importantSubTasksLowCount / impTotal) >= 0.12 && importantSubTasksLowCount}
-                </div>
+                  className="bg-blue-500 hover:bg-blue-600 transition-colors flex-1"
+                  title={`Quan trọng: ${impTotal} nhiệm vụ`}
+                />
               )}
 
               {/* Count on top */}
@@ -193,35 +129,11 @@ export function ProjectOverviewPriorityChart({
               style={{ height: getBarHeight(extTotal) }} 
               className="w-10 flex flex-col min-h-[4px] relative rounded-t-[4px] overflow-hidden shadow-[0_2px_8px_rgba(100,116,139,0.1)] hover:shadow-[0_4px_12px_rgba(100,116,139,0.25)] transition-all duration-300 hover:-translate-y-[1px]"
             >
-              {/* Top: High (Red) */}
-              {extendedSubTasksHighCount > 0 && (
+              {extTotal > 0 && (
                 <div 
-                  style={{ height: `${(extendedSubTasksHighCount / extTotal) * 100}%` }}
-                  className="bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Mở rộng - Cao: ${extendedSubTasksHighCount} nhiệm vụ`}
-                >
-                  {(extendedSubTasksHighCount / extTotal) >= 0.12 && extendedSubTasksHighCount}
-                </div>
-              )}
-              {/* Middle: Medium (Amber) */}
-              {extendedSubTasksMediumCount > 0 && (
-                <div 
-                  style={{ height: `${(extendedSubTasksMediumCount / extTotal) * 100}%` }}
-                  className="bg-amber-500 hover:bg-amber-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Mở rộng - Trung bình: ${extendedSubTasksMediumCount} nhiệm vụ`}
-                >
-                  {(extendedSubTasksMediumCount / extTotal) >= 0.12 && extendedSubTasksMediumCount}
-                </div>
-              )}
-              {/* Bottom: Low (Emerald) */}
-              {extendedSubTasksLowCount > 0 && (
-                <div 
-                  style={{ height: `${(extendedSubTasksLowCount / extTotal) * 100}%` }}
-                  className="bg-emerald-500 hover:bg-emerald-600 transition-colors flex items-center justify-center text-[9px] font-extrabold text-white"
-                  title={`Mở rộng - Thấp: ${extendedSubTasksLowCount} nhiệm vụ`}
-                >
-                  {(extendedSubTasksLowCount / extTotal) >= 0.12 && extendedSubTasksLowCount}
-                </div>
+                  className="bg-slate-500 hover:bg-slate-600 transition-colors flex-1"
+                  title={`Mở rộng: ${extTotal} nhiệm vụ`}
+                />
               )}
 
               {/* Count on top */}

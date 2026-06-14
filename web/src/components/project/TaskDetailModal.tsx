@@ -192,29 +192,12 @@ export function TaskDetailModal({
     }
   };
 
-  const handleSubtaskPriorityChange = async (subTaskId: string, priority: string | null) => {
-    const subtask = subtasks.find((st) => st.id === subTaskId);
-    if (!subtask) return;
+  const handleAddSubtask = async (title: string) => {
     try {
-      await api.patch(`/subtasks/${subTaskId}`, {
-        title: subtask.title,
-        assigneeUserId: subtask.assigneeUserId,
-        dueDate: subtask.dueDate,
-        isCompleted: subtask.isCompleted,
-        priority: priority || null,
-      });
-      await reloadTask();
-    } catch (err) {
-      console.error("Failed to update subtask priority:", err);
-    }
-  };
-
-  const handleAddSubtask = async (title: string, priority: string | null) => {
-    try {
-      await api.post("/subtasks", {
+      await api.post(`/subtasks`, {
         taskId: task.id,
         title,
-        priority: priority || null,
+        priority: null,
       });
       await reloadTask();
     } catch (err) {
@@ -307,7 +290,6 @@ export function TaskDetailModal({
               onToggleSubtask={handleToggleSubtask}
               onSubtaskAssigneeChange={handleSubtaskAssigneeChange}
               onSubtaskDueDateChange={handleSubtaskDueDateChange}
-              onSubtaskPriorityChange={handleSubtaskPriorityChange}
               onAddSubtask={handleAddSubtask}
               onDeleteSubtask={handleDeleteSubtask}
               currentUser={currentUser}
@@ -342,7 +324,6 @@ export function TaskDetailModal({
           onSubtaskTitleChange={handleSubtaskTitleChange}
           onSubtaskAssigneeChange={handleSubtaskAssigneeChange}
           onSubtaskDueDateChange={handleSubtaskDueDateChange}
-          onSubtaskPriorityChange={handleSubtaskPriorityChange}
           onDeleteSubtask={handleDeleteSubtask}
           onAddSubtaskComment={handleAddSubtaskComment}
           onDeleteSubtaskComment={handleDeleteSubtaskComment}

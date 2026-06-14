@@ -12,7 +12,6 @@ import { Avatar } from "@/components/ui/Avatar";
 
 import { SubTask } from "@/types/task";
 import { User } from "@/types/auth";
-import { getSubtaskPriorityLabel } from "@/lib/utils";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 interface TaskSubtaskItemProps {
@@ -22,7 +21,6 @@ interface TaskSubtaskItemProps {
   onToggleSubtask: (subTaskId: string) => void;
   onSubtaskAssigneeChange: (subTaskId: string, assigneeId: string) => void;
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
-  onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
   onDeleteSubtask: (subTaskId: string) => void;
   currentUser: User | null;
   allUsers: User[];
@@ -40,7 +38,6 @@ export function TaskSubtaskItem({
   onToggleSubtask,
   onSubtaskAssigneeChange,
   onSubtaskDueDateChange,
-  onSubtaskPriorityChange,
   onDeleteSubtask,
   currentUser,
   allUsers,
@@ -173,60 +170,7 @@ export function TaskSubtaskItem({
           />
         </div>
  
-        {/* Subtask Priority Selector */}
-        <div className="relative h-6 w-14" onClick={(e) => e.stopPropagation()}>
-          <select
-            value={subtask.priority || ""}
-            onChange={(e) => onSubtaskPriorityChange(subtask.id, e.target.value || null)}
-            disabled={!canManage}
-            className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
-              canManage ? "cursor-pointer" : "cursor-not-allowed"
-            }`}
-            title={canManage ? "Thay đổi độ ưu tiên nhiệm vụ" : "Độ ưu tiên"}
-          >
-            <option value="">Không có</option>
-            <option value="High">Cao</option>
-            <option value="Medium">Trung bình</option>
-            <option value="Low">Thấp</option>
-          </select>
-          {/* Display Badge overlay */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-            {(() => {
-              if (!subtask.priority) {
-                return (
-                  <div className="flex items-center gap-0.5 border border-dashed border-slate-200 dark:border-[#353e47] rounded px-1.5 py-0.5 text-slate-400 dark:text-slate-500 group-hover:border-slate-300 dark:group-hover:border-slate-450 group-hover:text-slate-500 dark:group-hover:text-slate-350 transition-all text-[9px] font-bold">
-                    <span>Ưu tiên</span>
-                  </div>
-                );
-              }
-              const label = getSubtaskPriorityLabel(subtask.priority);
-              const displayLabel = subtask.priority.toLowerCase() === "medium" ? "T.Bình" : label;
-              const p = subtask.priority.toLowerCase();
-              if (p === "high") {
-                return (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 text-red-700 dark:text-red-400 uppercase tracking-wide">
-                    {displayLabel}
-                  </span>
-                );
-              }
-              if (p === "medium") {
-                return (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-                    {displayLabel}
-                  </span>
-                );
-              }
-              if (p === "low") {
-                return (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-455 uppercase tracking-wide">
-                    {displayLabel}
-                  </span>
-                );
-              }
-              return null;
-            })()}
-          </div>
-        </div>
+
 
         {/* Subtask Assignee Selector */}
         {!isPersonalProject && (

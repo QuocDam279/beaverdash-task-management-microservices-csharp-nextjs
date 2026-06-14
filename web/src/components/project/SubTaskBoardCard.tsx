@@ -16,33 +16,7 @@ interface SubTaskBoardCardProps {
   readOnly?: boolean;
 }
 
-const renderPriority = (priority: string | null) => {
-  if (!priority) return null;
-  const p = priority.toLowerCase();
-  const label = getTaskPriorityLabel(priority);
-  if (p === "required" || p === "critical" || p === "high") {
-    return (
-      <span className="flex items-center gap-0.5 rounded bg-red-50 dark:bg-red-950/20 px-1 py-0.2 text-[9px] font-extrabold uppercase text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/30">
-        {label}
-      </span>
-    );
-  }
-  if (p === "important" || p === "medium") {
-    return (
-      <span className="flex items-center gap-0.5 rounded bg-blue-50 dark:bg-blue-950/20 px-1 py-0.2 text-[9px] font-bold uppercase text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/30">
-        {label}
-      </span>
-    );
-  }
-  if (p === "extended" || p === "low") {
-    return (
-      <span className="flex items-center gap-0.5 rounded bg-slate-50 dark:bg-slate-900/40 px-1 py-0.2 text-[9px] font-medium uppercase text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#353e47]">
-        {label}
-      </span>
-    );
-  }
-  return null;
-};
+
 
 const renderDueDate = (dueDateStr: string | null, isDone: boolean = false) => {
   if (!dueDateStr) return null;
@@ -152,7 +126,6 @@ export function SubTaskBoardCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
-          {renderPriority(subTask.priority)}
           {renderDueDate(subTask.dueDate, column.isDone)}
         </div>
       </div>

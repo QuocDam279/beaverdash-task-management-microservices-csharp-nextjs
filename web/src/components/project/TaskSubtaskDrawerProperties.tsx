@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { SubTask } from "@/types/task";
-import { getSubtaskPriorityLabel } from "@/lib/utils";
 
 /**
  * @component TaskSubtaskDrawerProperties
@@ -16,7 +15,6 @@ interface TaskSubtaskDrawerPropertiesProps {
   taskDueDate?: string | null;
   onSubtaskAssigneeChange: (subTaskId: string, assigneeId: string) => void;
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
-  onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
   assignees: any[];
   canManageSubtasks: boolean;
   readOnly?: boolean;
@@ -29,7 +27,6 @@ export function TaskSubtaskDrawerProperties({
   taskDueDate,
   onSubtaskAssigneeChange,
   onSubtaskDueDateChange,
-  onSubtaskPriorityChange,
   assignees,
   canManageSubtasks,
   readOnly = false,
@@ -130,52 +127,7 @@ export function TaskSubtaskDrawerProperties({
           </div>
         </div>
 
-        {/* Priority */}
-        <div className="flex items-center justify-between">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Độ ưu tiên:</span>
-          <div className="relative h-7 w-28 flex items-center justify-end">
-            <select
-              value={subtask.priority || ""}
-              onChange={(e) => onSubtaskPriorityChange(subtask.id, e.target.value || null)}
-              disabled={!canManageSubtasks || readOnly}
-              className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
-                canManageSubtasks && !readOnly ? "cursor-pointer" : "cursor-not-allowed"
-              }`}
-            >
-              <option value="">Không có</option>
-              <option value="High">Cao</option>
-              <option value="Medium">Trung bình</option>
-              <option value="Low">Thấp</option>
-            </select>
-            
-            <div className="pointer-events-none">
-              {(() => {
-                if (!subtask.priority) {
-                  return (
-                    <div className="flex items-center gap-1 bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                      <span>Chưa chọn</span>
-                      {canManageSubtasks && !readOnly && <span className="text-[9px]">▼</span>}
-                    </div>
-                  );
-                }
-                const label = getSubtaskPriorityLabel(subtask.priority);
-                const p = subtask.priority.toLowerCase();
-                
-                let badgeClass = "";
-                if (p === "high") badgeClass = "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40 text-orange-700 dark:text-orange-400";
-                else if (p === "medium") badgeClass = "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-400";
-                else badgeClass = "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-[#353e47] text-slate-500 dark:text-slate-400";
-                
-                return (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide flex items-center gap-1 ${badgeClass}`}>
-                    {label}
-                    {canManageSubtasks && !readOnly && <span className="scale-90 opacity-70">▼</span>}
-                  </span>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );

@@ -24,7 +24,6 @@ interface TaskSubtaskDrawerProps {
   onSubtaskTitleChange: (subTaskId: string, title: string) => void;
   onSubtaskAssigneeChange: (subTaskId: string, assigneeId: string) => void;
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
-  onSubtaskPriorityChange: (subTaskId: string, priority: string | null) => void;
   onDeleteSubtask: (subTaskId: string) => void;
   onAddSubtaskComment: (subTaskId: string, content: string, attachments?: any[]) => void;
   onDeleteSubtaskComment: (subTaskId: string, commentId: string) => void;
@@ -45,7 +44,6 @@ export function TaskSubtaskDrawer({
   onSubtaskTitleChange,
   onSubtaskAssigneeChange,
   onSubtaskDueDateChange,
-  onSubtaskPriorityChange,
   onDeleteSubtask,
   onAddSubtaskComment,
   onDeleteSubtaskComment,
@@ -155,7 +153,6 @@ export function TaskSubtaskDrawer({
               taskDueDate={taskDueDate}
               onSubtaskAssigneeChange={onSubtaskAssigneeChange}
               onSubtaskDueDateChange={onSubtaskDueDateChange}
-              onSubtaskPriorityChange={onSubtaskPriorityChange}
               assignees={assignees}
               canManageSubtasks={canManageSubtasks}
               readOnly={readOnly}
