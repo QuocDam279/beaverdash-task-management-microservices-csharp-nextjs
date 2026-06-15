@@ -183,14 +183,14 @@ function LoginContent() {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 font-sans selection:bg-[#1868db]/20 selection:text-[#1868db]">
+    <div className="flex min-h-screen w-full bg-[#FAF9F5] font-sans selection:bg-amber-200/50 selection:text-[#5c3a21]">
       {/* LEFT PANEL: Sign In Form & Features navigation */}
-      <div className="flex flex-col justify-between w-full lg:w-[45%] xl:w-[40%] bg-white p-8 sm:p-12 md:p-16 z-10 shadow-[0_0_40px_rgba(0,0,0,0.03)] border-r border-slate-100 relative overflow-hidden shrink-0">
+      <div className="flex flex-col justify-between w-full lg:w-[45%] xl:w-[40%] bg-[#FAF9F5] p-8 sm:p-12 md:p-16 z-10 shadow-[0_0_40px_rgba(43,34,26,0.02)] border-r border-stone-200/60 relative overflow-hidden shrink-0">
         {/* Subtle background radial glow */}
-        <div className="absolute bottom-[-150px] left-[-150px] w-[300px] h-[300px] rounded-full bg-gradient-to-br from-[#1868db]/5 to-transparent blur-[60px] pointer-events-none" />
+        <div className="absolute bottom-[-150px] left-[-150px] w-[300px] h-[300px] rounded-full bg-gradient-to-br from-[#854d0e]/5 to-transparent blur-[60px] pointer-events-none" />
 
         <div className="flex items-center justify-between animate-fade-slide-up select-none">
-          <span className="text-xs font-semibold text-[#1868db] bg-[#1868db]/10 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-full">
             v1.0.0 Stable
           </span>
         </div>
@@ -203,8 +203,8 @@ function LoginContent() {
           </div>
 
           <div className="space-y-0.5 mb-4 animate-fade-slide-up delay-200 text-center">
-            <h1 className="text-xl font-bold tracking-tight text-[#292a2e]">Đăng nhập BeaverDash</h1>
-            <p className="text-xs text-[#505258] leading-relaxed">
+            <h1 className="text-xl font-bold tracking-tight text-[#2b221a]">Đăng nhập BeaverDash</h1>
+            <p className="text-xs text-stone-500 leading-relaxed">
               Truy cập nhanh không gian làm việc của bạn bằng tài khoản Google.
             </p>
           </div>
@@ -219,18 +219,18 @@ function LoginContent() {
                   onClick={() => setActiveSection(idx)}
                   className={`w-full flex items-center gap-3.5 p-3 rounded-xl border text-left cursor-pointer transition-all duration-300 ${
                     isActive
-                      ? "bg-slate-50 border-slate-200/80 shadow-[0_4px_12px_rgba(24,104,219,0.04)] text-[#1868db]"
-                      : "bg-white hover:bg-slate-50/50 border-slate-100 text-[#505258]"
+                      ? "bg-white border-stone-200 shadow-[0_4px_12px_rgba(133,77,14,0.05)] text-amber-700"
+                      : "bg-transparent hover:bg-white/40 border-transparent text-stone-600"
                   }`}
                 >
                   <div className={`p-2.5 rounded-lg shrink-0 transition-colors ${
-                    isActive ? "bg-[#1868db]/10 text-[#1868db]" : "bg-slate-100 text-slate-400"
+                    isActive ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-400"
                   }`}>
                     {sec.icon}
                   </div>
                   <div className="space-y-0.5 min-w-0">
-                    <h4 className="text-xs font-bold text-[#292a2e] leading-none">{sec.title}</h4>
-                    <p className="text-[10px] text-slate-500 truncate leading-tight">{sec.desc}</p>
+                    <h4 className="text-xs font-bold text-[#2b221a] leading-none">{sec.title}</h4>
+                    <p className="text-[10px] text-stone-550 truncate leading-tight">{sec.desc}</p>
                   </div>
                 </button>
               );
@@ -252,11 +252,11 @@ function LoginContent() {
           <div className="relative min-h-[50px] w-full animate-fade-slide-up delay-300 flex justify-center items-center">
             {isLoading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/95 z-20 rounded-xl">
-                <svg className="animate-spin h-5 w-5 text-[#1868db]" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-amber-700" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                <span className="text-[10px] text-[#505258] font-bold">Xác thực tài khoản Google...</span>
+                <span className="text-[10px] text-stone-600 font-bold">Xác thực tài khoản Google...</span>
               </div>
             )}
             <div
@@ -273,9 +273,9 @@ function LoginContent() {
         <div className="animate-fade-slide-up delay-400 text-center w-full">
           <p className="text-[10px] text-[#6b6e76] leading-normal text-center">
             Bằng việc tiếp tục, bạn đồng ý với{" "}
-            <a href="#" className="underline hover:text-[#1868db] transition-colors">Điều khoản</a>
+            <a href="#" className="underline hover:text-[#854d0e] transition-colors">Điều khoản</a>
             {" "}và{" "}
-            <a href="#" className="underline hover:text-[#1868db] transition-colors">Chính sách bảo mật</a>
+            <a href="#" className="underline hover:text-[#854d0e] transition-colors">Chính sách bảo mật</a>
             {" "}của chúng tôi.
           </p>
         </div>

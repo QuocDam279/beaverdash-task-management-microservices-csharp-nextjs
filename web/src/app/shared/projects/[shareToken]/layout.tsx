@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { toUtcLocalDate } from "@/lib/utils";
+import { getTabIcon } from "@/components/project";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -172,13 +173,14 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
               <Link
                 key={tab.name}
                 href={tab.href}
-                className={`pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+                className={`group pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                   isTabActive
                     ? "border-[#1868db] text-[#1868db]"
                     : "border-transparent text-[#505258] hover:text-[#1868db] hover:border-slate-300"
                 }`}
               >
-                {tab.name}
+                {getTabIcon(tab.name)}
+                <span>{tab.name}</span>
               </Link>
             );
           })}

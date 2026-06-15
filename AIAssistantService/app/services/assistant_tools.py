@@ -28,11 +28,11 @@ class AIAssistantTools:
         sprint_id: str = None
     ) -> str:
         """
-        Tạo một công việc (Task) chính mới cho dự án hiện tại.
+        Tạo một công việc (Task) mới cho dự án hiện tại.
 
         Args:
             title: Tiêu đề công việc. Không được để trống.
-            priority: Độ ưu tiên của công việc cha (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Bắt buộc/Required, Quan trọng/Important, Mở rộng/Extended). Mặc định là 'Quan trọng'.
+            priority: Độ ưu tiên của công việc (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Bắt buộc/Required, Quan trọng/Important, Mở rộng/Extended). Mặc định là 'Quan trọng'.
             start_date: Ngày bắt đầu công việc (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             due_date: Ngày hạn hoàn thành (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             status: Trạng thái/Cột muốn tạo công việc (ví dụ: 'Chưa thực hiện', 'Đang thực hiện', 'Hoàn thành').
@@ -130,32 +130,19 @@ class AIAssistantTools:
         self,
         task_id: str,
         title: str,
-        priority: str = "Medium",
         due_date: str = None,
         assignee_id: str = None
     ) -> str:
         """
-        Tạo một công việc con (Subtask) cho một công việc cha đã tồn tại.
+        Tạo một nhiệm vụ (Subtask) cho một công việc (Task) đã tồn tại.
 
         Args:
-            task_id: ID (UUID) của công việc cha.
-            title: Tiêu đề công việc con. Không được để trống.
-            priority: Độ ưu tiên của công việc con (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Thấp/Low, Trung bình/Medium, Cao/High). Mặc định là 'Trung bình'.
-            due_date: Hạn hoàn thành của công việc con (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
-            assignee_id: ID (UUID) của thành viên dự án được phân công thực hiện công việc con này. Nếu không phân công ai, hãy để trống hoặc truyền None.
+            task_id: ID (UUID) của công việc.
+            title: Tiêu đề nhiệm vụ. Không được để trống.
+            due_date: Hạn hoàn thành của nhiệm vụ (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
+            assignee_id: ID (UUID) của thành viên dự án được phân công thực hiện nhiệm vụ này. Nếu không phân công ai, hãy để trống hoặc truyền None.
         """
         try:
-            # Map priority from Vietnamese/English to backend enum
-            p_lower = priority.strip().lower() if priority else "medium"
-            if p_lower in ["thấp", "thap", "low"]:
-                mapped_priority = "Low"
-            elif p_lower in ["trung bình", "trung binh", "medium"]:
-                mapped_priority = "Medium"
-            elif p_lower in ["cao", "high"]:
-                mapped_priority = "High"
-            else:
-                mapped_priority = "Medium"
-
             # Step 1: Fetch board to check for duplicate subtask title under the same parent task
             board_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/board"
             async with httpx.AsyncClient() as client:
@@ -181,14 +168,13 @@ class AIAssistantTools:
                         for st in parent_task.get("subTasks", []):
                             if st.get("title", "").strip().lower() == title.strip().lower():
                                 subtask_id = st.get("id")
-                                return f"Thành công: Công việc con '{title}' đã tồn tại dưới công việc cha '{parent_task.get('title')}' này (ID: {subtask_id}). Không cần tạo lại."
+                                return f"Thành công: Nhiệm vụ '{title}' đã tồn tại dưới công việc '{parent_task.get('title')}' này (ID: {subtask_id}). Không cần tạo lại."
             
             # Step 2: Post to PM API to create the subtask
             subtask_payload = {
                 "TaskId": task_id,
                 "Title": title,
-                "DueDate": due_date,
-                "Priority": mapped_priority
+                "DueDate": due_date
             }
             
             if assignee_id:
@@ -202,14 +188,14 @@ class AIAssistantTools:
                 if response.status_code == 201:
                     result = response.json()
                     subtask_id = result.get("id")
-                    return f"Thành công: Đã tạo công việc con '{title}' (ID: {subtask_id}) cho công việc cha '{task_id}'."
+                    return f"Thành công: Đã tạo nhiệm vụ '{title}' (ID: {subtask_id}) cho công việc '{task_id}'."
                 else:
                     error_detail = response.text
                     return f"Lỗi từ ProjectManagement Service: {response.status_code} - {error_detail}"
                     
         except Exception as ex:
             logger.exception("Error executing create_subtask tool")
-            return f"Lỗi ngoại lệ khi tạo công việc con: {str(ex)}"
+            return f"Lỗi ngoại lệ khi tạo nhiệm vụ: {str(ex)}"
 
     async def get_project_details(self) -> str:
         """
@@ -268,10 +254,10 @@ class AIAssistantTools:
         sprint_id: str = None
     ) -> str:
         """
-        Cập nhật thông tin của một công việc chính (Task) đã tồn tại.
+        Cập nhật thông tin của một công việc (Task) đã tồn tại.
 
         Args:
-            task_id: ID (UUID) của công việc chính cần cập nhật.
+            task_id: ID (UUID) của công việc cần cập nhật.
             title: Tiêu đề mới của công việc.
             priority: Độ ưu tiên mới (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Bắt buộc/Required, Quan trọng/Important, Mở rộng/Extended).
             start_date: Ngày bắt đầu mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
@@ -365,30 +351,28 @@ class AIAssistantTools:
                     if response.status_code not in [200, 204]:
                         return f"Lỗi từ ProjectManagement Service khi cập nhật chi tiết công việc: {response.status_code} - {response.text}"
 
-                return f"Thành công: Đã cập nhật công việc chính (ID: {task_id})."
+                return f"Thành công: Đã cập nhật công việc (ID: {task_id})."
         except Exception as ex:
             logger.exception("Error executing update_task tool")
-            return f"Lỗi ngoại lệ khi cập nhật công việc chính: {str(ex)}"
+            return f"Lỗi ngoại lệ khi cập nhật công việc: {str(ex)}"
 
     async def update_subtask(
         self,
         subtask_id: str,
         title: str = None,
-        priority: str = None,
         due_date: str = None,
         completed: bool = None,
         assignee_id: str = None
     ) -> str:
         """
-        Cập nhật thông tin của một công việc con (Subtask) đã tồn tại.
+        Cập nhật thông tin của một nhiệm vụ (Subtask) đã tồn tại.
 
         Args:
-            subtask_id: ID (UUID) của công việc con cần cập nhật.
-            title: Tiêu đề mới của công việc con.
-            priority: Độ ưu tiên mới (CHỈ CHẤP NHẬN 3 giá trị tiếng Việt hoặc tiếng Anh tương ứng: Thấp/Low, Trung bình/Medium, Cao/High).
+            subtask_id: ID (UUID) của nhiệm vụ cần cập nhật.
+            title: Tiêu đề mới của nhiệm vụ.
             due_date: Hạn hoàn thành mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
             completed: Trạng thái hoàn thành (True nếu đã hoàn thành, False nếu chưa).
-            assignee_id: ID (UUID) của thành viên dự án mới được gán cho công việc con này. Truyền chuỗi '00000000-0000-0000-0000-000000000000' hoặc 'none' để hủy phân công (unassign).
+            assignee_id: ID (UUID) của thành viên dự án mới được gán cho nhiệm vụ này. Truyền chuỗi '00000000-0000-0000-0000-000000000000' hoặc 'none' để hủy phân công (unassign).
         """
         try:
             # 1. Fetch current board to get subtask's current state as fallback (required fields in DTO)
@@ -396,7 +380,7 @@ class AIAssistantTools:
             async with httpx.AsyncClient() as client:
                 board_response = await client.get(board_url, headers=self.headers, timeout=10.0)
                 if board_response.status_code != 200:
-                    return f"Lỗi: Không thể lấy dữ liệu bảng để định cấu hình fallback cho công việc con (HTTP {board_response.status_code})."
+                    return f"Lỗi: Không thể lấy dữ liệu bảng để định cấu hình fallback cho nhiệm vụ (HTTP {board_response.status_code})."
                 
                 board_data = board_response.json()
                 columns = board_data.get("boardColumns", [])
@@ -414,27 +398,13 @@ class AIAssistantTools:
                         break
                 
                 if not target_subtask:
-                    return f"Lỗi: Không tìm thấy công việc con với ID '{subtask_id}' trong dự án."
+                    return f"Lỗi: Không tìm thấy nhiệm vụ với ID '{subtask_id}' trong dự án."
 
                 # Get fallback values from existing subtask
                 current_title = target_subtask.get("title")
                 current_completed = target_subtask.get("isCompleted", False)
                 current_due_date = target_subtask.get("dueDate")
-                current_priority = target_subtask.get("priority")
                 current_assignee = target_subtask.get("assigneeUserId")
-
-                # Map priority if provided
-                mapped_priority = None
-                if priority is not None:
-                    p_lower = priority.strip().lower()
-                    if p_lower in ["thấp", "thap", "low"]:
-                        mapped_priority = "Low"
-                    elif p_lower in ["trung bình", "trung binh", "medium"]:
-                        mapped_priority = "Medium"
-                    elif p_lower in ["cao", "high"]:
-                        mapped_priority = "High"
-                else:
-                    mapped_priority = current_priority
 
                 # Use fallbacks if parameters are not provided
                 final_title = title if title is not None else current_title
@@ -455,8 +425,7 @@ class AIAssistantTools:
                     "Title": final_title,
                     "AssigneeUserId": final_assignee,
                     "DueDate": final_due_date,
-                    "IsCompleted": final_completed,
-                    "Priority": mapped_priority
+                    "IsCompleted": final_completed
                 }
 
                 patch_url = f"{self.pm_base_url}/api/SubTasks/{subtask_id}"
@@ -464,13 +433,13 @@ class AIAssistantTools:
                 response = await client.patch(patch_url, json=patch_payload, headers=self.headers, timeout=10.0)
                 
                 if response.status_code in [200, 204]:
-                    return f"Thành công: Đã cập nhật công việc con '{final_title}' (ID: {subtask_id})."
+                    return f"Thành công: Đã cập nhật nhiệm vụ '{final_title}' (ID: {subtask_id})."
                 else:
                     return f"Lỗi từ ProjectManagement Service: {response.status_code} - {response.text}"
 
         except Exception as ex:
             logger.exception("Error executing update_subtask tool")
-            return f"Lỗi ngoại lệ khi cập nhật công việc con: {str(ex)}"
+            return f"Lỗi ngoại lệ khi cập nhật nhiệm vụ: {str(ex)}"
 
     async def get_project_sprints(self) -> str:
         """

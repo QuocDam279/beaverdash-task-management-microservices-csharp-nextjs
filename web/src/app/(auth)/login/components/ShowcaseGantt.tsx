@@ -4,14 +4,14 @@ import * as React from "react";
 
 export function ShowcaseGantt() {
   return (
-    <div className="space-y-3 animate-fade-slide-up duration-300 text-left w-full preserve-3d text-slate-800">
+    <div className="space-y-3 animate-fade-slide-up duration-300 text-left w-full text-slate-800">
       <div className="flex justify-between items-center px-1 text-xs">
         <span className="font-bold text-slate-700">Sơ đồ Tiến độ</span>
         <span className="text-[9px] bg-blue-50 text-blue-600 border border-blue-100 font-bold px-2 py-0.5 rounded">Sprint 1</span>
       </div>
 
       {/* Gantt Grid Container */}
-      <div className="border border-slate-200/60 rounded-xl overflow-hidden bg-white/40 flex flex-col text-[10px] preserve-3d">
+      <div className="border border-slate-200/60 rounded-xl overflow-hidden bg-white/40 flex flex-col text-[10px]">
         {/* Timeline Header Row */}
         <div className="grid grid-cols-10 border-b border-slate-200/50 bg-slate-200/20 font-semibold text-slate-400 py-1.5 text-center">
           <div className="col-span-3 text-left pl-3 text-slate-500 font-bold">Nhiệm vụ</div>
@@ -26,7 +26,7 @@ export function ShowcaseGantt() {
           { name: "Thêm hoạt họa login", color: "from-amber-50 to-amber-100 text-amber-800 border-amber-200", start: 2, span: 3 },
           { name: "Tối ưu hóa Auth API", color: "from-purple-50 to-purple-100 text-purple-700 border-purple-200", start: 4, span: 4 },
         ].map((taskRow, idx) => (
-          <div key={idx} className="grid grid-cols-10 border-b border-slate-200/40 last:border-b-0 py-3 relative items-center text-center preserve-3d min-h-[40px]">
+          <div key={idx} className="grid grid-cols-10 border-b border-slate-200/40 last:border-b-0 py-3 relative items-center text-center min-h-[40px]">
             <div className="col-span-3 text-left pl-3 text-slate-700 font-bold truncate pr-1">{taskRow.name}</div>
             
             {/* Grid background markers */}

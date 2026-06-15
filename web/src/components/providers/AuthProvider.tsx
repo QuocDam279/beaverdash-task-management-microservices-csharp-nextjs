@@ -49,10 +49,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (isLoading) return;
 
+    const isPublicPage = pathname === "/" || pathname === "/login" || pathname?.startsWith("/shared");
     const isAuthPage = pathname === "/login";
     const hasToken = !!token;
 
-    if (!hasToken && !isAuthPage) {
+    if (!hasToken && !isPublicPage) {
       // Redirect to login if trying to access any page without token
       const currentPath = window.location.pathname + window.location.search;
       routerRef.current.push(`/login?redirect=${encodeURIComponent(currentPath)}`);

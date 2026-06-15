@@ -4,7 +4,7 @@ import * as React from "react";
 
 export function ShowcaseCalendar() {
   return (
-    <div className="space-y-3 animate-fade-slide-up duration-300 text-left w-full preserve-3d text-slate-800">
+    <div className="space-y-3 animate-fade-slide-up duration-300 text-left w-full text-slate-800">
       <div className="flex justify-between items-center px-1 text-xs">
         <span className="font-bold text-slate-700">Tháng 6, 2026</span>
         <div className="flex gap-3 text-slate-400 text-[10px] font-bold select-none">
@@ -14,7 +14,7 @@ export function ShowcaseCalendar() {
       </div>
       
       {/* Compact Calendar Grid (7 columns for week, 3 rows for 21 days) */}
-      <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] preserve-3d">
+      <div className="grid grid-cols-7 gap-1.5 text-center text-[10px]">
         {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((dayName, idx) => (
           <span key={idx} className="text-slate-400 font-bold uppercase tracking-wider text-[8px]">{dayName}</span>
         ))}

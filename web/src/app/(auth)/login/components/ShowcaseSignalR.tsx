@@ -62,6 +62,12 @@ export function ShowcaseSignalR() {
     },
   ]);
   const [spotlightCoords, setSpotlightCoords] = React.useState<{ [key: number]: { x: number; y: number } }>({});
+  
+  // Real-time Multiplayer Cursors State
+  const [cursors, setCursors] = React.useState([
+    { id: 1, name: "Linh Chi", color: "bg-emerald-500", stroke: "#10b981", x: 80, y: 90 },
+    { id: 2, name: "Hải Nam", color: "bg-amber-500", stroke: "#f59e0b", x: 260, y: 180 },
+  ]);
 
   React.useEffect(() => {
     const pool = [
@@ -131,6 +137,34 @@ export function ShowcaseSignalR() {
     return () => clearInterval(interval);
   }, []);
 
+  // Smooth Cursor Drifting Animation Loop
+  React.useEffect(() => {
+    let frameId: number;
+    let angle1 = 0;
+    let angle2 = Math.PI;
+
+    const animate = () => {
+      angle1 += 0.006;
+      angle2 += 0.008;
+
+      const x1 = 120 + Math.cos(angle1) * 75 + Math.sin(angle1 * 1.5) * 15;
+      const y1 = 100 + Math.sin(angle1) * 60;
+
+      const x2 = 280 + Math.cos(angle2) * 85;
+      const y2 = 180 + Math.sin(angle2 * 1.8) * 45;
+
+      setCursors([
+        { id: 1, name: "Linh Chi", color: "bg-emerald-500", stroke: "#10b981", x: x1, y: y1 },
+        { id: 2, name: "Hải Nam", color: "bg-amber-500", stroke: "#f59e0b", x: x2, y: y2 },
+      ]);
+
+      frameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
   const handleSpotlightMouseMove = (id: number, e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setSpotlightCoords((prev) => ({
@@ -142,30 +176,53 @@ export function ShowcaseSignalR() {
   return (
     <div className="w-full grid grid-cols-1 xl:grid-cols-5 gap-8 items-center font-sans text-slate-800">
       {/* Info Panel (Right 2 columns in layout, but standard placement) */}
-      <div className="xl:col-span-2 space-y-4 text-left order-first xl:order-last">
+      <div className="xl:col-span-2 space-y-4 text-left order-first xl:order-last select-none">
         <span className="text-[10px] font-bold tracking-widest text-[#1868db] uppercase">Đồng bộ thời gian thực</span>
         <h2 className="text-xl font-bold text-slate-800">Kết nối đội nhóm tức thì</h2>
         <p className="text-xs text-slate-500 leading-relaxed">
           Mọi thay đổi từ trạng thái công việc, bình luận thảo luận, phân công thành viên cho đến các cập nhật của Trợ lý AI đều được đồng bộ ngay lập tức tới tất cả màn hình của dự án mà không cần tải lại trang.
         </p>
         <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
+          <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Đã kết nối thời gian thực</span>
+          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Đã kết nối thời gian thực (SignalR)</span>
         </div>
       </div>
 
       {/* Scrolling Log Stream (Left 3 columns) */}
-      <div className="xl:col-span-3 space-y-3.5 w-full">
+      <div className="xl:col-span-3 space-y-3.5 w-full relative min-h-[350px] overflow-hidden p-2 rounded-2xl bg-slate-200/20 border border-slate-250/10">
+        
+        {/* Collaborative multiplayer cursor overlays */}
+        {cursors.map((cursor) => (
+          <div
+            key={cursor.id}
+            className="absolute pointer-events-none z-30 transition-all duration-75 ease-out select-none"
+            style={{ left: `${cursor.x}px`, top: `${cursor.y}px` }}
+          >
+            <svg className="w-4.5 h-4.5 text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.15)]" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                fill={cursor.stroke}
+                stroke="white"
+                strokeWidth="1.5"
+                d="M4.5 3V17.5L9.2 13L13.8 21L16.8 19.3L12.3 11.5L18.3 11.5L4.5 3Z"
+              />
+            </svg>
+            <span className={`ml-3 mt-1.5 block px-1.5 py-0.5 rounded text-[8px] font-extrabold text-white shadow-md leading-none ${cursor.color}`}>
+              {cursor.name}
+            </span>
+          </div>
+        ))}
+
+        {/* Stream Items */}
         {activities.map((act) => {
           const coords = spotlightCoords[act.id] || { x: 0, y: 0 };
           return (
             <div
               key={act.id}
               onMouseMove={(e) => handleSpotlightMouseMove(act.id, e)}
-              className="relative bg-white/70 hover:bg-white border border-slate-200/70 hover:border-slate-300 rounded-2xl p-4 overflow-hidden cursor-pointer select-none transition-all duration-300 flex justify-between items-center group shadow-md"
+              className="relative bg-white/75 hover:bg-white border border-slate-200/50 hover:border-slate-300 rounded-2xl p-4 overflow-hidden cursor-pointer select-none transition-all duration-300 flex justify-between items-center group shadow-md"
             >
               <div
                 className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"

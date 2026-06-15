@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { EditProjectModal, ShareProjectModal } from "@/components/project";
+import { EditProjectModal, ShareProjectModal, getTabIcon } from "@/components/project";
 import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { AIAssistantContainer } from "@/components/features/ai-assistant";
@@ -320,12 +320,13 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
               <Link
                 key={tab.name}
                 href={tab.href}
-                className={`pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`group pb-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                   isTabActive
                     ? "border-[#1868db] dark:border-[#579dff] text-[#1868db] dark:text-[#579dff]"
                     : "border-transparent text-[#505258] dark:text-[#8c9bab] hover:text-[#1868db] dark:hover:text-[#579dff] hover:border-slate-300 dark:hover:border-slate-500"
                 }`}
               >
+                {getTabIcon(tab.name)}
                 <span>{tab.name}</span>
                 {tab.name === "Trò chuyện" && hasUnreadChat && (
                   <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
