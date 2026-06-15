@@ -511,4 +511,128 @@ class AIAssistantTools:
             logger.exception("Error executing get_project_sprints tool")
             return f"Lỗi ngoại lệ khi lấy danh sách Sprint: {str(ex)}"
 
+    async def create_sprint(
+        self,
+        name: str,
+        goal: str = None,
+        start_date: str = None,
+        end_date: str = None
+    ) -> str:
+        """
+        Tạo một Sprint mới cho dự án hiện tại. Sprint mới luôn ở trạng thái Tương lai (Future).
+
+        Args:
+            name: Tên Sprint (bắt buộc, phải duy nhất trong dự án). Ví dụ: 'Sprint 1', 'Sprint 2'.
+            goal: Mục tiêu của Sprint, mô tả ngắn gọn phạm vi công việc trong Sprint này.
+            start_date: Ngày bắt đầu Sprint (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ). Phải nằm trong khoảng ngày bắt đầu và kết thúc của dự án.
+            end_date: Ngày kết thúc Sprint (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ). Phải sau start_date và nằm trong khoảng ngày dự án.
+        """
+        try:
+            # Step 1: Check existing sprints for duplicate name
+            board_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/board"
+            async with httpx.AsyncClient() as client:
+                board_response = await client.get(board_url, headers=self.headers, timeout=10.0)
+                if board_response.status_code == 200:
+                    board_data = board_response.json()
+                    existing_sprints = board_data.get("sprints", [])
+                    for s in existing_sprints:
+                        if s.get("name", "").strip().lower() == name.strip().lower():
+                            sprint_id = s.get("id")
+                            return f"Thành công: Sprint '{name}' đã tồn tại trong dự án (ID: {sprint_id}). Không cần tạo lại."
+
+                # Step 2: Create sprint via PM API
+                sprint_payload = {
+                    "ProjectId": self.project_id_str,
+                    "Name": name.strip()
+                }
+                if goal:
+                    sprint_payload["Goal"] = goal
+                if start_date:
+                    sprint_payload["StartDate"] = start_date
+                if end_date:
+                    sprint_payload["EndDate"] = end_date
+
+                create_url = f"{self.pm_base_url}/api/Sprints"
+                logger.info(f"Creating sprint via PM Service: {create_url} with payload: {sprint_payload}")
+                response = await client.post(create_url, json=sprint_payload, headers=self.headers, timeout=10.0)
+
+                if response.status_code == 201:
+                    result = response.json()
+                    sprint_id = result.get("id")
+                    return f"Thành công: Đã tạo Sprint '{name}' (ID: {sprint_id}) với trạng thái Tương lai (Future)."
+                else:
+                    error_detail = response.text
+                    return f"Lỗi từ ProjectManagement Service: {response.status_code} - {error_detail}"
+
+        except Exception as ex:
+            logger.exception("Error executing create_sprint tool")
+            return f"Lỗi ngoại lệ khi tạo Sprint: {str(ex)}"
+
+    async def update_sprint(
+        self,
+        sprint_id: str,
+        name: str = None,
+        goal: str = None,
+        start_date: str = None,
+        end_date: str = None
+    ) -> str:
+        """
+        Cập nhật thông tin một Sprint đã tồn tại. Chỉ Sprint ở trạng thái Tương lai (Future) mới có thể cập nhật.
+
+        Args:
+            sprint_id: ID (UUID) của Sprint cần cập nhật.
+            name: Tên mới của Sprint (phải duy nhất trong dự án).
+            goal: Mục tiêu mới của Sprint.
+            start_date: Ngày bắt đầu mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
+            end_date: Ngày kết thúc mới (Định dạng ISO 8601: YYYY-MM-DDTHH:MM:SSZ).
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                # Step 1: Fetch current sprint details for fallback values
+                detail_url = f"{self.pm_base_url}/api/Sprints/{sprint_id}"
+                logger.info(f"Fetching sprint details from: {detail_url}")
+                detail_response = await client.get(detail_url, headers=self.headers, timeout=10.0)
+
+                if detail_response.status_code != 200:
+                    return f"Lỗi: Không tìm thấy Sprint với ID '{sprint_id}' (HTTP {detail_response.status_code})."
+
+                current_data = detail_response.json()
+                current_status = current_data.get("status", "")
+                if current_status != "Future":
+                    return f"Lỗi: Chỉ Sprint ở trạng thái Tương lai (Future) mới có thể cập nhật. Sprint này đang ở trạng thái '{current_status}'."
+
+                # Step 2: Build update payload with fallback to current values
+                patch_payload = {
+                    "Name": name.strip() if name else current_data.get("name"),
+                }
+                if goal is not None:
+                    patch_payload["Goal"] = goal
+                elif current_data.get("goal"):
+                    patch_payload["Goal"] = current_data.get("goal")
+
+                if start_date is not None:
+                    patch_payload["StartDate"] = start_date
+                elif current_data.get("startDate"):
+                    patch_payload["StartDate"] = current_data.get("startDate")
+
+                if end_date is not None:
+                    patch_payload["EndDate"] = end_date
+                elif current_data.get("endDate"):
+                    patch_payload["EndDate"] = current_data.get("endDate")
+
+                # Step 3: Send PATCH request
+                patch_url = f"{self.pm_base_url}/api/Sprints/{sprint_id}"
+                logger.info(f"Updating sprint via PM Service: {patch_url} with payload: {patch_payload}")
+                response = await client.patch(patch_url, json=patch_payload, headers=self.headers, timeout=10.0)
+
+                if response.status_code in [200, 204]:
+                    return f"Thành công: Đã cập nhật Sprint (ID: {sprint_id})."
+                else:
+                    error_detail = response.text
+                    return f"Lỗi từ ProjectManagement Service: {response.status_code} - {error_detail}"
+
+        except Exception as ex:
+            logger.exception("Error executing update_sprint tool")
+            return f"Lỗi ngoại lệ khi cập nhật Sprint: {str(ex)}"
+
 
