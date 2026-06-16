@@ -75,7 +75,14 @@ class AIAssistantService:
         "    - Newly created Sprints always have status 'Tương lai' (Future). Inform the user they can activate (start) the Sprint from the Backlog view on the UI when ready. The AI CANNOT start or close Sprints.\n"
         "21. SPRINT GOAL:\n"
         "    - When proposing Sprints, always include a concise goal (mục tiêu) describing the scope of work for each Sprint, so the user understands what each Sprint covers.\n"
+        "22. TASK QUERYING AND PROGRESS TRACKING:\n"
+        "    - You are provided with the tool `get_project_tasks` to query and filter tasks/subtasks in the project.\n"
+        "    - When a user asks about task assignments (e.g., 'What tasks am I assigned to?', 'What incomplete tasks does member A have?', 'Which tasks are approaching their due date?'), you MUST call `get_project_tasks` to inspect the project tasks.\n"
+        "    - Make sure to pass the appropriate filter arguments (like `assignee_name`, `status_type`, `due_date_filter`) to limit the response and keep the context clean.\n"
+        "    - For assignee queries, if the user asks 'What are my tasks?' ('tôi được giao việc gì'), you must first check the project member list using `get_project_details` to map their identity (or use their display name), and then call `get_project_tasks` with that `assignee_name`.\n"
+        "    - Do not make assumptions about task due dates or assignees; always fetch real-time data using the tool first.\n"
     )
+
 
     def __init__(self):
         # Initialize Google GenAI client
@@ -111,7 +118,8 @@ class AIAssistantService:
             tools_provider.update_subtask,
             tools_provider.get_project_sprints,
             tools_provider.create_sprint,
-            tools_provider.update_sprint
+            tools_provider.update_sprint,
+            tools_provider.get_project_tasks
         ]
 
         # 1. Convert DB history to Gemini SDK format

@@ -8,7 +8,7 @@ import { getTaskPriorityLabel, toUtcLocalDate } from "@/lib/utils";
 
 interface BoardTaskCardProps {
   task: TaskItem;
-  column: BoardColumn;
+  column?: BoardColumn | null;
   onTaskClick: (task: TaskItem) => void;
   currentUser: any;
   assignees: any[];
@@ -137,7 +137,7 @@ export function BoardTaskCard({
           return;
         }
         e.dataTransfer.setData("taskid", task.id);
-        e.dataTransfer.setData("sourcecolumnid", column.id);
+        e.dataTransfer.setData("sourcecolumnid", column?.id || "");
       }}
       className={`border border-slate-200/80 dark:border-[#353e47] bg-white dark:bg-[#2c3338] hover:border-slate-300/80 dark:hover:border-slate-500 hover:shadow-md transition-all duration-150 rounded-[6px] ${
         canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"
@@ -152,7 +152,7 @@ export function BoardTaskCard({
 
         <div className="flex flex-wrap items-center gap-1.5">
           {renderPriority(task.priority)}
-          {renderDueDate(task.dueDate, column.isDone)}
+          {renderDueDate(task.dueDate, column?.isDone ?? task.isCompleted)}
 
           {commentCount > 0 && (
             <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-[#353e47] px-1 py-0.5 rounded">

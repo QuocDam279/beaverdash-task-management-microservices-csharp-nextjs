@@ -208,6 +208,8 @@ export function useBoard(projectId: string) {
         }
       }
       setSelectedTaskState(null);
+    } else {
+      setSelectedTaskState(task);
     }
   }, [selectedTaskState, pathname, router]);
 
@@ -460,6 +462,31 @@ export function useBoard(projectId: string) {
 
   const handleMoveSubTask = async (subTaskId: string, targetColumnId: string) => {
     try {
+      if (targetColumnId === "completed" || targetColumnId === "uncompleted") {
+        let foundSubTask: any = null;
+        for (const task of tasks) {
+          if (task.subTasks) {
+            const st = task.subTasks.find(s => s.id === subTaskId);
+            if (st) {
+              foundSubTask = st;
+              break;
+            }
+          }
+        }
+        if (foundSubTask) {
+          const isCompleted = targetColumnId === "completed";
+          await api.patch(`/subtasks/${subTaskId}`, {
+            title: foundSubTask.title,
+            assigneeUserId: foundSubTask.assigneeUserId,
+            dueDate: foundSubTask.dueDate,
+            isCompleted: isCompleted,
+            priority: foundSubTask.priority || null,
+          });
+          fetchBoardData(true);
+        }
+        return;
+      }
+
       await api.patch(`/subtasks/${subTaskId}/column`, {
         boardColumnId: targetColumnId,
       });

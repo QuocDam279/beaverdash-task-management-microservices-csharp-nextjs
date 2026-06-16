@@ -604,4 +604,146 @@ class AIAssistantTools:
             logger.exception("Error executing update_sprint tool")
             return f"Lỗi ngoại lệ khi cập nhật Sprint: {str(ex)}"
 
+    async def get_project_tasks(
+        self,
+        assignee_name: str = None,
+        status_type: str = "uncompleted",
+        due_date_filter: str = None
+    ) -> str:
+        """
+        Lấy danh sách chi tiết các công việc (Task) và nhiệm vụ (Subtask) trong dự án hiện tại, hỗ trợ lọc thông tin.
+        Dùng công cụ này để trả lời các câu hỏi như: "Tôi được giao những nhiệm vụ nào?",
+        "Thành viên A còn những nhiệm vụ nào chưa hoàn thành?", "Các công việc/nhiệm vụ nào sắp đến hạn?".
+
+        Args:
+            assignee_name: Tên của thành viên được giao (tùy chọn). Ví dụ: 'Nguyễn Văn A'. Nếu cung cấp, chỉ trả về các nhiệm vụ được giao cho người này.
+            status_type: Trạng thái hoàn thành (tùy chọn). Chỉ chấp nhận 'completed' (đã hoàn thành), 'uncompleted' (chưa hoàn thành), hoặc 'all' (tất cả). Mặc định là 'uncompleted'.
+            due_date_filter: Bộ lọc ngày hạn hoàn thành (tùy chọn). Chỉ chấp nhận 'overdue' (quá hạn - trước ngày hôm nay), 'upcoming7' (sắp đến hạn trong 7 ngày tới), hoặc để trống để lấy tất cả.
+        """
+        try:
+            from datetime import datetime, timezone, timedelta
+            tasks_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/tasks"
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Fetching tasks from: {tasks_url} with X-User-Id: {self.user_id_str}")
+                response = await client.get(tasks_url, headers=self.headers, timeout=10.0)
+                
+                if response.status_code != 200:
+                    return f"Lỗi: Không lấy được danh sách công việc của dự án (HTTP {response.status_code})."
+                
+                data = response.json()
+                tasks = data.get("tasks", [])
+                
+                if not tasks:
+                    return "Dự án hiện tại chưa có công việc nào."
+                
+                now = datetime.now(timezone.utc)
+                today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+                seven_days_later = today_start + timedelta(days=7)
+                
+                filtered_tasks = []
+                for t in tasks:
+                    subtasks_matched = []
+                    
+                    # Filter subtasks
+                    for st in t.get("subTasks", []):
+                        # 1. Filter by assignee
+                        if assignee_name:
+                            st_assignee = st.get("assigneeName") or ""
+                            if assignee_name.strip().lower() not in st_assignee.lower():
+                                continue
+                        
+                        # 2. Filter by status
+                        st_is_completed = st.get("isCompleted", False)
+                        if status_type == "completed" and not st_is_completed:
+                            continue
+                        elif status_type == "uncompleted" and st_is_completed:
+                            continue
+                            
+                        # 3. Filter by due date
+                        if due_date_filter:
+                            st_due_str = st.get("dueDate")
+                            if not st_due_str:
+                                continue
+                            try:
+                                st_due = datetime.fromisoformat(st_due_str.replace("Z", "+00:00"))
+                                if due_date_filter == "overdue" and st_due >= today_start:
+                                    continue
+                                elif due_date_filter == "upcoming7" and not (today_start <= st_due <= seven_days_later):
+                                    continue
+                            except ValueError:
+                                pass
+                        
+                        subtasks_matched.append(st)
+                    
+                    # Parent task matching
+                    parent_matches = True
+                    if assignee_name:
+                        # If filtering by assignee, parent task matches only if it has matching subtasks
+                        if not subtasks_matched:
+                            parent_matches = False
+                    else:
+                        # Filter parent tasks without assignee
+                        if status_type == "completed" and t.get("columnName") != "Hoàn thành":
+                            parent_matches = False
+                        elif status_type == "uncompleted" and t.get("columnName") == "Hoàn thành":
+                            parent_matches = False
+                            
+                        if due_date_filter:
+                            t_due_str = t.get("dueDate")
+                            if t_due_str:
+                                try:
+                                    t_due = datetime.fromisoformat(t_due_str.replace("Z", "+00:00"))
+                                    if due_date_filter == "overdue" and t_due >= today_start:
+                                        parent_matches = False
+                                    elif due_date_filter == "upcoming7" and not (today_start <= t_due <= seven_days_later):
+                                        parent_matches = False
+                                except ValueError:
+                                    pass
+                            else:
+                                if not subtasks_matched:
+                                    parent_matches = False
+
+                    if parent_matches or subtasks_matched:
+                        t_copy = dict(t)
+                        t_copy["subTasks"] = subtasks_matched
+                        filtered_tasks.append(t_copy)
+                
+                if not filtered_tasks:
+                    return "Không tìm thấy công việc hoặc nhiệm vụ nào khớp với bộ lọc."
+                
+                res_lines = ["Danh sách công việc và nhiệm vụ trong dự án (Đã lọc):"]
+                for t in filtered_tasks:
+                    due_date_str = t.get("dueDate") or "Không có hạn"
+                    if due_date_str != "Không có hạn":
+                        due_date_str = due_date_str[:10]
+                    
+                    res_lines.append(
+                        f"\n[Công việc] '{t.get('title')}'\n"
+                        f"  - ID: {t.get('id')}\n"
+                        f"  - Độ ưu tiên: {t.get('priority') or 'Không có'}\n"
+                        f"  - Cột trạng thái: '{t.get('columnName') or 'Không xác định'}'\n"
+                        f"  - Sprint: {t.get('sprintName') or 'Backlog'}\n"
+                        f"  - Hạn hoàn thành: {due_date_str}"
+                    )
+                    
+                    if t.get("subTasks"):
+                        res_lines.append("  - Danh sách nhiệm vụ:")
+                        for st in t.get("subTasks"):
+                            st_due = st.get("dueDate") or "Không có hạn"
+                            if st_due != "Không có hạn":
+                                st_due = st_due[:10]
+                            st_status = "Đã hoàn thành" if st.get("isCompleted") else "Chưa hoàn thành"
+                            st_assignee = st.get("assigneeName") or "Chưa gán"
+                            res_lines.append(
+                                f"    * '{st.get('title')}' (ID: {st.get('id')} | "
+                                f"Người thực hiện: {st_assignee} | "
+                                f"Trạng thái: {st_status} | "
+                                f"Hạn hoàn thành: {st_due})"
+                            )
+                return "\n".join(res_lines)
+        except Exception as ex:
+            logger.exception("Error executing get_project_tasks tool")
+            return f"Lỗi ngoại lệ khi lấy danh sách công việc: {str(ex)}"
+
+
 

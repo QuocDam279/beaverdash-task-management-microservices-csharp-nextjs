@@ -10,7 +10,7 @@ import { getTaskPriorityLabel } from "@/lib/utils";
 interface BoardGroupedViewProps {
   columns: BoardColumn[];
   tasks: TaskItem[];
-  groupBy: "assignee" | "subtask" | string;
+  groupBy: "subtask" | string;
   onMoveTask: (taskId: string, columnId: string) => Promise<void>;
   onMoveSubTask: (subTaskId: string, columnId: string) => Promise<void>;
   onTaskClick: (task: TaskItem) => void;
@@ -32,12 +32,7 @@ export function BoardGroupedView({
   readOnly = false,
   isPersonalProject = false,
 }: BoardGroupedViewProps) {
-  // Sort columns by position to make sure they are in the correct order
-  const sortedColumns = React.useMemo(() => {
-    return [...columns].sort((a, b) => a.position - b.position);
-  }, [columns]);
 
-  const firstColumn = sortedColumns[0] || null;
 
   // Track expanded/collapsed state for each swimlane
   const [collapsedSwimlanes, setCollapsedSwimlanes] = React.useState<Record<string, boolean>>({});
@@ -62,7 +57,19 @@ export function BoardGroupedView({
     if (subTaskId) {
       await onMoveSubTask(subTaskId, targetColumnId);
     } else if (taskId) {
-      await onMoveTask(taskId, targetColumnId);
+      if (targetColumnId === "completed") {
+        const doneCol = columns.find(c => c.isDone);
+        if (doneCol) {
+          await onMoveTask(taskId, doneCol.id);
+        }
+      } else if (targetColumnId === "uncompleted") {
+        const todoCol = [...columns].sort((a, b) => a.position - b.position).find(c => !c.isDone);
+        if (todoCol) {
+          await onMoveTask(taskId, todoCol.id);
+        }
+      } else {
+        await onMoveTask(taskId, targetColumnId);
+      }
     }
   };
 
@@ -88,174 +95,7 @@ export function BoardGroupedView({
     return null;
   };
 
-  // Grouping 1: BY ASSIGNEE
-  if (groupBy === "assignee") {
-    const activeAssigneeIds = new Set(tasks.map((t) => t.assigneeUserId).filter(Boolean));
-    const activeAssignees = assignees.filter((a) => activeAssigneeIds.has(a.id));
 
-    return (
-      <div className="space-y-4 select-none">
-        {/* Active Assignees Swimlanes */}
-        {activeAssignees.map((assignee) => {
-          const isCollapsed = !!collapsedSwimlanes[assignee.id];
-          const assigneeTasks = tasks.filter((t) => t.assigneeUserId === assignee.id);
-
-          return (
-            <div key={assignee.id} className="border border-slate-250 dark:border-[#2c3338] rounded-lg overflow-hidden bg-[#fafbfc] dark:bg-[#161a1d]">
-              {/* Swimlane Header */}
-              <div 
-                onClick={() => toggleSwimlane(assignee.id)}
-                className="px-3.5 py-2.5 bg-slate-100/50 dark:bg-[#1e2227]/40 border-b border-slate-200 dark:border-[#2c3338] flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-[#1e2227]/60 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    className={`text-slate-400 dark:text-slate-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
-                  >
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                  <Avatar
-                    src={assignee.avatar}
-                    alt={assignee.displayName}
-                    className="h-5.5 w-5.5 rounded-full"
-                  />
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-350">
-                    {assignee.displayName}
-                  </span>
-                  <span className="text-[10px] bg-slate-200 dark:bg-[#2c3338] text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-bold">
-                    {assigneeTasks.length} công việc
-                  </span>
-                </div>
-              </div>
-
-              {/* Swimlane Columns Grid */}
-              {!isCollapsed && (
-                <div className="p-3 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-3 bg-white dark:bg-[#1d2125]/20">
-                  {sortedColumns.map((col) => {
-                    const colTasks = assigneeTasks.filter((t) => t.boardColumnId === col.id);
-
-                    return (
-                      <div
-                        key={col.id}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, col.id)}
-                        className="min-h-[120px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
-                      >
-                        <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-                          {col.name} ({colTasks.length})
-                        </div>
-                        {colTasks.length > 0 ? (
-                          colTasks.map((task) => (
-                            <BoardTaskCard
-                              key={task.id}
-                              task={task}
-                              column={col}
-                              onTaskClick={onTaskClick}
-                              currentUser={currentUser}
-                              assignees={assignees}
-                              readOnly={readOnly}
-                              isPersonalProject={isPersonalProject}
-                            />
-                          ))
-                        ) : (
-                          <div className="h-full min-h-[60px] flex items-center justify-center text-[10px] text-slate-400/70 italic">
-                            Kéo thả vào đây
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Unassigned Tasks Swimlane */}
-        {(() => {
-          const unassignedTasks = tasks.filter((t) => !t.assigneeUserId);
-          if (unassignedTasks.length === 0) return null;
-          const isCollapsed = !!collapsedSwimlanes["unassigned"];
-
-          return (
-            <div className="border border-slate-250 dark:border-[#2c3338] rounded-lg overflow-hidden bg-[#fafbfc] dark:bg-[#161a1d]">
-              <div 
-                onClick={() => toggleSwimlane("unassigned")}
-                className="px-3.5 py-2.5 bg-slate-100/50 dark:bg-[#1e2227]/40 border-b border-slate-200 dark:border-[#2c3338] flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-[#1e2227]/60 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    className={`text-slate-400 dark:text-slate-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
-                  >
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                  <span className="flex items-center justify-center h-5.5 w-5.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 text-xs">
-                    ?
-                  </span>
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-350">
-                    Chưa được giao
-                  </span>
-                  <span className="text-[10px] bg-slate-200 dark:bg-[#2c3338] text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-bold">
-                    {unassignedTasks.length} công việc
-                  </span>
-                </div>
-              </div>
-
-              {!isCollapsed && (
-                <div className="p-3 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-3 bg-white dark:bg-[#1d2125]/20">
-                  {sortedColumns.map((col) => {
-                    const colTasks = unassignedTasks.filter((t) => t.boardColumnId === col.id);
-
-                    return (
-                      <div
-                        key={col.id}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, col.id)}
-                        className="min-h-[120px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
-                      >
-                        <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-                          {col.name} ({colTasks.length})
-                        </div>
-                        {colTasks.length > 0 ? (
-                          colTasks.map((task) => (
-                            <BoardTaskCard
-                              key={task.id}
-                              task={task}
-                              column={col}
-                              onTaskClick={onTaskClick}
-                              currentUser={currentUser}
-                              assignees={assignees}
-                              readOnly={readOnly}
-                              isPersonalProject={isPersonalProject}
-                            />
-                          ))
-                        ) : (
-                          <div className="h-full min-h-[60px] flex items-center justify-center text-[10px] text-slate-400/70 italic">
-                            Kéo thả vào đây
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })()}
-      </div>
-    );
-  }
 
   // Grouping 2: BY SUBTASK
   if (groupBy === "subtask") {
@@ -263,6 +103,8 @@ export function BoardGroupedView({
     const parentTasks = tasks.filter((t) => t.subTasks && t.subTasks.length > 0);
     // Tasks that do not have subtasks (these go to the bottom swimlane)
     const otherTasks = tasks.filter((t) => !t.subTasks || t.subTasks.length === 0);
+
+    const doneColumnIds = new Set(columns.filter(c => c.isDone).map(c => c.id));
 
     return (
       <div className="space-y-4 select-none">
@@ -273,6 +115,9 @@ export function BoardGroupedView({
           const assignee = parentTask.assigneeUserId 
             ? assignees.find((a) => a.id === parentTask.assigneeUserId)
             : null;
+
+          const uncompletedSubtasks = subTasks.filter((st) => !st.isCompleted);
+          const completedSubtasks = subTasks.filter((st) => st.isCompleted);
 
           return (
             <div key={parentTask.id} className="border border-slate-250 dark:border-[#2c3338] rounded-lg overflow-hidden bg-[#fafbfc] dark:bg-[#161a1d]">
@@ -318,49 +163,66 @@ export function BoardGroupedView({
                 </div>
               </div>
 
-              {/* Swimlane Columns Grid (renders subtasks) */}
+              {/* Swimlane Columns Grid (renders subtasks in 2 columns) */}
               {!isCollapsed && (
-                <div className="p-3 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-3 bg-white dark:bg-[#1d2125]/20">
-                  {sortedColumns.map((col) => {
-                    // Filter subtasks belonging to this column. If subtask's boardColumnId is null, put in first column
-                    const colSubTasks = subTasks.filter((st) => {
-                      if (st.boardColumnId) {
-                        return st.boardColumnId === col.id;
-                      }
-                      return firstColumn && col.id === firstColumn.id;
-                    });
-
-                    return (
-                      <div
-                        key={col.id}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, col.id)}
-                        className="min-h-[100px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
-                      >
-                        <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-                          {col.name} ({colSubTasks.length})
-                        </div>
-                        {colSubTasks.length > 0 ? (
-                          colSubTasks.map((st) => (
-                            <SubTaskBoardCard
-                              key={st.id}
-                              subTask={st}
-                              parentTask={parentTask}
-                              column={col}
-                              onTaskClick={onTaskClick}
-                              currentUser={currentUser}
-                              assignees={assignees}
-                              readOnly={readOnly}
-                            />
-                          ))
-                        ) : (
-                          <div className="h-full min-h-[50px] flex items-center justify-center text-[10px] text-slate-400/60 italic">
-                            Kéo thả vào đây
-                          </div>
-                        )}
+                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3 bg-white dark:bg-[#1d2125]/20">
+                  {/* Column 1: Chưa hoàn thành */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, "uncompleted")}
+                    className="min-h-[100px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
+                  >
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+                      Chưa hoàn thành ({uncompletedSubtasks.length})
+                    </div>
+                    {uncompletedSubtasks.length > 0 ? (
+                      uncompletedSubtasks.map((st) => (
+                        <SubTaskBoardCard
+                          key={st.id}
+                          subTask={st}
+                          parentTask={parentTask}
+                          column={null as any}
+                          onTaskClick={onTaskClick}
+                          currentUser={currentUser}
+                          assignees={assignees}
+                          readOnly={readOnly}
+                        />
+                      ))
+                    ) : (
+                      <div className="h-full min-h-[50px] flex items-center justify-center text-[10px] text-slate-400/60 italic">
+                        Kéo thả vào đây
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+
+                  {/* Column 2: Đã hoàn thành */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, "completed")}
+                    className="min-h-[100px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
+                  >
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+                      Đã hoàn thành ({completedSubtasks.length})
+                    </div>
+                    {completedSubtasks.length > 0 ? (
+                      completedSubtasks.map((st) => (
+                        <SubTaskBoardCard
+                          key={st.id}
+                          subTask={st}
+                          parentTask={parentTask}
+                          column={null as any}
+                          onTaskClick={onTaskClick}
+                          currentUser={currentUser}
+                          assignees={assignees}
+                          readOnly={readOnly}
+                        />
+                      ))
+                    ) : (
+                      <div className="h-full min-h-[50px] flex items-center justify-center text-[10px] text-slate-400/60 italic">
+                        Kéo thả vào đây
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -370,6 +232,9 @@ export function BoardGroupedView({
         {/* Other Tasks Swimlane (Everything else / Tasks without subtasks) */}
         {otherTasks.length > 0 && (() => {
           const isCollapsed = !!collapsedSwimlanes["other"];
+          const uncompletedOtherTasks = otherTasks.filter((t) => !doneColumnIds.has(t.boardColumnId));
+          const completedOtherTasks = otherTasks.filter((t) => doneColumnIds.has(t.boardColumnId));
+
           return (
             <div className="border border-slate-250 dark:border-[#2c3338] rounded-lg overflow-hidden bg-[#fafbfc] dark:bg-[#161a1d]">
               <div 
@@ -398,41 +263,64 @@ export function BoardGroupedView({
               </div>
 
               {!isCollapsed && (
-                <div className="p-3 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-3 bg-white dark:bg-[#1d2125]/20">
-                  {sortedColumns.map((col) => {
-                    const colTasks = otherTasks.filter((t) => t.boardColumnId === col.id);
-
-                    return (
-                      <div
-                        key={col.id}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, col.id)}
-                        className="min-h-[120px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
-                      >
-                        <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-                          {col.name} ({colTasks.length})
-                        </div>
-                        {colTasks.length > 0 ? (
-                          colTasks.map((task) => (
-                            <BoardTaskCard
-                              key={task.id}
-                              task={task}
-                              column={col}
-                              onTaskClick={onTaskClick}
-                              currentUser={currentUser}
-                              assignees={assignees}
-                              readOnly={readOnly}
-                              isPersonalProject={isPersonalProject}
-                            />
-                          ))
-                        ) : (
-                          <div className="h-full min-h-[60px] flex items-center justify-center text-[10px] text-slate-400/70 italic">
-                            Kéo thả vào đây
-                          </div>
-                        )}
+                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3 bg-white dark:bg-[#1d2125]/20">
+                  {/* Column 1: Chưa hoàn thành */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, "uncompleted")}
+                    className="min-h-[120px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
+                  >
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+                      Chưa hoàn thành ({uncompletedOtherTasks.length})
+                    </div>
+                    {uncompletedOtherTasks.length > 0 ? (
+                      uncompletedOtherTasks.map((task) => (
+                        <BoardTaskCard
+                          key={task.id}
+                          task={task}
+                          column={null as any}
+                          onTaskClick={onTaskClick}
+                          currentUser={currentUser}
+                          assignees={assignees}
+                          readOnly={readOnly}
+                          isPersonalProject={isPersonalProject}
+                        />
+                      ))
+                    ) : (
+                      <div className="h-full min-h-[60px] flex items-center justify-center text-[10px] text-slate-400/70 italic">
+                        Kéo thả vào đây
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+
+                  {/* Column 2: Đã hoàn thành */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, "completed")}
+                    className="min-h-[120px] bg-slate-50/50 dark:bg-[#1d2125]/45 border border-dashed border-slate-205 dark:border-[#2c3338]/85 rounded-lg p-2.5 space-y-2.5 transition-colors"
+                  >
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+                      Đã hoàn thành ({completedOtherTasks.length})
+                    </div>
+                    {completedOtherTasks.length > 0 ? (
+                      completedOtherTasks.map((task) => (
+                        <BoardTaskCard
+                          key={task.id}
+                          task={task}
+                          column={null as any}
+                          onTaskClick={onTaskClick}
+                          currentUser={currentUser}
+                          assignees={assignees}
+                          readOnly={readOnly}
+                          isPersonalProject={isPersonalProject}
+                        />
+                      ))
+                    ) : (
+                      <div className="h-full min-h-[60px] flex items-center justify-center text-[10px] text-slate-400/70 italic">
+                        Kéo thả vào đây
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

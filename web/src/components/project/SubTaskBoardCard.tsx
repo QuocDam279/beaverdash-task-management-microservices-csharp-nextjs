@@ -9,7 +9,7 @@ import { getTaskPriorityLabel, toUtcLocalDate } from "@/lib/utils";
 interface SubTaskBoardCardProps {
   subTask: any; // SubTaskBoardDto
   parentTask: TaskItem;
-  column: BoardColumn;
+  column?: BoardColumn | null;
   onTaskClick: (task: TaskItem) => void;
   currentUser: any;
   assignees: any[];
@@ -89,7 +89,7 @@ export function SubTaskBoardCard({
           return;
         }
         e.dataTransfer.setData("subtaskid", subTask.id);
-        e.dataTransfer.setData("sourcecolumnid", column.id);
+        e.dataTransfer.setData("sourcecolumnid", column?.id || "");
       }}
       className={`border border-slate-200/60 dark:border-[#353e47]/80 bg-white dark:bg-[#2c3338] hover:border-slate-300 dark:hover:border-slate-500 hover:shadow transition-all duration-150 rounded-[4px] p-2 ${
         canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"
@@ -126,7 +126,7 @@ export function SubTaskBoardCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
-          {renderDueDate(subTask.dueDate, column.isDone)}
+          {renderDueDate(subTask.dueDate, column?.isDone ?? subTask.isCompleted)}
         </div>
       </div>
     </Card>

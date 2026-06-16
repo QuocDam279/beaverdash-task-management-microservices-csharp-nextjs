@@ -355,7 +355,6 @@ export function BoardToolbar({
                     <div className="space-y-1">
                       {[
                         { value: "none", label: "Bình thường" },
-                        { value: "assignee", label: "Người được giao" },
                         { value: "subtask", label: "Nhiệm vụ" },
                       ].map((item) => (
                         <div

@@ -88,6 +88,7 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksRe
             .Where(st => st.DeletedAt == null && 
                          st.AssigneeUserId == currentUserId && 
                          st.Task != null &&
+                         (st.Task!.Sprint == null || st.Task!.Sprint!.Status != SprintStatus.Closed) &&
                          st.Task!.BoardColumn != null &&
                          st.Task!.BoardColumn!.Project!.TeamId.HasValue &&
                          myTeamIds.Contains(st.Task!.BoardColumn!.Project!.TeamId.Value));

@@ -53,8 +53,6 @@ export default function MyTasksPage() {
         onProjectChange={state.setSelectedProject}
         selectedStatus={state.selectedStatus}
         onStatusChange={state.setSelectedStatus}
-        selectedPriority={state.selectedPriority}
-        onPriorityChange={state.setSelectedPriority}
         selectedDueDateFilter={state.selectedDueDateFilter}
         onDueDateFilterChange={state.setSelectedDueDateFilter}
         sortBy={state.sortBy}

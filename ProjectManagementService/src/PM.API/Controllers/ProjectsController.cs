@@ -72,6 +72,19 @@ public class ProjectsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}/tasks")]
+    public async Task<IActionResult> GetProjectTasks(Guid id)
+    {
+        var query = new PM.Application.Features.Projects.Project.Queries.GetProjectTasks.GetProjectTasksQuery(id);
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+            return NotFound(new { Message = "Dự án không tồn tại." });
+
+        return Ok(result);
+    }
+
+
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto request)
     {

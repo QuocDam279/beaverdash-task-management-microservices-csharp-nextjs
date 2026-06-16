@@ -79,6 +79,10 @@ export function ProjectOverviewPriorityChart({
             href={getBoardUrl("?priority=Required")}
             className="h-full flex flex-col justify-end items-center w-16 group relative z-10 cursor-pointer block"
           >
+            {/* Count on top */}
+            <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] mb-1.5 transition-transform group-hover:scale-110 pointer-events-none select-none">
+              {reqTotal}
+            </span>
             <div 
               style={{ height: getBarHeight(reqTotal) }} 
               className="w-10 flex flex-col min-h-[4px] relative rounded-t-[4px] overflow-hidden shadow-[0_2px_8px_rgba(239,68,68,0.1)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.25)] transition-all duration-300 hover:-translate-y-[1px]"
@@ -89,11 +93,6 @@ export function ProjectOverviewPriorityChart({
                   title={`Bắt buộc: ${reqTotal} nhiệm vụ`}
                 />
               )}
-
-              {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
-                {reqTotal}
-              </span>
             </div>
           </Link>
 
@@ -102,6 +101,10 @@ export function ProjectOverviewPriorityChart({
             href={getBoardUrl("?priority=Important")}
             className="h-full flex flex-col justify-end items-center w-16 group relative z-10 cursor-pointer block"
           >
+            {/* Count on top */}
+            <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] mb-1.5 transition-transform group-hover:scale-110 pointer-events-none select-none">
+              {impTotal}
+            </span>
             <div 
               style={{ height: getBarHeight(impTotal) }} 
               className="w-10 flex flex-col min-h-[4px] relative rounded-t-[4px] overflow-hidden shadow-[0_2px_8px_rgba(24,104,219,0.1)] hover:shadow-[0_4px_12px_rgba(24,104,219,0.25)] transition-all duration-300 hover:-translate-y-[1px]"
@@ -112,11 +115,6 @@ export function ProjectOverviewPriorityChart({
                   title={`Quan trọng: ${impTotal} nhiệm vụ`}
                 />
               )}
-
-              {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
-                {impTotal}
-              </span>
             </div>
           </Link>
 
@@ -125,6 +123,10 @@ export function ProjectOverviewPriorityChart({
             href={getBoardUrl("?priority=Extended")}
             className="h-full flex flex-col justify-end items-center w-16 group relative z-10 cursor-pointer block"
           >
+            {/* Count on top */}
+            <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] mb-1.5 transition-transform group-hover:scale-110 pointer-events-none select-none">
+              {extTotal}
+            </span>
             <div 
               style={{ height: getBarHeight(extTotal) }} 
               className="w-10 flex flex-col min-h-[4px] relative rounded-t-[4px] overflow-hidden shadow-[0_2px_8px_rgba(100,116,139,0.1)] hover:shadow-[0_4px_12px_rgba(100,116,139,0.25)] transition-all duration-300 hover:-translate-y-[1px]"
@@ -135,11 +137,6 @@ export function ProjectOverviewPriorityChart({
                   title={`Mở rộng: ${extTotal} nhiệm vụ`}
                 />
               )}
-
-              {/* Count on top */}
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-[#deebff] absolute -top-5.5 left-1/2 -translate-x-1/2 transition-transform group-hover:scale-110 pointer-events-none select-none">
-                {extTotal}
-              </span>
             </div>
           </Link>
         </div>

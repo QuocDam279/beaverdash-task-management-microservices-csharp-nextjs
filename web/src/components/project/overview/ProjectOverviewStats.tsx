@@ -70,8 +70,8 @@ export function ProjectOverviewStats({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 select-none">
       {/* Card 1: Completed Tasks */}
-      <Link href={getBoardUrl()} className="block group">
-        <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300">
+      <Link href={getBoardUrl()} className="block group h-full">
+        <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300 h-full">
           <CardBody className="p-5 flex flex-col justify-between h-full min-h-[130px]">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -98,8 +98,8 @@ export function ProjectOverviewStats({
       </Link>
 
       {/* Card 2: Created Tasks */}
-      <Link href={getBoardUrl()} className="block group">
-        <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300">
+      <Link href={getBoardUrl()} className="block group h-full">
+        <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300 h-full">
           <CardBody className="p-5 flex flex-col justify-between h-full min-h-[130px]">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -123,8 +123,8 @@ export function ProjectOverviewStats({
       </Link>
 
       {/* Card 3: Upcoming Due Tasks */}
-      <Link href={getBoardUrl("?dueDate=upcoming7")} className="block group">
-        <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300">
+      <Link href={getBoardUrl("?dueDate=upcoming7")} className="block group h-full">
+        <Card className="bg-white border border-slate-200/80 rounded-[6px] shadow-[0_1px_3px_rgba(9,30,66,0.12)] hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(9,30,66,0.08)] transition-all duration-300 h-full">
           <CardBody className="p-5 flex flex-col justify-between h-full min-h-[130px]">
             <div className="flex items-start justify-between">
               <div className="space-y-1">

@@ -68,7 +68,6 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState("");
   const [selectedProject, setSelectedProject] = React.useState("all");
   const [selectedStatus, setSelectedStatus] = React.useState("all");
-  const [selectedPriority, setSelectedPriority] = React.useState("all");
   const [selectedDueDateFilter, setSelectedDueDateFilter] = React.useState("all");
   const [sortBy, setSortBy] = React.useState("dueDate");
 
@@ -146,9 +145,6 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
       if (selectedProject !== "all") {
         params.set("projectId", selectedProject);
       }
-      if (selectedPriority !== "all") {
-        params.set("priority", selectedPriority);
-      }
       if (selectedStatus !== "all") {
         params.set("status", selectedStatus);
       }
@@ -195,7 +191,7 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, effectivePageSize, debouncedSearchQuery, selectedProject, selectedPriority, selectedStatus, selectedDueDateFilter, sortBy]);
+  }, [currentPage, effectivePageSize, debouncedSearchQuery, selectedProject, selectedStatus, selectedDueDateFilter, sortBy]);
 
   // Re-fetch when any filter/sort/page changes
   React.useEffect(() => { fetchTasks(); }, [fetchTasks]);
@@ -203,16 +199,16 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   // Reset to page 1 when filters or sort or search change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedProject, selectedPriority, selectedStatus, selectedDueDateFilter, sortBy, effectivePageSize]);
+  }, [debouncedSearchQuery, selectedProject, selectedStatus, selectedDueDateFilter, sortBy, effectivePageSize]);
 
   // Since backend handles filtering/sorting, tasks from API are already filtered and sorted
   const filteredTasks = tasks;
   const sortedTasks = tasks;
 
-  const hasActiveFilters = !!searchQuery || selectedProject !== "all" || selectedPriority !== "all" || selectedStatus !== "all" || selectedDueDateFilter !== "all";
+  const hasActiveFilters = !!searchQuery || selectedProject !== "all" || selectedStatus !== "all" || selectedDueDateFilter !== "all";
 
   const handleResetFilters = React.useCallback(() => {
-    setSearchQuery(""); setSelectedProject("all"); setSelectedPriority("all"); setSelectedStatus("all"); setSelectedDueDateFilter("all"); setSortBy("dueDate");
+    setSearchQuery(""); setSelectedProject("all"); setSelectedStatus("all"); setSelectedDueDateFilter("all"); setSortBy("dueDate");
   }, []);
 
   const goToPage = React.useCallback((page: number) => {
@@ -292,7 +288,7 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
     tasks, isLoading, error, fetchTasks,
     showAnnouncement, notifications, isNotifLoading, unreadNotifications, handleCloseAnnouncement, announcementStats,
     searchQuery, setSearchQuery, selectedProject, setSelectedProject,
-    selectedStatus, setSelectedStatus, selectedPriority, setSelectedPriority,
+    selectedStatus, setSelectedStatus,
     selectedDueDateFilter, setSelectedDueDateFilter, sortBy, setSortBy,
     selectedTask, setSelectedTask, clickedSubtaskId, setClickedSubtaskId,
     modalColumns, setModalColumns, modalAssignees, setModalAssignees,

@@ -16,8 +16,6 @@ interface MyTasksFilterToolbarProps {
   onProjectChange: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (value: string) => void;
-  selectedPriority: string;
-  onPriorityChange: (value: string) => void;
   selectedDueDateFilter: string;
   onDueDateFilterChange: (value: string) => void;
   
@@ -47,8 +45,6 @@ export function MyTasksFilterToolbar({
   onProjectChange,
   selectedStatus,
   onStatusChange,
-  selectedPriority,
-  onPriorityChange,
   selectedDueDateFilter,
   onDueDateFilterChange,
   sortBy,
@@ -73,7 +69,6 @@ export function MyTasksFilterToolbar({
 
   const hasAnyFilterActive =
     selectedProject !== "all" ||
-    selectedPriority !== "all" ||
     selectedStatus !== "all" ||
     selectedDueDateFilter !== "all";
 
@@ -229,51 +224,6 @@ export function MyTasksFilterToolbar({
                   )}
                 </div>
 
-                {/* Độ ưu tiên */}
-                <div
-                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
-                  onMouseEnter={() => setActiveSubMenu("priority")}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveSubMenu(activeSubMenu === "priority" ? null : "priority");
-                  }}
-                >
-                  <span>Độ ưu tiên</span>
-                  <div className="flex items-center gap-1 text-slate-400 font-normal">
-                    <span className="text-[10px]">
-                      {selectedPriority === "all" ? "Tất cả" : selectedPriority === "High" ? "Cao" : selectedPriority === "Medium" ? "Trung bình" : "Thấp"}
-                    </span>
-                    <span className="text-[9px]">▶</span>
-                  </div>
-
-                  {activeSubMenu === "priority" && (
-                    <div
-                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {[
-                        { value: "all", label: "Tất cả độ ưu tiên" },
-                        { value: "High", label: "Cao" },
-                        { value: "Medium", label: "Trung bình" },
-                        { value: "Low", label: "Thấp" },
-                      ].map((item) => (
-                        <div
-                          key={item.value}
-                          onClick={() => {
-                            onPriorityChange(item.value);
-                            closePopovers();
-                          }}
-                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
-                            selectedPriority === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
-                          }`}
-                        >
-                          <span>{item.label}</span>
-                          {selectedPriority === item.value && <span className="text-[#1868db]">✓</span>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
                 {/* Hạn chót */}
                 <div
@@ -357,7 +307,7 @@ export function MyTasksFilterToolbar({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M15 18H3M21 12H3M21 6H3" />
             </svg>
-            <span>Sắp xếp: {sortBy === "dueDate" ? "Hạn chót" : sortBy === "priority" ? "Ưu tiên" : "Dự án"}</span>
+            <span>Sắp xếp: {sortBy === "dueDate" ? "Hạn chót" : "Dự án"}</span>
           </button>
 
           {isSortOpen && (
@@ -366,7 +316,6 @@ export function MyTasksFilterToolbar({
               <div className="absolute left-0 mt-1.5 w-44 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]">
                 {[
                   { value: "dueDate", label: "Hạn chót" },
-                  { value: "priority", label: "Độ ưu tiên" },
                   { value: "project", label: "Dự án" },
                 ].map((item) => (
                   <div
