@@ -9,6 +9,7 @@ public class SubTaskBoardDto
     public Guid TaskId { get; set; }
     public string Title { get; set; } = null!;
     public bool IsCompleted { get; set; }
+    public DateTime? DueDate { get; set; }
     public Guid? AssigneeUserId { get; set; }
     public string? AssigneeAvatar { get; set; }
     public string? AssigneeName { get; set; }

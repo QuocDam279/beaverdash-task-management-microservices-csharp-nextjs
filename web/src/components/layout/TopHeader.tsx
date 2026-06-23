@@ -1,11 +1,17 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { SearchResultDto } from "@/types/api";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { ProfileDropdown } from "./ProfileDropdown";
+
+const CreateProjectModal = dynamic(
+  () => import("@/components/project/CreateProjectModal").then((m) => m.CreateProjectModal),
+  { ssr: false }
+);
 
 interface TopHeaderProps {
   currentUser: {
@@ -27,6 +33,7 @@ export function TopHeader({ currentUser }: TopHeaderProps) {
   const [isSearching, setIsSearching] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = React.useState(false);
 
   // Sync state when props change
   React.useEffect(() => {
@@ -147,14 +154,37 @@ export function TopHeader({ currentUser }: TopHeaderProps) {
         )}
       </div>
 
-      {/* Right: Notifications & User Avatar */}
-      <div className="flex items-center gap-4">
+      {/* Right: Create Project, Notifications & User Avatar */}
+      <div className="flex items-center gap-3">
+        {/* Create Project Button */}
+        <button
+          onClick={() => setIsCreateProjectModalOpen(true)}
+          className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1868db] hover:bg-[#1254b7] text-white text-xs font-bold transition-all duration-150 cursor-pointer shadow-sm hover:shadow-md active:scale-[0.97]"
+          title="Tạo dự án mới"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-150 group-hover:rotate-90">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span className="hidden lg:inline">Tạo dự án</span>
+        </button>
+
         {/* Notifications Bell with Dropdown */}
         <NotificationDropdown />
 
         {/* User Profile Dropdown */}
         <ProfileDropdown user={user} />
       </div>
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
+        onProjectCreated={(project) => {
+          window.dispatchEvent(new Event("projects-updated"));
+          router.push(`/projects/${project.id}`);
+        }}
+      />
     </header>
   );
 }

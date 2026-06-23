@@ -151,6 +151,21 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
               />
             </div>
 
+            {/* Mô tả dự án */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
+                Mô tả dự án
+              </label>
+              <textarea
+                disabled={isSubmitting}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Mô tả ngắn gọn về mục tiêu, phạm vi hoặc yêu cầu của dự án..."
+                rows={3}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-[4px] bg-white text-[#292a2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1868db] focus-visible:border-transparent transition-all resize-none disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-50"
+              />
+            </div>
+
             {/* Thuộc nhóm */}
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-[#6b6e76] uppercase tracking-wider block">
