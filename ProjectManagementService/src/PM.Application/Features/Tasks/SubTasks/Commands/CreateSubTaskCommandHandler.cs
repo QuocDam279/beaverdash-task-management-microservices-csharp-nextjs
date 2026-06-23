@@ -81,12 +81,6 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
         {
             priority = parsedPriority;
         }
-
-        var firstColumn = await _dbContext.BoardColumns
-            .Where(c => c.ProjectId == task.BoardColumn!.ProjectId)
-            .OrderBy(c => c.Position)
-            .FirstOrDefaultAsync(cancellationToken);
-
         var subTask = new SubTask
         {
             Id = Guid.CreateVersion7(),
@@ -97,7 +91,6 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
             Priority = priority,
             SortOrder = sortOrder,
             IsCompleted = false,
-            BoardColumnId = firstColumn?.Id,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

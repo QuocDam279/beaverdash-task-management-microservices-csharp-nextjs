@@ -94,21 +94,7 @@ public class SubTasksController : ControllerBase
         return NoContent();
     }
 
-    [HttpPatch("{id}/column")]
-    public async Task<IActionResult> MoveSubTaskColumn(Guid id, [FromBody] MoveSubTaskColumnDto request)
-    {
-        var command = new MoveSubTaskColumnCommand
-        {
-            SubTaskId = id,
-            BoardColumnId = request.BoardColumnId
-        };
-
-        var success = await _mediator.Send(command);
-        if (!success)
-            return NotFound(new { Message = "SubTask không tồn tại." });
-
-        return NoContent();
-    }
+    
 
     [HttpPost("{subTaskId}/comments/{commentId}/attachments")]
     public async Task<IActionResult> AddAttachment(Guid subTaskId, Guid commentId, [FromForm] Microsoft.AspNetCore.Http.IFormFile file)
@@ -125,7 +111,3 @@ public class SubTasksController : ControllerBase
     }
 }
 
-public class MoveSubTaskColumnDto
-{
-    public Guid BoardColumnId { get; set; }
-}

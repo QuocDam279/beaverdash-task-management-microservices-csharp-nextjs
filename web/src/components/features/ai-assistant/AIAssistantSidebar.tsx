@@ -52,15 +52,15 @@ export function AIAssistantSidebar({
   };
 
   return (
-    <div className="w-[240px] border-r border-[#262626] bg-[#171717] flex flex-col shrink-0 text-slate-200">
-      <div className="p-3.5 border-b border-[#262626] flex flex-col gap-3 shrink-0 bg-[#171717]">
+    <div className="w-[240px] border-r border-slate-200/80 dark:border-[#262626] bg-slate-50 dark:bg-[#171717] flex flex-col shrink-0 text-slate-700 dark:text-slate-200">
+      <div className="p-3.5 border-b border-slate-200/80 dark:border-[#262626] flex flex-col gap-3 shrink-0 bg-slate-50 dark:bg-[#171717]">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Trợ lý BeaverDash</span>
+          <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trợ lý BeaverDash</span>
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Sẵn sàng" />
         </div>
         <button
           onClick={onCreateSession}
-          className="w-full py-2 px-3 bg-transparent hover:bg-[#212121] border border-slate-700/50 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          className="w-full py-2 px-3 bg-transparent hover:bg-slate-200/60 dark:hover:bg-[#212121] border border-slate-350 dark:border-slate-700/50 text-slate-800 dark:text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -98,8 +98,8 @@ export function AIAssistantSidebar({
                 }}
                 className={`group relative w-full flex items-center justify-between pl-2.5 pr-14 py-2.5 rounded-lg text-xs font-semibold cursor-pointer ${
                   isActive
-                    ? "bg-[#212121] text-white font-bold"
-                    : "text-slate-300 hover:bg-[#212121]/50 hover:text-white"
+                    ? "bg-slate-200/70 dark:bg-[#212121] text-slate-900 dark:text-white font-bold"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-200/30 dark:hover:bg-[#212121]/50 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 {isEditing ? (
@@ -116,7 +116,7 @@ export function AIAssistantSidebar({
                     }}
                     onBlur={() => handleSaveRename(s.id)}
                     autoFocus
-                    className="flex-1 bg-[#212121] border border-blue-500 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                    className="flex-1 bg-white dark:bg-[#212121] border border-blue-500 rounded px-1.5 py-0.5 text-xs text-slate-900 dark:text-white focus:outline-none"
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
@@ -129,7 +129,7 @@ export function AIAssistantSidebar({
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2.5"
-                        className={`shrink-0 ${isActive ? "text-white" : "text-slate-500"}`}
+                        className={`shrink-0 ${isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"}`}
                       >
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>
@@ -144,7 +144,7 @@ export function AIAssistantSidebar({
                           setEditingSessionId(s.id);
                           setEditTitle(s.title || "");
                         }}
-                        className="p-1 rounded hover:bg-[#2f2f2f] text-slate-400 hover:text-white transition-colors cursor-pointer border-0 bg-transparent"
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#2f2f2f] text-slate-555 dark:text-slate-400 hover:text-slate-800 hover:dark:text-white transition-colors cursor-pointer border-0 bg-transparent"
                         title="Sửa tên"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -157,7 +157,7 @@ export function AIAssistantSidebar({
                           e.stopPropagation();
                           handleConfirmDelete(s.id);
                         }}
-                        className="p-1 rounded hover:bg-[#2f2f2f] text-slate-400 hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent"
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#2f2f2f] text-slate-555 dark:text-slate-400 hover:text-red-650 hover:dark:text-red-400 transition-colors cursor-pointer border-0 bg-transparent"
                         title="Xóa cuộc hội thoại"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

@@ -117,7 +117,6 @@ public class GetSharedProjectBoardQueryHandler : IRequestHandler<GetSharedProjec
                             TaskId = st.TaskId,
                             Title = st.Title,
                             IsCompleted = st.IsCompleted,
-                            BoardColumnId = st.BoardColumnId,
                             AssigneeUserId = st.AssigneeUserId,
                             AssigneeAvatar = st.AssigneeUser != null ? st.AssigneeUser.Avatar : null,
                             AssigneeName = st.AssigneeUser != null ? st.AssigneeUser.DisplayName : null,

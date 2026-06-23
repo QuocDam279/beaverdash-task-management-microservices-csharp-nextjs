@@ -19,9 +19,6 @@ public class SubTask : BaseEntity
     
     public bool IsCompleted { get; set; } = false;
     
-    public Guid? BoardColumnId { get; set; }
-    public BoardColumn? BoardColumn { get; set; }
-    
     public DateTime? DueDate { get; set; }
     
     public SubTaskPriority? Priority { get; set; }

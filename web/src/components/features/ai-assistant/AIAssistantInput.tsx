@@ -190,7 +190,7 @@ export function AIAssistantInput({
             }
             disabled={isSending || isUploading || countdown > 0}
             rows={1}
-            className={`flex-1 bg-transparent border-none outline-hidden text-xs text-slate-800 dark:text-[#deebff] placeholder-slate-450 dark:placeholder-slate-500 py-1.5 resize-none min-h-[20px] max-h-[120px] custom-chat-scrollbar ${
+            className={`flex-1 bg-transparent border-none outline-hidden text-sm text-slate-800 dark:text-[#deebff] placeholder-slate-450 dark:placeholder-slate-500 py-1.5 resize-none min-h-[20px] max-h-[120px] custom-chat-scrollbar ${
               !inputText ? "overflow-hidden" : ""
             }`}
           />

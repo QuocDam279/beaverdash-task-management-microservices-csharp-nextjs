@@ -53,7 +53,7 @@ function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const h3Match = line.match(/^###\s+(.+)$/);
     if (h3Match) {
       renderedLines.push(
-        <h3 key={i} className="text-xs font-bold text-slate-800 dark:text-[#deebff] mt-3 mb-1 first:mt-0">
+        <h3 key={i} className="text-sm font-extrabold text-slate-800 dark:text-[#deebff] mt-3.5 mb-1.5 first:mt-0">
           {parseInlineMarkdown(h3Match[1])}
         </h3>
       );
@@ -64,7 +64,7 @@ function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const h2Match = line.match(/^##\s+(.+)$/);
     if (h2Match) {
       renderedLines.push(
-        <h2 key={i} className="text-sm font-bold text-slate-800 dark:text-[#deebff] mt-4 mb-1.5 first:mt-0">
+        <h2 key={i} className="text-base font-bold text-slate-850 dark:text-white mt-4 mb-2 first:mt-0">
           {parseInlineMarkdown(h2Match[1])}
         </h2>
       );
@@ -75,7 +75,7 @@ function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const h1Match = line.match(/^#\s+(.+)$/);
     if (h1Match) {
       renderedLines.push(
-        <h1 key={i} className="text-base font-bold text-slate-900 dark:text-white mt-4.5 mb-2 first:mt-0">
+        <h1 key={i} className="text-lg font-extrabold text-slate-900 dark:text-white mt-5 mb-2.5 first:mt-0">
           {parseInlineMarkdown(h1Match[1])}
         </h1>
       );
@@ -86,9 +86,9 @@ function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const bulletMatch = line.match(/^[\*\-]\s+(.+)$/);
     if (bulletMatch) {
       renderedLines.push(
-        <div key={i} className="flex gap-2 items-start pl-2.5 my-1 leading-relaxed">
-          <span className="text-slate-400 dark:text-slate-500 select-none font-bold text-sm leading-none pt-[1px]">•</span>
-          <div className="flex-1 text-slate-700 dark:text-slate-350">
+        <div key={i} className="flex gap-2 items-start pl-2.5 my-1.5 leading-relaxed">
+          <span className="text-slate-400 dark:text-slate-500 select-none font-bold text-sm leading-none pt-[2px]">•</span>
+          <div className="flex-1 text-slate-700 dark:text-slate-350 text-sm">
             {parseInlineMarkdown(bulletMatch[1])}
           </div>
         </div>
@@ -101,7 +101,7 @@ function MarkdownRenderer({ content }: MarkdownRendererProps) {
       renderedLines.push(<div key={i} className="h-2.5" />);
     } else {
       renderedLines.push(
-        <p key={i} className="leading-relaxed text-slate-700 dark:text-slate-300 my-1">
+        <p key={i} className="leading-relaxed text-slate-700 dark:text-slate-300 my-1.5 text-sm">
           {parseInlineMarkdown(line)}
         </p>
       );
@@ -270,9 +270,9 @@ export function AIAssistantChatViewport({
           if (isUser) {
             return (
               <div key={msg.id} className="flex justify-end w-full">
-                <div className="max-w-[70%] rounded-2xl px-4 py-2.5 text-xs bg-slate-100 text-slate-800 dark:text-[#deebff] leading-relaxed shadow-3xs">
+                <div className="max-w-[70%] rounded-2xl px-4 py-2.5 text-sm bg-slate-100 dark:bg-[#2c3338] text-slate-800 dark:text-[#deebff] leading-relaxed shadow-3xs">
                   {attachment && (
-                    <div className="mb-2 p-2 rounded flex items-center gap-2 border text-[11px] bg-slate-50 dark:bg-[#22272b] border-slate-200 dark:border-[#353e47] text-slate-855 dark:text-[#deebff]">
+                    <div className="mb-2 p-2 rounded flex items-center gap-2 border text-[11px] bg-slate-50 dark:bg-[#22272b] border-slate-200 dark:border-[#353e47] text-slate-700 dark:text-[#deebff]">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
@@ -306,17 +306,17 @@ export function AIAssistantChatViewport({
             }
 
             return (
-              <div key={msg.id} className="flex gap-4 items-start w-full text-slate-800 dark:text-slate-300">
+              <div key={msg.id} className="flex gap-4 items-start w-full text-slate-800 dark:text-slate-300 p-4 rounded-2xl bg-slate-50/50 dark:bg-[#2c3338]/15 border border-slate-100/50 dark:border-transparent">
                 {/* AI Avatar */}
                 <img
                   src="/logo.svg"
                   alt="Beaverdash Logo"
-                  className="w-10 h-10 object-contain shrink-0 select-none filter drop-shadow-[0_0_4px_rgba(99,102,241,0.15)]"
+                  className="w-9 h-9 object-contain shrink-0 select-none filter drop-shadow-[0_0_4px_rgba(99,102,241,0.15)]"
                 />
                 {/* Content */}
                 <div className="flex-1 min-w-0 pt-0.5 space-y-1">
                   <div className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase select-none">Trợ lý BeaverDash</div>
-                  <div className="text-xs leading-relaxed font-medium text-slate-800 dark:text-slate-350">
+                  <div className="text-sm leading-relaxed font-medium text-slate-800 dark:text-slate-350">
                     <MarkdownRenderer content={displayText || ""} />
                   </div>
                   {msg.tool_calls && msg.tool_calls.length > 0 && (
@@ -340,12 +340,12 @@ export function AIAssistantChatViewport({
         })}
 
         {isSending && (
-          <div className="flex gap-4 items-start w-full text-slate-800 dark:text-slate-300">
+          <div className="flex gap-4 items-start w-full text-slate-800 dark:text-slate-300 p-4 rounded-2xl bg-slate-50/50 dark:bg-[#2c3338]/15 border border-slate-100/50 dark:border-transparent">
             {/* AI Avatar */}
             <img
               src="/logo.svg"
               alt="Beaverdash Logo"
-              className="w-10 h-10 object-contain shrink-0 select-none animate-pulse filter drop-shadow-[0_0_6px_rgba(99,102,241,0.25)]"
+              className="w-9 h-9 object-contain shrink-0 select-none animate-pulse filter drop-shadow-[0_0_6px_rgba(99,102,241,0.25)]"
             />
             {/* Content */}
             <div className="flex-1 min-w-0 pt-0.5 space-y-2">

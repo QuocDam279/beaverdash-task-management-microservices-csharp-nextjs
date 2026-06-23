@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { api } from "@/lib/api";
+import { usePathname } from "next/navigation";
 
 interface UseInputProps {
   projectId: string;
@@ -35,15 +36,21 @@ export function useAIAssistantInput({
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = React.useState(false);
+  const pathname = usePathname();
 
   // Auto-size textarea height based on content
   React.useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+      const scrollHeight = textarea.scrollHeight;
+      if (scrollHeight > 0) {
+        textarea.style.height = `${Math.min(scrollHeight, 120)}px`;
+      } else {
+        textarea.style.height = "24px"; // Safe fallback height for rows={1} when parent is display: none
+      }
     }
-  }, [inputText]);
+  }, [inputText, pathname]);
 
   // Refocus textarea when input transitions from disabled to enabled
   const isDisabled = isSending || isUploading || countdown > 0;
