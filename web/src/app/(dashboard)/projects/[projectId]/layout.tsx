@@ -31,6 +31,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
   const [isShareOpen, setIsShareOpen] = React.useState(false);
   const [isActionPending, setIsActionPending] = React.useState(false);
   const [hasUnreadChat, setHasUnreadChat] = React.useState(false);
+  const [isDescExpanded, setIsDescExpanded] = React.useState(false);
   const { alert, confirm } = useAlertConfirm();
 
   const fetchProjectDetails = React.useCallback(async () => {
@@ -260,7 +261,35 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
         {/* Project Description */}
         {project?.description && (
           <p className="text-xs text-[#505258] max-w-4xl leading-relaxed mb-4">
-            {project.description}
+            {project.description.length > 200 && !isDescExpanded ? (
+              <>
+                {project.description.substring(0, 200)}...
+                <button
+                  onClick={() => setIsDescExpanded(true)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 ml-1.5 focus:outline-none focus:underline cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  Xem thêm
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="mt-0.5">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                {project.description}
+                {project.description.length > 200 && (
+                  <button
+                    onClick={() => setIsDescExpanded(false)}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 ml-1.5 focus:outline-none focus:underline cursor-pointer inline-flex items-center gap-0.5"
+                  >
+                    Thu gọn
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="mt-0.5">
+                      <polyline points="18 15 12 9 6 15" />
+                    </svg>
+                  </button>
+                )}
+              </>
+            )}
           </p>
         )}
 

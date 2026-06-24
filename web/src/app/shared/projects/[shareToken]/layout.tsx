@@ -19,6 +19,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
   const [project, setProject] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isDescExpanded, setIsDescExpanded] = React.useState(false);
 
   const fetchProjectDetails = React.useCallback(async () => {
     try {
@@ -126,7 +127,35 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
         {/* Project Description */}
         {project.description && (
           <p className="text-xs text-[#505258] max-w-4xl leading-relaxed mb-4">
-            {project.description}
+            {project.description.length > 200 && !isDescExpanded ? (
+              <>
+                {project.description.substring(0, 200)}...
+                <button
+                  onClick={() => setIsDescExpanded(true)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 ml-1.5 focus:outline-none focus:underline cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  Xem thêm
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="mt-0.5">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                {project.description}
+                {project.description.length > 200 && (
+                  <button
+                    onClick={() => setIsDescExpanded(false)}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 ml-1.5 focus:outline-none focus:underline cursor-pointer inline-flex items-center gap-0.5"
+                  >
+                    Thu gọn
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="mt-0.5">
+                      <polyline points="18 15 12 9 6 15" />
+                    </svg>
+                  </button>
+                )}
+              </>
+            )}
           </p>
         )}
 
