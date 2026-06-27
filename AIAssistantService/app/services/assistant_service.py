@@ -240,6 +240,8 @@ class AIAssistantService:
                         result_str = await tools_provider.create_sprint(**tool_args)
                     elif tool_name == "update_sprint":
                         result_str = await tools_provider.update_sprint(**tool_args)
+                    elif tool_name == "get_project_tasks":
+                        result_str = await tools_provider.get_project_tasks(**tool_args)
                     else:
                         result_str = f"Lỗi: Không tìm thấy công cụ '{tool_name}'."
                     

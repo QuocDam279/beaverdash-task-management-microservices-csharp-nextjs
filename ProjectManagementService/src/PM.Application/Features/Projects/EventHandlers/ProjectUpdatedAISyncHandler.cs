@@ -1,5 +1,5 @@
+using MassTransit;
 using MediatR;
-using PM.Application.Contracts;
 using PM.Domain.Events;
 using System;
 using System.Threading;
@@ -9,28 +9,28 @@ namespace PM.Application.Features.Projects.EventHandlers;
 
 public class ProjectUpdatedAISyncHandler : INotificationHandler<ProjectUpdatedEvent>
 {
-    private readonly IAIAssistantServiceClient _aiAssistantClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public ProjectUpdatedAISyncHandler(IAIAssistantServiceClient aiAssistantClient)
+    public ProjectUpdatedAISyncHandler(IPublishEndpoint publishEndpoint)
     {
-        _aiAssistantClient = aiAssistantClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task Handle(ProjectUpdatedEvent notification, CancellationToken cancellationToken)
     {
         try
         {
-            await _aiAssistantClient.SyncProjectAsync(
-                notification.ProjectId,
-                notification.ProjectName,
-                notification.Description,
-                null
-            );
+            await _publishEndpoint.Publish(new EventBus.Messages.Events.ProjectUpdatedIntegrationEvent
+            {
+                ProjectId = notification.ProjectId,
+                Name = notification.ProjectName,
+                Description = notification.Description,
+                Status = null
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
-            // Fail silently or log
-            Console.WriteLine($"Async sync with AIAssistant failed for project: {ex.Message}");
+            Console.WriteLine($"Failed to publish ProjectUpdatedIntegrationEvent: {ex.Message}");
         }
     }
 }

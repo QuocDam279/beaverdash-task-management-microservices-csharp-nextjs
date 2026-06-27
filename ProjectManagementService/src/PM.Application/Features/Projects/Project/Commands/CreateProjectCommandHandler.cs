@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,16 +13,16 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
 {
     private readonly PM.Application.Contracts.IPMDbContext _dbContext;
     private readonly PM.Application.Contracts.ICurrentUserService _currentUserService;
-    private readonly PM.Application.Contracts.IAIAssistantServiceClient _aiAssistantClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public CreateProjectCommandHandler(
         PM.Application.Contracts.IPMDbContext dbContext,
         PM.Application.Contracts.ICurrentUserService currentUserService,
-        PM.Application.Contracts.IAIAssistantServiceClient aiAssistantClient)
+        IPublishEndpoint publishEndpoint)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
-        _aiAssistantClient = aiAssistantClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
@@ -78,17 +79,25 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // --- Đồng bộ sang AIAssistant Service ---
-        // 1. Đồng bộ thông tin dự án
-        await _aiAssistantClient.SyncProjectAsync(project.Id, project.Name, project.Description, null);
-
-        // 2. Đồng bộ danh sách thành viên
+        // --- Đồng bộ sang AIAssistant Service qua Event Bus ---
         List<Guid> memberIds = await _dbContext.TeamMembers
             .Where(tm => tm.TeamId == request.TeamId.Value)
             .Select(tm => tm.UserId)
             .ToListAsync(cancellationToken);
 
-        await _aiAssistantClient.SyncProjectMembersAsync(project.Id, memberIds);
+        await _publishEndpoint.Publish(new EventBus.Messages.Events.ProjectCreatedEvent
+        {
+            ProjectId = project.Id,
+            Name = project.Name,
+            Description = project.Description,
+            Status = null
+        }, cancellationToken);
+
+        await _publishEndpoint.Publish(new EventBus.Messages.Events.ProjectMembersSyncedEvent
+        {
+            ProjectId = project.Id,
+            MemberUserIds = memberIds
+        }, cancellationToken);
 
         return project.Id;
     }

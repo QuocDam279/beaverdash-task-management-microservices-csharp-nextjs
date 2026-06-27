@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.api.v1 import chat, webhooks
+from app.api.v1 import chat
 from app.worker.consumer import RabbitMQConsumer
 
 # Setup logging configuration
@@ -58,7 +58,7 @@ app.add_middleware(
 
 # Register routes
 app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["AI Chat"])
-app.include_router(webhooks.router, prefix=f"{settings.API_V1_STR}/webhooks", tags=["Webhooks Sync"])
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():

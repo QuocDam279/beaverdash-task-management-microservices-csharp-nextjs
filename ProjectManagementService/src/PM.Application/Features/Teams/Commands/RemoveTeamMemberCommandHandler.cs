@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
@@ -13,16 +14,16 @@ public class RemoveTeamMemberCommandHandler : IRequestHandler<RemoveTeamMemberCo
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
-    private readonly IAIAssistantServiceClient _aiAssistantClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public RemoveTeamMemberCommandHandler(
         IPMDbContext dbContext,
         ICurrentUserService currentUserService,
-        IAIAssistantServiceClient aiAssistantClient)
+        IPublishEndpoint publishEndpoint)
     {
         _currentUserService = currentUserService;
         _dbContext = dbContext;
-        _aiAssistantClient = aiAssistantClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<bool> Handle(RemoveTeamMemberCommand request, CancellationToken cancellationToken)
@@ -78,7 +79,11 @@ public class RemoveTeamMemberCommandHandler : IRequestHandler<RemoveTeamMemberCo
         // Đồng bộ cho từng dự án
         foreach (var projectId in projectIds)
         {
-            await _aiAssistantClient.SyncProjectMembersAsync(projectId, memberIds);
+            await _publishEndpoint.Publish(new EventBus.Messages.Events.ProjectMembersSyncedEvent
+            {
+                ProjectId = projectId,
+                MemberUserIds = memberIds
+            }, cancellationToken);
         }
 
         return true;

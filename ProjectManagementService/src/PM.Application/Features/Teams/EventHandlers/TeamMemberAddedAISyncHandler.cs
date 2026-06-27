@@ -1,5 +1,5 @@
+using MassTransit;
 using MediatR;
-using PM.Application.Contracts;
 using PM.Domain.Events;
 using System;
 using System.Threading;
@@ -9,11 +9,11 @@ namespace PM.Application.Features.Teams.EventHandlers;
 
 public class TeamMemberAddedAISyncHandler : INotificationHandler<TeamMemberAddedEvent>
 {
-    private readonly IAIAssistantServiceClient _aiAssistantClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public TeamMemberAddedAISyncHandler(IAIAssistantServiceClient aiAssistantClient)
+    public TeamMemberAddedAISyncHandler(IPublishEndpoint publishEndpoint)
     {
-        _aiAssistantClient = aiAssistantClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task Handle(TeamMemberAddedEvent notification, CancellationToken cancellationToken)
@@ -22,13 +22,16 @@ public class TeamMemberAddedAISyncHandler : INotificationHandler<TeamMemberAdded
         {
             foreach (var projectId in notification.ProjectIds)
             {
-                await _aiAssistantClient.SyncProjectMembersAsync(projectId, notification.MemberUserIds);
+                await _publishEndpoint.Publish(new EventBus.Messages.Events.ProjectMembersSyncedEvent
+                {
+                    ProjectId = projectId,
+                    MemberUserIds = notification.MemberUserIds
+                }, cancellationToken);
             }
         }
         catch (Exception ex)
         {
-            // Fail silently or log
-            Console.WriteLine($"Async sync with AIAssistant failed for team members: {ex.Message}");
+            Console.WriteLine($"Failed to publish ProjectMembersSyncedEvent: {ex.Message}");
         }
     }
 }

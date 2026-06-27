@@ -3,7 +3,7 @@ import json
 import logging
 import aio_pika
 from app.core.config import settings
-from app.worker.handlers import handle_user_created_or_updated
+from app.worker.handlers import handle_user_created_or_updated, handle_project_created_or_updated, handle_project_members_synced
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,40 @@ class RabbitMQConsumer:
                 await q_created.bind(ex_created)
                 await q_updated.bind(ex_updated)
 
+                # --- Project & Member Events ---
+                ex_project_created = await self.channel.declare_exchange(
+                    "EventBus.Messages.Events:ProjectCreatedEvent",
+                    aio_pika.ExchangeType.FANOUT,
+                    durable=True
+                )
+                ex_project_updated = await self.channel.declare_exchange(
+                    "EventBus.Messages.Events:ProjectUpdatedIntegrationEvent",
+                    aio_pika.ExchangeType.FANOUT,
+                    durable=True
+                )
+                ex_members_synced = await self.channel.declare_exchange(
+                    "EventBus.Messages.Events:ProjectMembersSyncedEvent",
+                    aio_pika.ExchangeType.FANOUT,
+                    durable=True
+                )
+
+                q_project_created = await self.channel.declare_queue(
+                    "ai-assistant-project-created",
+                    durable=True
+                )
+                q_project_updated = await self.channel.declare_queue(
+                    "ai-assistant-project-updated",
+                    durable=True
+                )
+                q_members_synced = await self.channel.declare_queue(
+                    "ai-assistant-members-synced",
+                    durable=True
+                )
+
+                await q_project_created.bind(ex_project_created)
+                await q_project_updated.bind(ex_project_updated)
+                await q_members_synced.bind(ex_members_synced)
+
                 # Setup consumption callbacks
                 async def on_message(message: aio_pika.abc.AbstractIncomingMessage):
                     async with message.process():
@@ -92,6 +126,34 @@ class RabbitMQConsumer:
 
                 await q_created.consume(on_message)
                 await q_updated.consume(on_message)
+
+                # Project event callback
+                async def on_project_message(message: aio_pika.abc.AbstractIncomingMessage):
+                    async with message.process():
+                        try:
+                            body = json.loads(message.body.decode())
+                            logger.info(f"Received project event from queue")
+                            await handle_project_created_or_updated(body)
+                        except json.JSONDecodeError:
+                            logger.error(f"Failed to decode JSON from project event: {message.body}")
+                        except Exception as e:
+                            logger.exception(f"Error processing project event: {e}")
+
+                # Members synced event callback
+                async def on_members_message(message: aio_pika.abc.AbstractIncomingMessage):
+                    async with message.process():
+                        try:
+                            body = json.loads(message.body.decode())
+                            logger.info(f"Received members synced event from queue")
+                            await handle_project_members_synced(body)
+                        except json.JSONDecodeError:
+                            logger.error(f"Failed to decode JSON from members event: {message.body}")
+                        except Exception as e:
+                            logger.exception(f"Error processing members synced event: {e}")
+
+                await q_project_created.consume(on_project_message)
+                await q_project_updated.consume(on_project_message)
+                await q_members_synced.consume(on_members_message)
 
                 logger.info("RabbitMQ Consumer started listening on queues successfully.")
                 

@@ -1,15 +1,7 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import List, Optional
+from typing import Optional
 
-class ProjectSyncSchema(BaseModel):
-    id: UUID
-    name: str
-    description: Optional[str] = None
-    status: Optional[str] = None
-
-class ProjectMembersSyncSchema(BaseModel):
-    member_user_ids: List[UUID]
 
 class UserEventSchema(BaseModel):
     id: UUID = Field(alias="Id")
@@ -19,3 +11,4 @@ class UserEventSchema(BaseModel):
 
     class Config:
         populate_by_name = True
+
