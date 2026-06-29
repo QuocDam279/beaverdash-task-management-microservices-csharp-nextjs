@@ -189,11 +189,7 @@ function LoginContent() {
         {/* Subtle background radial glow */}
         <div className="absolute bottom-[-150px] left-[-150px] w-[300px] h-[300px] rounded-full bg-gradient-to-br from-[#854d0e]/5 to-transparent blur-[60px] pointer-events-none" />
 
-        <div className="flex items-center justify-between animate-fade-slide-up select-none">
-          <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-full">
-            v1.0.0 Stable
-          </span>
-        </div>
+
 
         {/* Center Auth Container */}
         <div className="flex-1 flex flex-col justify-center items-center max-w-[360px] mx-auto w-full py-4">

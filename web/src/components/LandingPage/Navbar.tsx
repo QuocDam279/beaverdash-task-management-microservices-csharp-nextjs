@@ -34,9 +34,6 @@ export function Navbar() {
           <button onClick={() => scrollToSection("ai-showcase")} className="hover:text-[#78350f] transition-colors cursor-pointer">
             Quy trình AI
           </button>
-          <button onClick={() => scrollToSection("pricing")} className="hover:text-[#78350f] transition-colors cursor-pointer">
-            Bảng giá
-          </button>
           <button onClick={() => scrollToSection("faq")} className="hover:text-[#78350f] transition-colors cursor-pointer">
             Hỏi đáp
           </button>
@@ -46,15 +43,9 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             href="/login"
-            className="text-xs font-bold text-stone-600 hover:text-[#78350f] transition-colors px-3 py-1.5"
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            href="/login"
             className="text-xs font-bold text-white bg-gradient-to-r from-amber-700 to-[#78350f] hover:from-amber-600 hover:to-[#5c2d12] px-4 py-2 rounded-xl transition-all duration-300 shadow-lg shadow-amber-700/10 active:scale-95"
           >
-            Dùng thử miễn phí
+            Đăng nhập
           </Link>
         </div>
 

@@ -39,7 +39,7 @@ class AIAssistantService:
         "    - Missions (Subtask) require: title, due_date, and assignee (specify which project member is assigned, e.g. 'Người thực hiện: Nguyễn Văn A' hoặc 'Người thực hiện: Chưa gán'). ABSOLUTELY NO priority field.\n"
         "    - You MUST suggest reasonable dates (and priorities only for Tasks) when listing proposals to the user, unless the user explicitly mentions they do not need dates or priorities. When planning task dates, you MUST call the tool `get_project_details` first to inspect the project's start date, due date, and member list, to ensure that the proposed dates for both tasks and missions fall strictly within the project's active date range, and that assignees are matched properly.\n"
         "12. When displaying proposed task lists or announcing results to the user, ALWAYS use the Vietnamese phrases 'công việc' instead of 'task'/'Task'/'công việc cha', and 'nhiệm vụ' instead of 'subtask'/'Subtask'. Never use these English terms in your response to the user.\n"
-        "13. ABSOLUTELY NEVER DISPLAY OR MENTION the names of the technical tools or functions (such as `create_task`, `update_task`, `create_subtask`, `update_subtask`, `create_sprint`, `update_sprint`, `get_project_details`, `get_project_sprints`, etc.) in your text response to the user. Speak using natural Vietnamese descriptions instead.\n"
+        "13. ABSOLUTELY NEVER DISPLAY OR MENTION the names of the technical tools or functions (such as `create_task`, `update_task`, `create_subtask`, `update_subtask`, `create_sprint`, `update_sprint`, `get_project_details`, `get_project_sprints`, `delete_task`, `delete_subtask`, `delete_sprint`, `get_project_activities`, etc.) in your text response to the user. Speak using natural Vietnamese descriptions instead.\n"
         "14. MEMBER ASSIGNMENT RULES (CRITICAL):\n"
         "    - The list of project members, their User IDs, and roles are retrieved by calling `get_project_details`.\n"
         "    - You MUST analyze the user's description of member skills, roles, or capabilities (provided in conversation or in attached documents) and automatically map subtasks to the most appropriate member based on their expertise.\n"
@@ -79,8 +79,18 @@ class AIAssistantService:
         "    - You are provided with the tool `get_project_tasks` to query and filter tasks/subtasks in the project.\n"
         "    - When a user asks about task assignments (e.g., 'What tasks am I assigned to?', 'What incomplete tasks does member A have?', 'Which tasks are approaching their due date?'), you MUST call `get_project_tasks` to inspect the project tasks.\n"
         "    - Make sure to pass the appropriate filter arguments (like `assignee_name`, `status_type`, `due_date_filter`) to limit the response and keep the context clean.\n"
+        "    - FLEXIBLE DUE DATE FILTER: The `due_date_filter` parameter accepts 'overdue' or 'upcomingN' where N is any number of days the user specifies. For example: if the user asks 'các nhiệm vụ sắp đến hạn trong 3 ngày tới', pass `due_date_filter='upcoming3'`. If the user asks 'sắp đến hạn trong 2 tuần', pass `due_date_filter='upcoming14'`. If the user just says 'sắp đến hạn' without specifying days, default to 'upcoming7'.\n"
+        "    - COMBINED FILTERS: You can combine `assignee_name` with `due_date_filter` in a single call to answer questions like 'Các nhiệm vụ của thành viên A sắp đến hạn trong 5 ngày tới?'. Simply pass both `assignee_name='Thành viên A'` and `due_date_filter='upcoming5'` together.\n"
         "    - For assignee queries, if the user asks 'What are my tasks?' ('tôi được giao việc gì'), you must first check the project member list using `get_project_details` to map their identity (or use their display name), and then call `get_project_tasks` with that `assignee_name`.\n"
         "    - Do not make assumptions about task due dates or assignees; always fetch real-time data using the tool first.\n"
+        "23. DELETION RULES & TWO-STEP CONFIRMATION (CRITICAL):\n"
+        "    - When a user asks to delete a task, subtask, or sprint, you MUST NOT execute the deletion immediately.\n"
+        "    - You must first output a clear confirmation message listing exactly what will be deleted (e.g. 'Tôi sẽ tiến hành xóa công việc: X (ID: Y)'). Wait for the user's explicit confirmation (e.g. 'Đồng ý', 'Ok', 'Xóa đi', etc.) before calling `delete_task`, `delete_subtask`, or `delete_sprint`.\n"
+        "24. PROJECT ACTIVITIES TRACKING:\n"
+        "    - Use the tool `get_project_activities` to view who did what and when. You can filter by member ID or a specific date if requested.\n"
+        "25. PROJECT OVERVIEW & METRICS REPORTING:\n"
+        "    - When the user asks about the general state, progress, workloads, or a summary of the project, you must first call `get_project_details` which returns rich project metrics (e.g., tasks completed/created/upcoming due in 7 days, subtask status counts, member workload counts and percentages).\n"
+        "    - Use this rich data to provide analytical and complete reports (e.g., identifying who has the highest workload, what the status split of subtasks is, etc.) in natural Vietnamese.\n"
     )
 
 
@@ -119,7 +129,11 @@ class AIAssistantService:
             tools_provider.get_project_sprints,
             tools_provider.create_sprint,
             tools_provider.update_sprint,
-            tools_provider.get_project_tasks
+            tools_provider.get_project_tasks,
+            tools_provider.delete_task,
+            tools_provider.delete_subtask,
+            tools_provider.delete_sprint,
+            tools_provider.get_project_activities
         ]
 
         # 1. Convert DB history to Gemini SDK format
@@ -242,6 +256,14 @@ class AIAssistantService:
                         result_str = await tools_provider.update_sprint(**tool_args)
                     elif tool_name == "get_project_tasks":
                         result_str = await tools_provider.get_project_tasks(**tool_args)
+                    elif tool_name == "delete_task":
+                        result_str = await tools_provider.delete_task(**tool_args)
+                    elif tool_name == "delete_subtask":
+                        result_str = await tools_provider.delete_subtask(**tool_args)
+                    elif tool_name == "delete_sprint":
+                        result_str = await tools_provider.delete_sprint(**tool_args)
+                    elif tool_name == "get_project_activities":
+                        result_str = await tools_provider.get_project_activities(**tool_args)
                     else:
                         result_str = f"Lỗi: Không tìm thấy công cụ '{tool_name}'."
                     

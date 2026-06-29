@@ -11,20 +11,20 @@ export function FAQAccordion() {
 
   const faqs = [
     {
-      q: "Tôi có thể đăng nhập bằng những phương thức nào?",
-      a: "Hiện tại BeaverDash hỗ trợ đăng nhập cực kỳ nhanh chóng và an toàn thông qua Tài khoản Google (Google Login SDK). Bạn không cần phải nhớ thêm mật khẩu mới để bắt đầu sử dụng.",
+      q: "BeaverDash là gì và có dễ sử dụng không?",
+      a: "BeaverDash là công cụ quản lý công việc trực quan giúp cá nhân và đội nhóm sắp xếp công việc gọn gàng. Giao diện được thiết kế kéo-thả cực kỳ đơn giản như việc dán giấy ghi chú lên bảng, giúp bạn làm quen và bắt đầu sử dụng chỉ trong vòng 5 phút mà không cần bất kỳ kiến thức kỹ thuật nào.",
     },
     {
-      q: "Trợ lý AI lập kế hoạch hoạt động như thế nào?",
-      a: "Trợ lý AI tích hợp trong BeaverDash sử dụng các mô hình ngôn ngữ lớn để bóc tách ngữ nghĩa từ câu thoại của bạn. Khi bạn yêu cầu lập kế hoạch cho một nhiệm vụ, AI sẽ tự động phân tách thành các checklist con, gán nhãn ưu tiên, tính toán thời gian và vẽ chúng lên bảng Kanban cho bạn.",
+      q: "Trợ lý AI giúp tôi những gì trong công việc?",
+      a: "Trợ lý AI đóng vai trò như một người đồng nghiệp thông minh. Khi bạn nhập một yêu cầu ngắn ví dụ như lập kế hoạch thiết kế trang web, AI sẽ tự động phân tách yêu cầu thành danh sách các đầu việc nhỏ cần làm, gợi ý thứ tự ưu tiên và thời gian hoàn thành để bạn bắt tay vào việc ngay lập tức.",
     },
     {
-      q: "Tính năng đồng bộ thời gian thực hoạt động ra sao?",
-      a: "Ứng dụng sử dụng công nghệ SignalR để thiết lập cổng kết nối liên tục giữa Client và máy chủ. Nhờ đó, bất cứ khi nào có thay đổi xảy ra trên dự án, tất cả thành viên đang trực tuyến sẽ nhìn thấy cập nhật ngay lập tức trên màn hình của họ mà không cần tải lại trang.",
+      q: "Làm thế nào để phối hợp làm việc nhóm trên BeaverDash?",
+      a: "Bạn có thể dễ dàng tạo nhóm và mời các thành viên tham gia qua email hoặc liên kết chia sẻ. Mọi người có thể cùng cập nhật trạng thái công việc, thảo luận, đính kèm tài liệu. Mọi thay đổi của đồng đội sẽ xuất hiện ngay lập tức trên màn hình của bạn mà không cần tải lại trang.",
     },
     {
-      q: "Gói dùng thử Pro có bị giới hạn gì không?",
-      a: "Gói dùng thử Pro cho phép đội nhóm của bạn sử dụng đầy đủ mọi tính năng cao cấp nhất như đồng bộ SignalR và câu lệnh AI không giới hạn trong vòng 14 ngày. Bạn không cần nhập thông tin thẻ thanh toán để dùng thử.",
+      q: "Tôi đăng nhập vào hệ thống bằng cách nào?",
+      a: "BeaverDash hỗ trợ đăng nhập cực kỳ nhanh chóng và an toàn chỉ với một cú nhấp chuột bằng Tài khoản Google của bạn. Hệ thống không yêu cầu điền biểu mẫu đăng ký rườm rà hay bắt bạn phải ghi nhớ thêm bất kỳ mật khẩu mới nào.",
     },
   ];
 
@@ -64,10 +64,10 @@ export function FAQAccordion() {
               {/* Answer Content */}
               <div
                 className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                  isOpen ? "max-h-[200px] border-t border-stone-150" : "max-h-0"
+                  isOpen ? "max-h-[300px] border-t border-stone-150" : "max-h-0"
                 }`}
               >
-                <p className="p-4 text-[11px] text-stone-500 leading-relaxed text-justify">
+                <p className="p-4 text-[11.5px] text-stone-500 leading-relaxed text-justify">
                   {faq.a}
                 </p>
               </div>

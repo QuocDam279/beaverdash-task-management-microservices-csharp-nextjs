@@ -9,24 +9,38 @@ import * as React from "react";
 export function FeaturesGrid() {
   const features = [
     {
-      icon: "⚡",
-      title: "Đồng bộ thời gian thực",
-      desc: "Mọi thay đổi từ cập nhật nhiệm vụ, bình luận đến chỉnh sửa tiến độ đều được đồng bộ tức thời qua SignalR tới tất cả màn hình của thành viên.",
-      tag: "SignalR Sync",
+      icon: "📋",
+      title: "Bảng Kanban & Danh sách",
+      desc: "Quản lý công việc linh hoạt thông qua bảng Kanban kéo-thả trực quan hoặc dạng danh sách chi tiết, giúp bạn dễ dàng theo dõi trạng thái nhiệm vụ.",
+      tag: "Trực quan",
+      color: "border-stone-200 hover:border-amber-700/40 hover:shadow-amber-700/5",
+    },
+    {
+      icon: "📅",
+      title: "Sơ đồ Gantt & Lịch biểu",
+      desc: "Hình dung tiến trình công việc theo thời gian thực trên sơ đồ Gantt và quản lý thời hạn hoàn thành sát sao qua giao diện lịch biểu của cả đội.",
+      tag: "Tiến độ",
       color: "border-stone-200 hover:border-amber-700/40 hover:shadow-amber-700/5",
     },
     {
       icon: "🤖",
       title: "Trợ lý AI lập kế hoạch",
-      desc: "Tự động phân tích dự án, đề xuất danh sách việc cần làm (checklist) và tạo công việc tự động từ câu hội thoại ngôn ngữ tự nhiên.",
-      tag: "AI Powered",
+      desc: "Hỏi đáp và trò chuyện với Trợ lý AI để tự động phân rã các nhiệm vụ lớn thành checklist công việc nhỏ hơn, giúp tiết kiệm thời gian chuẩn bị.",
+      tag: "Trí tuệ nhân tạo",
       color: "border-stone-200 hover:border-amber-700/40 hover:shadow-amber-700/5",
     },
     {
-      icon: "📅",
-      title: "Bảng biểu trực quan",
-      desc: "Theo dõi tiến độ linh hoạt thông qua bảng Kanban kéo thả, Lịch biểu chi tiết và sơ đồ Gantt trực quan giúp kiểm soát sát sao thời hạn công việc.",
-      tag: "Visual Boards",
+      icon: "💬",
+      title: "Kênh chat nội bộ dự án",
+      desc: "Trao đổi ý kiến, thảo luận trực tiếp và chia sẻ tệp tin ngay trong không gian làm việc của từng dự án, giúp thông tin luôn liền mạch.",
+      tag: "Cộng tác",
+      color: "border-stone-200 hover:border-amber-700/40 hover:shadow-amber-700/5",
+    },
+    {
+      icon: "⚡",
+      title: "Đồng bộ tức thời",
+      desc: "Tự động cập nhật mọi thay đổi từ các thành viên khác ngay trên màn hình làm việc của bạn mà không cần tải lại trang, giúp cả nhóm phối hợp ăn ý.",
+      tag: "Đồng bộ",
       color: "border-stone-200 hover:border-amber-700/40 hover:shadow-amber-700/5",
     },
   ];
@@ -44,12 +58,12 @@ export function FeaturesGrid() {
         </p>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 max-w-6xl mx-auto">
+      {/* Centered Flexbox Layout */}
+      <div className="flex flex-wrap justify-center gap-6 px-4 max-w-6xl mx-auto">
         {features.map((f, idx) => (
           <div
             key={idx}
-            className={`bg-white/80 border rounded-2xl p-6 text-left space-y-4 hover:-translate-y-1 transition-all duration-300 shadow-xl ${f.color}`}
+            className={`w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] bg-white/80 border rounded-2xl p-6 text-left space-y-4 hover:-translate-y-1 transition-all duration-300 shadow-xl ${f.color}`}
           >
             <div className="flex justify-between items-center">
               <span className="text-2xl">{f.icon}</span>

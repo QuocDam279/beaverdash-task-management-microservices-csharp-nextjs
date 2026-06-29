@@ -195,7 +195,7 @@ const doc = new Document({
 
         // ── PHẦN 4: DANH SÁCH CÔNG VIỆC CẦN LÀM ──
         heading("4. DANH SÁCH CÔNG VIỆC CẦN LÀM"),
-        instruction("(Liệt kê các đầu việc lớn và các việc nhỏ bên trong. AI sẽ dựa vào đây để tạo công việc và phân công cho thành viên.)"),
+        instruction("(Liệt kê các công việc chính và danh sách nhiệm vụ bên trong. AI sẽ dựa vào đây để tạo công việc, nhiệm vụ và phân công cho thành viên.)"),
         emptyLine(),
 
         new Paragraph({
@@ -204,14 +204,34 @@ const doc = new Document({
         }),
         bullet("Mức độ ưu tiên: [Bắt buộc / Quan trọng / Mở rộng]"),
         bullet("Giai đoạn dự kiến: [Giai đoạn 1 / Giai đoạn 2 / ...]"),
-        bullet("Các việc nhỏ:"),
-        new Paragraph({
-          children: [new TextRun({ text: "  - [Việc nhỏ 1]", size: 20, font: "Arial", color: "888888", italics: true })],
-          spacing: { after: 30 },
-        }),
-        new Paragraph({
-          children: [new TextRun({ text: "  - [Việc nhỏ 2]", size: 20, font: "Arial", color: "888888", italics: true })],
-          spacing: { after: 60 },
+        bullet("Danh sách nhiệm vụ:"),
+        emptyLine(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              children: [
+                createHeaderCell("Tên nhiệm vụ", 40),
+                createHeaderCell("Phân công cho ai", 30),
+                createHeaderCell("Hạn chót", 30),
+              ],
+            }),
+            new TableRow({
+              children: [
+                createCell("[VD: Thiết kế giao diện]", 40),
+                createCell("[VD: Nguyễn Văn A]", 30),
+                createCell("[VD: 10/07/2026]", 30),
+              ],
+            }),
+            new TableRow({
+              children: [
+                createCell("[VD: Viết tài liệu API]", 40),
+                createCell("[VD: Trần Thị B]", 30),
+                createCell("[VD: 12/07/2026]", 30),
+              ],
+            }),
+          ],
         }),
         emptyLine(),
 
@@ -221,7 +241,35 @@ const doc = new Document({
         }),
         bullet("Mức độ ưu tiên: [Bắt buộc / Quan trọng / Mở rộng]"),
         bullet("Giai đoạn dự kiến: [...]"),
-        bullet("Các việc nhỏ: [...]"),
+        bullet("Danh sách nhiệm vụ:"),
+        emptyLine(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              children: [
+                createHeaderCell("Tên nhiệm vụ", 40),
+                createHeaderCell("Phân công cho ai", 30),
+                createHeaderCell("Hạn chót", 30),
+              ],
+            }),
+            new TableRow({
+              children: [
+                createCell("[Tên nhiệm vụ]", 40),
+                createCell("[Họ tên thành viên]", 30),
+                createCell("[Ngày/Tháng/Năm]", 30),
+              ],
+            }),
+            new TableRow({
+              children: [
+                createCell("[...]", 40),
+                createCell("[...]", 30),
+                createCell("[...]", 30),
+              ],
+            }),
+          ],
+        }),
         emptyLine(),
 
         instruction("(Thêm các công việc tiếp theo theo cùng cấu trúc...)"),

@@ -126,7 +126,7 @@ export function ShowcaseAI() {
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 text-[11px] leading-tight">Thiết kế khung dây (Wireframe) sơ bộ</p>
+                        <p className="font-bold text-slate-800 text-[11px] leading-tight">Thiết kế khung dây Wireframe sơ bộ</p>
                         <p className="text-[8.5px] text-slate-400 mt-0.5">Ưu tiên: <span className="text-red-500 font-bold">Cao</span></p>
                       </div>
                     </div>

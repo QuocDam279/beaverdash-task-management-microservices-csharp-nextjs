@@ -75,6 +75,15 @@ body {
   animation: float-fast 4s ease-in-out infinite;
 }
 
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 5s ease-in-out infinite;
+}
+
 /* Ambient Glow Spheres Drift Animations */
 @keyframes drift-one {
   0%, 100% { transform: translate(0, 0) scale(1); }

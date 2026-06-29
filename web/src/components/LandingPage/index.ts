@@ -2,7 +2,6 @@ export { Navbar } from "./Navbar";
 export { HeroSection } from "./HeroSection";
 export { FeaturesGrid } from "./FeaturesGrid";
 export { AIShowcase } from "./AIShowcase";
-export { PricingGrid } from "./PricingGrid";
 export { FAQAccordion } from "./FAQAccordion";
 export { Footer } from "./Footer";
 export { ProductMockup } from "./ProductMockup";

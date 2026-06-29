@@ -199,7 +199,7 @@ class AIAssistantTools:
 
     async def get_project_details(self) -> str:
         """
-        Lấy thông tin chi tiết của dự án hiện tại bao gồm: Tên dự án, mô tả, trạng thái, ngày bắt đầu, ngày kết thúc, các cột trạng thái hiện tại và danh sách thành viên dự án kèm vai trò, ID của họ.
+        Lấy thông tin chi tiết và tổng hợp (Overview) của dự án hiện tại bao gồm: Tên dự án, mô tả, trạng thái, ngày bắt đầu, ngày kết thúc, thống kê tiến độ các công việc/nhiệm vụ con, và chi tiết khối lượng công việc của từng thành viên.
         """
         try:
             overview_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/overview"
@@ -217,15 +217,40 @@ class AIAssistantTools:
                 start_date = data.get("startDate") or "Không xác định"
                 due_date = data.get("dueDate") or "Không xác định"
                 
-                # Format column list
-                cols = data.get("columnStatusCounts", [])
-                cols_str = ", ".join([f"'{c.get('columnName')}'" for c in cols])
-                
+                # Format dates
+                if start_date != "Không xác định" and len(start_date) > 10:
+                    start_date = start_date[:10]
+                if due_date != "Không xác định" and len(due_date) > 10:
+                    due_date = due_date[:10]
+
+                # Extract metrics (7 days)
+                new_tasks = data.get("newTasksCount", 0)
+                new_st_total = data.get("newTasksSubTasksTotal", 0)
+                new_st_done = data.get("newTasksSubTasksDone", 0)
+
+                completed_tasks = data.get("completedTasksCount", 0)
+                completed_st_total = data.get("completedTasksSubTasksTotal", 0)
+                completed_st_done = data.get("completedTasksSubTasksDone", 0)
+
+                upcoming_tasks = data.get("upcomingDueTasksCount", 0)
+                upcoming_st_total = data.get("upcomingDueTasksSubTasksTotal", 0)
+                upcoming_st_done = data.get("upcomingDueTasksSubTasksDone", 0)
+
+                # Subtask status counts
+                todo_st = data.get("todoSubTasksCount", 0)
+                inprogress_st = data.get("inProgressSubTasksCount", 0)
+                done_st = data.get("doneSubTasksCount", 0)
+
                 # Format project member workloads list
                 members = data.get("memberWorkloads", [])
                 member_lines = []
                 for m in members:
-                    member_lines.append(f"- Tên: {m.get('displayName')} | Vai trò: {m.get('role')} | ID người dùng: {m.get('userId')}")
+                    member_lines.append(
+                        f"- Tên: {m.get('displayName')} | Vai trò: {m.get('role')} | "
+                        f"ID người dùng: {m.get('userId')} | "
+                        f"Nhiệm vụ được giao: {m.get('assignedTasksCount')} | "
+                        f"Tỷ lệ khối lượng công việc: {m.get('workloadPercentage')}%"
+                    )
                 members_str = "\n".join(member_lines) if member_lines else "Không có thành viên"
                 
                 res_str = (
@@ -234,9 +259,16 @@ class AIAssistantTools:
                     f"- Mô tả: {description}\n"
                     f"- Trạng thái: {status}\n"
                     f"- Ngày bắt đầu: {start_date}\n"
-                    f"- Ngày kết thúc/Hạn hoàn thành: {due_date}\n"
-                    f"- Các cột trạng thái trong dự án: {cols_str}\n"
-                    f"- Danh sách thành viên trong dự án:\n{members_str}"
+                    f"- Ngày kết thúc/Hạn hoàn thành: {due_date}\n\n"
+                    f"Thống kê công việc (Task) trong 7 ngày qua:\n"
+                    f"- Mới tạo: {new_tasks} công việc (chứa {new_st_done}/{new_st_total} nhiệm vụ đã hoàn thành)\n"
+                    f"- Đã hoàn thành: {completed_tasks} công việc (chứa {completed_st_done}/{completed_st_total} nhiệm vụ đã hoàn thành)\n"
+                    f"- Sắp đến hạn (7 ngày tới): {upcoming_tasks} công việc (chứa {upcoming_st_done}/{upcoming_st_total} nhiệm vụ đã hoàn thành)\n\n"
+                    f"Thống kê nhiệm vụ (Subtask) hiện tại:\n"
+                    f"- Cần làm (Todo): {todo_st}\n"
+                    f"- Đang thực hiện (In Progress): {inprogress_st}\n"
+                    f"- Đã hoàn thành (Done): {done_st}\n\n"
+                    f"Danh sách thành viên & Khối lượng công việc:\n{members_str}"
                 )
                 return res_str
         except Exception as ex:
@@ -613,12 +645,13 @@ class AIAssistantTools:
         """
         Lấy danh sách chi tiết các công việc (Task) và nhiệm vụ (Subtask) trong dự án hiện tại, hỗ trợ lọc thông tin.
         Dùng công cụ này để trả lời các câu hỏi như: "Tôi được giao những nhiệm vụ nào?",
-        "Thành viên A còn những nhiệm vụ nào chưa hoàn thành?", "Các công việc/nhiệm vụ nào sắp đến hạn?".
+        "Thành viên A còn những nhiệm vụ nào chưa hoàn thành?", "Các công việc/nhiệm vụ nào sắp đến hạn?",
+        "Các nhiệm vụ của thành viên B sắp đến hạn trong 5 ngày tới?". Có thể kết hợp nhiều bộ lọc cùng lúc.
 
         Args:
-            assignee_name: Tên của thành viên được giao (tùy chọn). Ví dụ: 'Nguyễn Văn A'. Nếu cung cấp, chỉ trả về các nhiệm vụ được giao cho người này.
+            assignee_name: Tên của thành viên được giao (tùy chọn). Ví dụ: 'Nguyễn Văn A'. Nếu cung cấp, chỉ trả về các nhiệm vụ được giao cho người này. Có thể kết hợp với due_date_filter để lọc nhiệm vụ sắp đến hạn của một thành viên cụ thể.
             status_type: Trạng thái hoàn thành (tùy chọn). Chỉ chấp nhận 'completed' (đã hoàn thành), 'uncompleted' (chưa hoàn thành), hoặc 'all' (tất cả). Mặc định là 'uncompleted'.
-            due_date_filter: Bộ lọc ngày hạn hoàn thành (tùy chọn). Chỉ chấp nhận 'overdue' (quá hạn - trước ngày hôm nay), 'upcoming7' (sắp đến hạn trong 7 ngày tới), hoặc để trống để lấy tất cả.
+            due_date_filter: Bộ lọc ngày hạn hoàn thành (tùy chọn). Chấp nhận 'overdue' (quá hạn - trước ngày hôm nay), hoặc 'upcomingN' với N là số ngày cụ thể (ví dụ: 'upcoming3' cho 3 ngày tới, 'upcoming7' cho 7 ngày tới, 'upcoming14' cho 14 ngày tới, 'upcoming30' cho 30 ngày tới). Nếu người dùng hỏi 'sắp đến hạn' mà không nói rõ số ngày, mặc định dùng 'upcoming7'. Để trống để lấy tất cả.
         """
         try:
             from datetime import datetime, timezone, timedelta
@@ -638,7 +671,15 @@ class AIAssistantTools:
                 
                 now = datetime.now(timezone.utc)
                 today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-                seven_days_later = today_start + timedelta(days=7)
+                
+                # Parse dynamic upcoming days from due_date_filter (e.g., 'upcoming3', 'upcoming14')
+                upcoming_days = 7  # default
+                if due_date_filter and due_date_filter.startswith("upcoming"):
+                    try:
+                        upcoming_days = int(due_date_filter.replace("upcoming", ""))
+                    except ValueError:
+                        upcoming_days = 7  # fallback if no number provided
+                upcoming_end = today_start + timedelta(days=upcoming_days)
                 
                 filtered_tasks = []
                 for t in tasks:
@@ -668,7 +709,7 @@ class AIAssistantTools:
                                 st_due = datetime.fromisoformat(st_due_str.replace("Z", "+00:00"))
                                 if due_date_filter == "overdue" and st_due >= today_start:
                                     continue
-                                elif due_date_filter == "upcoming7" and not (today_start <= st_due <= seven_days_later):
+                                elif due_date_filter.startswith("upcoming") and not (today_start <= st_due <= upcoming_end):
                                     continue
                             except ValueError:
                                 pass
@@ -695,7 +736,7 @@ class AIAssistantTools:
                                     t_due = datetime.fromisoformat(t_due_str.replace("Z", "+00:00"))
                                     if due_date_filter == "overdue" and t_due >= today_start:
                                         parent_matches = False
-                                    elif due_date_filter == "upcoming7" and not (today_start <= t_due <= seven_days_later):
+                                    elif due_date_filter.startswith("upcoming") and not (today_start <= t_due <= upcoming_end):
                                         parent_matches = False
                                 except ValueError:
                                     pass
@@ -744,6 +785,132 @@ class AIAssistantTools:
         except Exception as ex:
             logger.exception("Error executing get_project_tasks tool")
             return f"Lỗi ngoại lệ khi lấy danh sách công việc: {str(ex)}"
+
+    async def delete_task(self, task_id: str) -> str:
+        """
+        Xóa một công việc (Task) đã tồn tại (di chuyển vào thùng rác).
+
+        Args:
+            task_id: ID (UUID) của công việc cần xóa.
+        """
+        try:
+            delete_url = f"{self.pm_base_url}/api/Tasks/{task_id.strip()}"
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Deleting task via PM Service: {delete_url}")
+                response = await client.delete(delete_url, headers=self.headers, timeout=10.0)
+                
+                if response.status_code in [200, 204]:
+                    return f"Thành công: Đã xóa công việc (ID: {task_id})."
+                else:
+                    return f"Lỗi từ ProjectManagement Service khi xóa công việc: {response.status_code} - {response.text}"
+        except Exception as ex:
+            logger.exception("Error executing delete_task tool")
+            return f"Lỗi ngoại lệ khi xóa công việc: {str(ex)}"
+
+    async def delete_subtask(self, subtask_id: str) -> str:
+        """
+        Xóa một nhiệm vụ con (Subtask) đã tồn tại.
+
+        Args:
+            subtask_id: ID (UUID) của nhiệm vụ con cần xóa.
+        """
+        try:
+            delete_url = f"{self.pm_base_url}/api/SubTasks/{subtask_id.strip()}"
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Deleting subtask via PM Service: {delete_url}")
+                response = await client.delete(delete_url, headers=self.headers, timeout=10.0)
+                
+                if response.status_code in [200, 204]:
+                    return f"Thành công: Đã xóa nhiệm vụ con (ID: {subtask_id})."
+                else:
+                    return f"Lỗi từ ProjectManagement Service khi xóa nhiệm vụ con: {response.status_code} - {response.text}"
+        except Exception as ex:
+            logger.exception("Error executing delete_subtask tool")
+            return f"Lỗi ngoại lệ khi xóa nhiệm vụ con: {str(ex)}"
+
+    async def delete_sprint(self, sprint_id: str) -> str:
+        """
+        Xóa một phân đoạn công việc (Sprint) đã tồn tại. Chỉ hỗ trợ xóa Sprint ở trạng thái Tương lai (Future).
+
+        Args:
+            sprint_id: ID (UUID) của Sprint cần xóa.
+        """
+        try:
+            delete_url = f"{self.pm_base_url}/api/Sprints/{sprint_id.strip()}"
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Deleting sprint via PM Service: {delete_url}")
+                response = await client.delete(delete_url, headers=self.headers, timeout=10.0)
+                
+                if response.status_code in [200, 204]:
+                    return f"Thành công: Đã xóa phân đoạn công việc/Sprint (ID: {sprint_id})."
+                else:
+                    return f"Lỗi từ ProjectManagement Service khi xóa Sprint: {response.status_code} - {response.text}"
+        except Exception as ex:
+            logger.exception("Error executing delete_sprint tool")
+            return f"Lỗi ngoại lệ khi xóa Sprint: {str(ex)}"
+
+    async def get_project_activities(
+        self,
+        page: int = 1,
+        page_size: int = 50,
+        user_id: str = None,
+        date: str = None
+    ) -> str:
+        """
+        Lấy lịch sử hoạt động/lịch sử thay đổi của dự án hiện tại (ai đã làm gì, lúc nào).
+
+        Args:
+            page: Số trang kết quả (mặc định là 1).
+            page_size: Số lượng bản ghi mỗi trang (mặc định là 50).
+            user_id: ID (UUID) của thành viên để lọc hoạt động của người đó (tùy chọn).
+            date: Ngày để lọc hoạt động dạng YYYY-MM-DD (tùy chọn).
+        """
+        try:
+            activities_url = f"{self.pm_base_url}/api/Projects/{self.project_id_str}/activities"
+            params = {
+                "page": page,
+                "pageSize": page_size
+            }
+            if user_id:
+                params["userId"] = user_id.strip()
+            if date:
+                params["date"] = date.strip()
+
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Fetching project activities from: {activities_url} with params: {params}")
+                response = await client.get(activities_url, params=params, headers=self.headers, timeout=10.0)
+                
+                if response.status_code != 200:
+                    return f"Lỗi: Không lấy được lịch sử hoạt động (HTTP {response.status_code})."
+                
+                activities = response.json()
+                if not activities:
+                    return "Không tìm thấy hoạt động nào trong dự án khớp với bộ lọc."
+                
+                res_lines = ["Lịch sử hoạt động của dự án:"]
+                for act in activities:
+                    created_at = act.get("createdAt", "Không rõ thời gian")
+                    if created_at != "Không rõ thời gian" and len(created_at) > 16:
+                        created_at = created_at.replace("T", " ")[:16]
+                    
+                    display_name = act.get("displayName") or "Hệ thống"
+                    action_type = act.get("actionType") or "Thao tác"
+                    entity_type = act.get("entityType") or "Đối tượng"
+                    old_value = act.get("oldValue")
+                    new_value = act.get("newValue")
+                    
+                    detail = ""
+                    if old_value and new_value:
+                        detail = f" (Thay đổi: '{old_value}' -> '{new_value}')"
+                    elif new_value:
+                        detail = f" (Giá trị: '{new_value}')"
+                        
+                    res_lines.append(f"- [{created_at}] {display_name}: {action_type} {entity_type}{detail}")
+                
+                return "\n".join(res_lines)
+        except Exception as ex:
+            logger.exception("Error executing get_project_activities tool")
+            return f"Lỗi ngoại lệ khi lấy lịch sử hoạt động: {str(ex)}"
 
 
 

@@ -5,7 +5,6 @@ import {
   HeroSection,
   FeaturesGrid,
   AIShowcase,
-  PricingGrid,
   FAQAccordion,
   Footer
 } from "@/components/LandingPage";
@@ -31,7 +30,6 @@ export default function Home() {
         <HeroSection />
         <FeaturesGrid />
         <AIShowcase />
-        <PricingGrid />
         <FAQAccordion />
       </main>
 

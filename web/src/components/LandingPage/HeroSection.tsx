@@ -20,11 +20,7 @@ export function HeroSection() {
 
       {/* Hero Header Text */}
       <div className="max-w-3xl mx-auto space-y-4 px-4">
-        {/* Animated tag */}
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-50 border border-amber-200 text-amber-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-          Giải pháp quản lý hiện đại
-        </span>
+
 
         {/* H1 Main Title */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#2b221a] leading-[1.15]">
@@ -46,7 +42,7 @@ export function HeroSection() {
           href="/login"
           className="text-xs font-bold text-white bg-gradient-to-r from-amber-700 to-[#78350f] hover:from-amber-600 hover:to-[#5c2d12] px-6 py-3 rounded-xl transition-all duration-300 shadow-xl shadow-amber-700/10 active:scale-95 cursor-pointer"
         >
-          Bắt đầu miễn phí ngay
+          Đăng nhập ngay
         </Link>
         <button
           onClick={() => setIsVideoOpen(true)}
