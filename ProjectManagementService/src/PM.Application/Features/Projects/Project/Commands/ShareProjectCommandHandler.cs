@@ -55,6 +55,21 @@ public class ShareProjectCommandHandler : IRequestHandler<ShareProjectCommand, b
 
         // 2. Save project share record
         var email = request.RecipientEmail.Trim().ToLower();
+
+        // Check if the recipient email exists in the system
+        var recipientUserExists = await _dbContext.Users
+            .AnyAsync(u => u.Email.ToLower() == email, cancellationToken);
+
+        if (!recipientUserExists)
+            throw new InvalidOperationException("Tài khoản email này không tồn tại trong hệ thống.");
+
+        // Check if the recipient email belongs to a member of the project's team
+        var isTeamMember = await _dbContext.TeamMembers
+            .AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.User != null && tm.User.Email.ToLower() == email, cancellationToken);
+
+        if (isTeamMember)
+            throw new InvalidOperationException("Thành viên này đã thuộc nhóm của dự án và mặc định có quyền truy cập.");
+
         var exists = await _dbContext.ProjectShares
             .AnyAsync(ps => ps.ProjectId == project.Id && ps.RecipientEmail == email, cancellationToken);
 

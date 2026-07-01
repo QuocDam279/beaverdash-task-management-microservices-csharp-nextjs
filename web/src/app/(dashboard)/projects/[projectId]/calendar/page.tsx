@@ -25,16 +25,33 @@ export default function ProjectCalendarPage({ params }: PageProps) {
       const board = await api.get(`/projects/${projectId}/board`);
       if (board) {
         const cols = board.boardColumns || [];
-        const allTasks: TaskItem[] = cols.flatMap((col: any) =>
-          (col.taskItems || []).map((t: any) => ({
-            ...t,
-            assigneeUser: t.assigneeUserId ? {
-              id: t.assigneeUserId,
-              displayName: t.assigneeName,
-              avatar: t.assigneeAvatar
-            } : null
-          }))
-        );
+        const allTasks: TaskItem[] = [];
+        cols.forEach((col: any) => {
+          (col.taskItems || []).forEach((t: any) => {
+            (t.subTasks || []).forEach((st: any) => {
+              allTasks.push({
+                id: st.id,
+                boardColumnId: col.id,
+                title: st.title,
+                isCompleted: st.isCompleted,
+                completedAt: st.isCompleted ? st.updatedAt || new Date().toISOString() : null,
+                dueDate: st.dueDate,
+                startDate: null,
+                priority: t.priority,
+                parentTaskId: t.id,
+                parentTaskTitle: t.title,
+                projectName: board.name,
+                projectId: projectId,
+                assigneeUserId: st.assigneeUserId,
+                assigneeUser: st.assigneeUserId ? {
+                  id: st.assigneeUserId,
+                  displayName: st.assigneeName,
+                  avatar: st.assigneeAvatar
+                } : null
+              } as any);
+            });
+          });
+        });
         setTasks(allTasks);
       }
     } catch (err: any) {

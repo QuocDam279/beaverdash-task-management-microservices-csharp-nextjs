@@ -87,7 +87,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-white select-none overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-white select-none overflow-hidden">
       {/* Project Header Area */}
       <div className="px-6 pt-6 pb-2 border-b border-slate-200 shrink-0 bg-slate-50/50">
         <div className="flex items-start justify-between gap-4 mb-2">
@@ -120,7 +120,7 @@ export default function SharedProjectLayout({ children, params }: LayoutProps) {
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            Quay lại trang chính
+            Quay lại
           </Link>
         </div>
 

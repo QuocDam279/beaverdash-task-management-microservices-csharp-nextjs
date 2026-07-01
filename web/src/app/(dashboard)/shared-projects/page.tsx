@@ -112,14 +112,15 @@ export default function SharedProjectsPage() {
                 : null;
 
               return (
-                <div 
+                <Link 
                   key={project.id} 
-                  className="bg-white border border-slate-200 hover:border-[#1868db] rounded-lg shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group"
+                  href={`/shared/projects/${project.shareToken}/board`}
+                  className="bg-white border border-slate-200 hover:border-[#1868db] rounded-lg shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer block"
                 >
                   <div className="p-5 space-y-4">
                     {/* Header: Title and badge */}
                     <div className="flex justify-between items-start gap-3">
-                      <h3 className="font-bold text-sm text-[#292a2e] group-hover:text-[#1868db] transition-colors line-clamp-1 leading-snug">
+                      <h3 className="font-bold text-sm text-[#292a2e] group-hover:text-[#1868db] transition-colors line-clamp-1 leading-snug flex-1 min-w-0">
                         {project.name}
                       </h3>
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wide">
@@ -128,7 +129,7 @@ export default function SharedProjectsPage() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed h-8">
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[38px] max-h-[38px] overflow-hidden">
                       {project.description || "Không có mô tả dự án."}
                     </p>
 
@@ -148,16 +149,24 @@ export default function SharedProjectsPage() {
 
                     {/* Dates */}
                     {(formattedStartDate || formattedDueDate) && (
-                      <div className="flex items-center gap-4 text-[10px] text-slate-400 pt-1 font-semibold">
+                      <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 pt-1 font-semibold">
                         {formattedStartDate && (
                           <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
                             <span>Bắt đầu: {formattedStartDate}</span>
                           </div>
                         )}
                         {formattedDueDate && (
                           <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400">
+                              <circle cx="12" cy="12" r="10" />
+                              <polyline points="12 6 12 12 16 14" />
+                            </svg>
                             <span className="text-slate-500">Hạn chót: {formattedDueDate}</span>
                           </div>
                         )}
@@ -187,17 +196,16 @@ export default function SharedProjectsPage() {
                     </div>
 
                     {/* Action button */}
-                    <Link 
-                      href={`/shared/projects/${project.shareToken}/board`} 
-                      className="px-3.5 py-1.5 text-[11px] font-bold text-white bg-[#1868db] hover:bg-[#0052cc] rounded-[4px] transition-colors shrink-0 shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1"
+                    <div 
+                      className="px-3.5 py-1.5 text-[11px] font-bold text-white bg-[#1868db] group-hover:bg-[#0052cc] rounded-[4px] transition-colors shrink-0 shadow-xs group-hover:shadow-md flex items-center gap-1"
                     >
                       Xem bảng
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="translate-y-[0.5px]">
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
-                    </Link>
+                    </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

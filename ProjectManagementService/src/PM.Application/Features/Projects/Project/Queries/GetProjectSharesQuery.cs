@@ -13,6 +13,8 @@ public class ProjectShareDto
 {
     public Guid Id { get; set; }
     public string RecipientEmail { get; set; } = null!;
+    public string? RecipientDisplayName { get; set; }
+    public string? RecipientAvatar { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -56,14 +58,33 @@ public class GetProjectSharesQueryHandler : IRequestHandler<GetProjectSharesQuer
             .AsNoTracking()
             .Where(ps => ps.ProjectId == project.Id)
             .OrderByDescending(ps => ps.CreatedAt)
-            .Select(ps => new ProjectShareDto
+            .Select(ps => new
             {
-                Id = ps.Id,
-                RecipientEmail = ps.RecipientEmail,
-                CreatedAt = ps.CreatedAt
+                ps.Id,
+                ps.RecipientEmail,
+                ps.CreatedAt
             })
             .ToListAsync(cancellationToken);
 
-        return shares;
+        // Fetch users matching these emails to get display name and avatar
+        var emails = shares.Select(s => s.RecipientEmail.ToLower()).ToList();
+        var users = await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => emails.Contains(u.Email.ToLower()))
+            .ToDictionaryAsync(u => u.Email.ToLower(), cancellationToken);
+
+        var result = shares.Select(s => {
+            users.TryGetValue(s.RecipientEmail.ToLower(), out var user);
+            return new ProjectShareDto
+            {
+                Id = s.Id,
+                RecipientEmail = s.RecipientEmail,
+                RecipientDisplayName = user?.DisplayName,
+                RecipientAvatar = user?.Avatar,
+                CreatedAt = s.CreatedAt
+            };
+        }).ToList();
+
+        return result;
     }
 }

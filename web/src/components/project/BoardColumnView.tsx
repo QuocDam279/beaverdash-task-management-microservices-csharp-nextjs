@@ -211,34 +211,6 @@ export function BoardColumnView({
                   <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-1 w-44 rounded-md border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#2c3338] shadow-lg z-20 py-1 text-[11px] text-[#292a2e] dark:text-[#deebff]">
                     <button
-                      disabled={isFirst}
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        onMoveLeft();
-                      }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#353e47] disabled:opacity-40 disabled:hover:bg-transparent font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed border-0 bg-transparent text-[#292a2e] dark:text-[#deebff]"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                      </svg>
-                      Dịch sang trái
-                    </button>
-                    <button
-                      disabled={isLast}
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        onMoveRight();
-                      }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#353e47] disabled:opacity-40 disabled:hover:bg-transparent font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed border-0 bg-transparent text-[#292a2e] dark:text-[#deebff]"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                      </svg>
-                      Dịch sang phải
-                    </button>
-                    <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         onSetWipLimit();

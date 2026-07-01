@@ -16,6 +16,10 @@ interface MyTasksFilterToolbarProps {
   onProjectChange: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (value: string) => void;
+  selectedPriority: string;
+  onPriorityChange: (value: string) => void;
+  selectedSprintFilter: string;
+  onSprintFilterChange: (value: string) => void;
   selectedDueDateFilter: string;
   onDueDateFilterChange: (value: string) => void;
   
@@ -45,6 +49,10 @@ export function MyTasksFilterToolbar({
   onProjectChange,
   selectedStatus,
   onStatusChange,
+  selectedPriority,
+  onPriorityChange,
+  selectedSprintFilter,
+  onSprintFilterChange,
   selectedDueDateFilter,
   onDueDateFilterChange,
   sortBy,
@@ -58,18 +66,22 @@ export function MyTasksFilterToolbar({
   // Popover State
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [isSortOpen, setIsSortOpen] = React.useState(false);
+  const [isActivityOpen, setIsActivityOpen] = React.useState(false);
   const [activeSubMenu, setActiveSubMenu] = React.useState<string | null>(null);
 
   // Close all popovers
   const closePopovers = () => {
     setIsFilterOpen(false);
     setIsSortOpen(false);
+    setIsActivityOpen(false);
     setActiveSubMenu(null);
   };
 
   const hasAnyFilterActive =
     selectedProject !== "all" ||
-    selectedStatus !== "all" ||
+    selectedStatus !== "uncompleted" ||
+    selectedPriority !== "all" ||
+    selectedSprintFilter !== "active" ||
     selectedDueDateFilter !== "all";
 
   return (
@@ -224,6 +236,52 @@ export function MyTasksFilterToolbar({
                   )}
                 </div>
 
+                {/* Độ ưu tiên */}
+                <div
+                  className="relative px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between font-semibold"
+                  onMouseEnter={() => setActiveSubMenu("priority")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSubMenu(activeSubMenu === "priority" ? null : "priority");
+                  }}
+                >
+                  <span>Độ ưu tiên</span>
+                  <div className="flex items-center gap-1 text-slate-400 font-normal">
+                    <span className="text-[10px]">
+                      {selectedPriority === "all" ? "Tất cả" : selectedPriority === "Required" ? "Bắt buộc" : selectedPriority === "Important" ? "Quan trọng" : "Mở rộng"}
+                    </span>
+                    <span className="text-[9px]">▶</span>
+                  </div>
+
+                  {activeSubMenu === "priority" && (
+                    <div
+                      className="absolute left-full top-0 ml-1 w-48 rounded-md border border-slate-200 bg-white shadow-lg py-1 z-30 animate-in fade-in slide-in-from-left-1 duration-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {[
+                        { value: "all", label: "Tất cả độ ưu tiên" },
+                        { value: "Required", label: "Bắt buộc" },
+                        { value: "Important", label: "Quan trọng" },
+                        { value: "Extended", label: "Mở rộng" },
+                      ].map((item) => (
+                        <div
+                          key={item.value}
+                          onClick={() => {
+                            onPriorityChange(item.value);
+                            closePopovers();
+                          }}
+                          className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
+                            selectedPriority === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {selectedPriority === item.value && <span className="text-[#1868db]">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
 
                 {/* Hạn chót */}
                 <div
@@ -290,6 +348,61 @@ export function MyTasksFilterToolbar({
           )}
         </div>
 
+        {/* Activity Filter Dropdown */}
+        <div className="relative font-sans text-xs">
+          <button
+            onClick={() => {
+              setIsActivityOpen(!isActivityOpen);
+              setIsSortOpen(false);
+              setIsFilterOpen(false);
+              setActiveSubMenu(null);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-[4px] font-semibold bg-white cursor-pointer transition-all ${
+              selectedSprintFilter !== "active"
+                ? "border-[#1868db] text-[#1868db] bg-blue-50/30"
+                : "border-slate-200 text-slate-700 hover:border-slate-400"
+            }`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>
+              {selectedSprintFilter === "active"
+                ? "Đang hoạt động"
+                : selectedSprintFilter === "inactive"
+                ? "Chưa hoạt động"
+                : "Tất cả nhiệm vụ"}
+            </span>
+          </button>
+
+          {isActivityOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={closePopovers} />
+              <div className="absolute left-0 mt-1.5 w-48 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]">
+                {[
+                  { value: "active", label: "Đang hoạt động" },
+                  { value: "inactive", label: "Chưa hoạt động" },
+                  { value: "all", label: "Tất cả nhiệm vụ" },
+                ].map((item) => (
+                  <div
+                    key={item.value}
+                    onClick={() => {
+                      onSprintFilterChange(item.value);
+                      closePopovers();
+                    }}
+                    className={`px-3 py-2 hover:bg-slate-50 text-left cursor-pointer flex items-center justify-between ${
+                      selectedSprintFilter === item.value ? "text-[#1868db] bg-blue-50/20 font-bold" : "text-slate-600 font-medium"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {selectedSprintFilter === item.value && <span className="text-[#1868db]">✓</span>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
         {/* 2. Sort Button */}
         <div className="relative">
           <button
@@ -307,7 +420,7 @@ export function MyTasksFilterToolbar({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M15 18H3M21 12H3M21 6H3" />
             </svg>
-            <span>Sắp xếp: {sortBy === "dueDate" ? "Hạn chót" : "Dự án"}</span>
+            <span>Sắp xếp: {sortBy === "dueDate" ? "Hạn chót" : sortBy === "priority" ? "Độ ưu tiên" : "Dự án"}</span>
           </button>
 
           {isSortOpen && (
@@ -316,6 +429,7 @@ export function MyTasksFilterToolbar({
               <div className="absolute left-0 mt-1.5 w-44 rounded-md border border-slate-200 bg-white shadow-lg z-20 py-1 animate-in fade-in slide-in-from-top-1 duration-150 text-xs text-[#292a2e]">
                 {[
                   { value: "dueDate", label: "Hạn chót" },
+                  { value: "priority", label: "Độ ưu tiên" },
                   { value: "project", label: "Dự án" },
                 ].map((item) => (
                   <div

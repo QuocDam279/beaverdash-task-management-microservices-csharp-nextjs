@@ -112,12 +112,28 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
         var doneColumnIds = columns.Where(c => c.IsDone).Select(c => c.Id).ToList();
 
-        // Fetch all tasks in these columns (excluding deleted)
-        var tasks = await _dbContext.TaskItems
+        // Fetch the active sprint of the project
+        var activeSprint = await _dbContext.Sprints
             .AsNoTracking()
-            .Include(t => t.SubTasks)
-            .Where(t => t.BoardColumn != null && t.BoardColumn.ProjectId == request.ProjectId && t.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .FirstOrDefaultAsync(s => s.ProjectId == request.ProjectId && s.Status == SprintStatus.Active, cancellationToken);
+
+        List<PM.Domain.Entities.TaskItem> tasks;
+        if (activeSprint != null)
+        {
+            // Fetch tasks belonging to the active sprint
+            tasks = await _dbContext.TaskItems
+                .AsNoTracking()
+                .Include(t => t.SubTasks)
+                .Where(t => t.BoardColumn != null && 
+                             t.BoardColumn.ProjectId == request.ProjectId && 
+                             t.DeletedAt == null &&
+                             t.SprintId == activeSprint.Id)
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            tasks = new List<PM.Domain.Entities.TaskItem>();
+        }
 
         var now = DateTime.UtcNow;
         var sevenDaysAgo = now.AddDays(-7);

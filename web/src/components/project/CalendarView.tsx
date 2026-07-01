@@ -39,14 +39,22 @@ export default function CalendarView({
   const [viewMode, setViewMode] = React.useState<"month" | "week">("month");
   
   const [selectedTask, setSelectedTask] = React.useState<TaskItem | null>(null);
+  const [clickedSubtaskId, setClickedSubtaskId] = React.useState<string | null>(null);
   const [activeColumns, setActiveColumns] = React.useState<BoardColumn[]>([]);
   const [activeAssignees, setActiveAssignees] = React.useState<any[]>([]);
 
   const handleTaskClick = async (task: TaskItem) => {
     try {
+      const parentId = (task as any).parentTaskId;
+      if (parentId) {
+        setClickedSubtaskId(task.id);
+      } else {
+        setClickedSubtaskId(null);
+      }
+      const actualId = parentId || task.id;
       const fullTask = readOnly && shareToken
-        ? await api.get(`/shared/tasks/${task.id}?shareToken=${shareToken}`)
-        : await api.get(`/tasks/${task.id}`);
+        ? await api.get(`/shared/tasks/${actualId}?shareToken=${shareToken}`)
+        : await api.get(`/tasks/${actualId}`);
         
       if (fullTask) {
         const tId = fullTask.projectId;
@@ -224,25 +232,70 @@ export default function CalendarView({
           isOpen={!!selectedTask}
           onClose={() => {
             setSelectedTask(null);
+            setClickedSubtaskId(null);
             // Refresh parent calendar tasks
             if (readOnly && shareToken) {
               api.get(`/shared/projects/${shareToken}/board`).then(board => {
                 const cols = board?.boardColumns || [];
-                const allTasks = cols.flatMap((col: any) =>
-                  (col.taskItems || []).map((t: any) => ({
-                    ...t
-                  }))
-                );
+                const allTasks: TaskItem[] = [];
+                cols.forEach((col: any) => {
+                  (col.taskItems || []).forEach((t: any) => {
+                    (t.subTasks || []).forEach((st: any) => {
+                      allTasks.push({
+                        id: st.id,
+                        boardColumnId: col.id,
+                        title: st.title,
+                        isCompleted: st.isCompleted,
+                        completedAt: st.isCompleted ? st.updatedAt || new Date().toISOString() : null,
+                        dueDate: st.dueDate,
+                        startDate: null,
+                        priority: t.priority,
+                        parentTaskId: t.id,
+                        parentTaskTitle: t.title,
+                        projectName: board.name,
+                        projectId: board.id,
+                        assigneeUserId: st.assigneeUserId,
+                        assigneeUser: st.assigneeUserId ? {
+                          id: st.assigneeUserId,
+                          displayName: st.assigneeName,
+                          avatar: st.assigneeAvatar
+                        } : null
+                      } as any);
+                    });
+                  });
+                });
                 if (setTasks) setTasks(allTasks);
               });
             } else if (viewContext === "project" && projectId) {
               api.get(`/projects/${projectId}/board`).then(board => {
                 const cols = board?.boardColumns || [];
-                const allTasks = cols.flatMap((col: any) =>
-                  (col.taskItems || []).map((t: any) => ({
-                    ...t
-                  }))
-                );
+                const allTasks: TaskItem[] = [];
+                cols.forEach((col: any) => {
+                  (col.taskItems || []).forEach((t: any) => {
+                    (t.subTasks || []).forEach((st: any) => {
+                      allTasks.push({
+                        id: st.id,
+                        boardColumnId: col.id,
+                        title: st.title,
+                        isCompleted: st.isCompleted,
+                        completedAt: st.isCompleted ? st.updatedAt || new Date().toISOString() : null,
+                        dueDate: st.dueDate,
+                        startDate: null,
+                        priority: t.priority,
+                        parentTaskId: t.id,
+                        parentTaskTitle: t.title,
+                        projectName: board.name,
+                        projectId: projectId,
+                        assigneeUserId: st.assigneeUserId,
+                        assigneeUser: st.assigneeUserId ? {
+                          id: st.assigneeUserId,
+                          displayName: st.assigneeName,
+                          avatar: st.assigneeAvatar
+                        } : null
+                      } as any);
+                    });
+                  });
+                });
                 if (setTasks) setTasks(allTasks);
               });
             }
@@ -253,6 +306,7 @@ export default function CalendarView({
           assignees={activeAssignees}
           readOnly={readOnly}
           shareToken={shareToken}
+          initialActiveSubtaskId={clickedSubtaskId}
         />
       )}
     </div>

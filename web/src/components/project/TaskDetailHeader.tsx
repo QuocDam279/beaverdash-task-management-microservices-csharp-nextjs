@@ -1,21 +1,37 @@
 "use client";
 
-/**
- * @component TaskDetailHeader
- * @description Header of the Task Detail Modal, displaying project path, task code, and close button.
- */
-
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 interface TaskDetailHeaderProps {
   onClose: () => void;
   onDelete?: () => void;
+  projectId?: string;
+  projectName?: string;
+  shareToken?: string | null;
 }
 
-export function TaskDetailHeader({ onClose, onDelete }: TaskDetailHeaderProps) {
+export function TaskDetailHeader({ 
+  onClose, 
+  onDelete, 
+  projectId, 
+  projectName, 
+  shareToken 
+}: TaskDetailHeaderProps) {
+  const router = useRouter();
+
+  const handleProjectClick = () => {
+    onClose();
+    if (shareToken) {
+      router.push(`/shared/projects/${shareToken}/board`);
+    } else if (projectId) {
+      router.push(`/projects/${projectId}/board`);
+    }
+  };
+
   return (
     <div className="px-6 py-4 border-b border-slate-100 dark:border-[#2c3338] flex justify-between items-center bg-[#fafbfc] dark:bg-[#1d2125]">
-      <div className="flex items-center gap-2 text-xs font-semibold text-[#505258] dark:text-slate-400">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[#505258] dark:text-slate-400 min-w-0">
         <svg
           width="14"
           height="14"
@@ -28,9 +44,15 @@ export function TaskDetailHeader({ onClose, onDelete }: TaskDetailHeaderProps) {
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M9 3v18M15 3v18" />
         </svg>
-        <span>DỰ ÁN</span>
-        <span>/</span>
-        <span className="text-[#1868db] dark:text-[#579dff]">CÔNG VIỆC</span>
+        <button
+          onClick={handleProjectClick}
+          className="hover:underline hover:text-[#1868db] dark:hover:text-[#579dff] transition-all cursor-pointer font-bold uppercase border-0 bg-transparent p-0 text-[#505258] dark:text-slate-400 max-w-[150px] md:max-w-[200px] truncate whitespace-nowrap block shrink-0 text-left"
+          title={projectName ? `Đi tới bảng công việc của dự án: ${projectName}` : "Đi tới bảng công việc của dự án này"}
+        >
+          {projectName || "DỰ ÁN"}
+        </button>
+        <span className="shrink-0">/</span>
+        <span className="text-[#1868db] dark:text-[#579dff] shrink-0">CÔNG VIỆC</span>
       </div>
       
       <div className="flex items-center gap-3">

@@ -41,7 +41,7 @@
    - `progress (integer, default 0)` -- Tiến độ dự án (0-100%) --
    - `start_date (timestamp with time zone, nullable)`
    - `due_date (timestamp with time zone, nullable)`
-   - `is_public (boolean, default false)`
+   - `is_public (boolean, default false)` -- Không còn sử dụng (đã loại bỏ chia sẻ công khai) --
    - `share_token (varchar, nullable, unique)`
    - `created_by_user_id (uuid, fk, not null)`
    - `created_at (timestamp with time zone)`

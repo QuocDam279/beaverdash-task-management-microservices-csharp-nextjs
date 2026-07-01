@@ -148,6 +148,8 @@ export interface MyTasksResponseDto {
   uncompletedTasksCount: number;
   overdueTasks: TaskItem[];
   todayTasks: TaskItem[];
+  upcomingTasks: TaskItem[];
+  urgentTasks: TaskItem[];
 }
 
 /** DTO tài liệu dự án */

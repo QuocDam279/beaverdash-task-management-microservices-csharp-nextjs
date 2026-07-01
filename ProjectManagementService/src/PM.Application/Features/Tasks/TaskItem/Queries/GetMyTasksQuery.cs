@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PM.Application.Contracts;
 using PM.Domain.Enums;
+using PM.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,8 +46,11 @@ public class MyTasksResponseDto
     public int TotalTasksCount { get; set; }
     public int CompletedTasksCount { get; set; }
     public int UncompletedTasksCount { get; set; }
+    public int InactiveTasksCount { get; set; }
     public List<MyTaskDto> OverdueTasks { get; set; } = new();
     public List<MyTaskDto> TodayTasks { get; set; } = new();
+    public List<MyTaskDto> UpcomingTasks { get; set; } = new();
+    public List<MyTaskDto> UrgentTasks { get; set; } = new();
 }
 
 public record GetMyTasksQuery : IRequest<MyTasksResponseDto>
@@ -59,6 +63,7 @@ public record GetMyTasksQuery : IRequest<MyTasksResponseDto>
     public string? Status { get; init; }
     public string? DueDateFilter { get; init; }
     public string? SortBy { get; init; }
+    public string? SprintFilter { get; init; } = "active";
 }
 
 public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksResponseDto>
@@ -83,76 +88,107 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksRe
             .Select(tm => tm.TeamId)
             .ToListAsync(cancellationToken);
 
-        var baseQuery = _dbContext.SubTasks
+        var activeQuery = _dbContext.SubTasks
             .AsNoTracking()
             .Where(st => st.DeletedAt == null && 
                          st.AssigneeUserId == currentUserId && 
                          st.Task != null &&
-                         (st.Task!.Sprint == null || st.Task!.Sprint!.Status != SprintStatus.Closed) &&
-                         st.Task!.BoardColumn != null &&
-                         st.Task!.BoardColumn!.Project!.TeamId.HasValue &&
-                         myTeamIds.Contains(st.Task!.BoardColumn!.Project!.TeamId.Value));
+                         st.Task.Sprint != null && 
+                         st.Task.Sprint.Status == SprintStatus.Active &&
+                         st.Task.BoardColumn != null &&
+                         st.Task.BoardColumn.Project!.TeamId.HasValue &&
+                         myTeamIds.Contains(st.Task.BoardColumn.Project.TeamId.Value));
+
+        var backlogQuery = _dbContext.SubTasks
+            .AsNoTracking()
+            .Where(st => st.DeletedAt == null && 
+                         st.AssigneeUserId == currentUserId && 
+                         st.Task != null &&
+                         (st.Task.Sprint == null || st.Task.Sprint.Status != SprintStatus.Closed) &&
+                         st.Task.BoardColumn != null &&
+                         st.Task.BoardColumn.Project!.TeamId.HasValue &&
+                         myTeamIds.Contains(st.Task.BoardColumn.Project.TeamId.Value));
+
+        var baseQuery = request.SprintFilter == "all" 
+            ? backlogQuery 
+            : request.SprintFilter == "inactive"
+                ? backlogQuery.Where(st => st.Task!.Sprint == null || st.Task!.Sprint!.Status == SprintStatus.Future)
+                : activeQuery;
 
         // 1. Calculate stats on all tasks assigned to the user
-        var totalTasksCount = await baseQuery.CountAsync(cancellationToken);
-        var completedTasksCount = await baseQuery.CountAsync(st => st.IsCompleted, cancellationToken);
-        var uncompletedTasksCount = totalTasksCount - completedTasksCount;
+        var completedTasksCount = await activeQuery.CountAsync(st => st.IsCompleted, cancellationToken);
+        var uncompletedTasksCount = await activeQuery.CountAsync(st => !st.IsCompleted, cancellationToken);
+        var inactiveTasksCount = await backlogQuery.CountAsync(st => st.Task!.Sprint == null || st.Task!.Sprint!.Status == SprintStatus.Future, cancellationToken);
+        var totalTasksCount = completedTasksCount + uncompletedTasksCount + inactiveTasksCount;
+
+        Console.WriteLine($"[DIAGNOSTIC] request.SprintFilter received: '{request.SprintFilter}'");
+        Console.WriteLine($"[DIAGNOSTIC] completedTasksCount: {completedTasksCount}");
+        Console.WriteLine($"[DIAGNOSTIC] uncompletedTasksCount: {uncompletedTasksCount}");
+        Console.WriteLine($"[DIAGNOSTIC] inactiveTasksCount: {inactiveTasksCount}");
+        Console.WriteLine($"[DIAGNOSTIC] totalTasksCount: {totalTasksCount}");
+        Console.WriteLine($"[DIAGNOSTIC] baseQuery count: {await baseQuery.CountAsync(cancellationToken)}");
+        
+        var diagInactiveItems = await backlogQuery
+            .Where(st => st.Task!.Sprint == null || st.Task!.Sprint!.Status == SprintStatus.Future)
+            .Select(st => new { st.Id, st.Title, SprintName = st.Task!.Sprint != null ? st.Task!.Sprint!.Name : "Null", IsCompleted = st.IsCompleted })
+            .ToListAsync(cancellationToken);
+            
+        Console.WriteLine($"[DIAGNOSTIC] Database inactive subtasks ({diagInactiveItems.Count}):");
+        foreach (var item in diagInactiveItems)
+        {
+            Console.WriteLine($"  - {item.Id}: {item.Title} (Sprint: {item.SprintName}, Completed: {item.IsCompleted})");
+        }
 
         var todayStart = DateTime.UtcNow.Date;
         var todayEnd = todayStart.AddDays(1).AddTicks(-1);
+        var upcomingEnd = todayStart.AddDays(4).AddTicks(-1); // next 72 hours
 
-        var overdueTasks = await baseQuery
+        var projectToDto = (IQueryable<SubTask> q) => q.Select(st => new MyTaskDto
+        {
+            Id = st.Id,
+            ParentTaskId = st.TaskId,
+            ParentTaskTitle = st.Task!.Title,
+            Title = st.Title,
+            Description = st.Task!.Description,
+            Priority = st.Task!.Priority != null ? st.Task!.Priority.ToString() : null,
+            StartDate = st.Task!.StartDate,
+            DueDate = st.DueDate,
+            BoardColumnId = st.Task!.BoardColumnId,
+            ColumnName = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.Name : string.Empty,
+            ColumnIsDone = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.IsDone,
+            IsCompleted = st.IsCompleted,
+            ProjectId = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.ProjectId : Guid.Empty,
+            ProjectName = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.Name : string.Empty,
+            TeamId = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.TeamId : null,
+            CreatedAt = st.CreatedAt,
+            UpdatedAt = st.UpdatedAt,
+            SubTasksCount = st.Task!.SubTasks.Count(s => s.DeletedAt == null),
+            CompletedSubTasksCount = st.Task!.SubTasks.Count(s => s.IsCompleted && s.DeletedAt == null)
+        });
+
+        var overdueTasks = await projectToDto(activeQuery
             .Where(st => !st.IsCompleted && st.DueDate != null && st.DueDate < todayStart)
-            .OrderBy(st => st.DueDate)
-            .Select(st => new MyTaskDto
-            {
-                Id = st.Id,
-                ParentTaskId = st.TaskId,
-                ParentTaskTitle = st.Task!.Title,
-                Title = st.Title,
-                Description = st.Task!.Description,
-                Priority = st.Priority != null ? st.Priority.ToString() : null,
-                StartDate = st.Task!.StartDate,
-                DueDate = st.DueDate,
-                BoardColumnId = st.Task!.BoardColumnId,
-                ColumnName = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.Name : string.Empty,
-                ColumnIsDone = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.IsDone,
-                IsCompleted = st.IsCompleted,
-                ProjectId = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.ProjectId : Guid.Empty,
-                ProjectName = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.Name : string.Empty,
-                TeamId = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.TeamId : null,
-                CreatedAt = st.CreatedAt,
-                UpdatedAt = st.UpdatedAt,
-                SubTasksCount = st.Task!.SubTasks.Count(s => s.DeletedAt == null),
-                CompletedSubTasksCount = st.Task!.SubTasks.Count(s => s.IsCompleted && s.DeletedAt == null)
-            })
+            .OrderBy(st => st.DueDate))
             .ToListAsync(cancellationToken);
 
-        var todayTasks = await baseQuery
+        var todayTasks = await projectToDto(activeQuery
             .Where(st => !st.IsCompleted && st.DueDate != null && st.DueDate >= todayStart && st.DueDate <= todayEnd)
-            .OrderBy(st => st.DueDate)
-            .Select(st => new MyTaskDto
-            {
-                Id = st.Id,
-                ParentTaskId = st.TaskId,
-                ParentTaskTitle = st.Task!.Title,
-                Title = st.Title,
-                Description = st.Task!.Description,
-                Priority = st.Priority != null ? st.Priority.ToString() : null,
-                StartDate = st.Task!.StartDate,
-                DueDate = st.DueDate,
-                BoardColumnId = st.Task!.BoardColumnId,
-                ColumnName = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.Name : string.Empty,
-                ColumnIsDone = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.IsDone,
-                IsCompleted = st.IsCompleted,
-                ProjectId = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.ProjectId : Guid.Empty,
-                ProjectName = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.Name : string.Empty,
-                TeamId = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.TeamId : null,
-                CreatedAt = st.CreatedAt,
-                UpdatedAt = st.UpdatedAt,
-                SubTasksCount = st.Task!.SubTasks.Count(s => s.DeletedAt == null),
-                CompletedSubTasksCount = st.Task!.SubTasks.Count(s => s.IsCompleted && s.DeletedAt == null)
-            })
+            .OrderBy(st => st.DueDate))
+            .ToListAsync(cancellationToken);
+
+        var upcomingTasks = await projectToDto(activeQuery
+            .Where(st => !st.IsCompleted && st.DueDate != null && st.DueDate > todayEnd && st.DueDate <= upcomingEnd)
+            .OrderBy(st => st.DueDate))
+            .ToListAsync(cancellationToken);
+
+        var urgentTasks = await projectToDto(activeQuery
+            .Where(st => !st.IsCompleted && 
+                         st.Task != null && 
+                         st.Task.Priority != null && 
+                         (st.Task.Priority == TaskPriority.Required || st.Task.Priority == TaskPriority.Important) &&
+                         (st.DueDate == null || st.DueDate > upcomingEnd))
+            .OrderBy(st => st.Task!.Priority == TaskPriority.Required ? 0 : 1)
+            .ThenBy(st => st.DueDate))
             .ToListAsync(cancellationToken);
 
         // 2. Apply filters to query for page items
@@ -172,9 +208,9 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksRe
 
         if (!string.IsNullOrWhiteSpace(request.Priority) && request.Priority != "all")
         {
-            if (Enum.TryParse<SubTaskPriority>(request.Priority, true, out var parsedPriority))
+            if (Enum.TryParse<TaskPriority>(request.Priority, true, out var parsedPriority))
             {
-                filteredQuery = filteredQuery.Where(st => st.Priority == parsedPriority);
+                filteredQuery = filteredQuery.Where(st => st.Task != null && st.Task.Priority == parsedPriority);
             }
         }
 
@@ -209,7 +245,8 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksRe
             }
             else if (request.SortBy == "priority")
             {
-                filteredQuery = filteredQuery.OrderBy(st => st.Priority == null).ThenByDescending(st => st.Priority);
+                filteredQuery = filteredQuery.OrderBy(st => st.Task == null || st.Task.Priority == null)
+                                             .ThenBy(st => st.Task!.Priority == TaskPriority.Required ? 0 : st.Task!.Priority == TaskPriority.Important ? 1 : 2);
             }
             else if (request.SortBy == "project")
             {
@@ -229,28 +266,7 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksRe
             itemsQuery = filteredQuery.Skip((pageNumber - 1) * request.PageSize).Take(request.PageSize);
         }
 
-        var items = await itemsQuery.Select(st => new MyTaskDto
-        {
-            Id = st.Id,
-            ParentTaskId = st.TaskId,
-            ParentTaskTitle = st.Task!.Title,
-            Title = st.Title,
-            Description = st.Task!.Description,
-            Priority = st.Priority != null ? st.Priority.ToString() : null,
-            StartDate = st.Task!.StartDate,
-            DueDate = st.DueDate,
-            BoardColumnId = st.Task!.BoardColumnId,
-            ColumnName = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.Name : string.Empty,
-            ColumnIsDone = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.IsDone,
-            IsCompleted = st.IsCompleted,
-            ProjectId = st.Task!.BoardColumn != null ? st.Task!.BoardColumn!.ProjectId : Guid.Empty,
-            ProjectName = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.Name : string.Empty,
-            TeamId = st.Task!.BoardColumn != null && st.Task!.BoardColumn!.Project != null ? st.Task!.BoardColumn!.Project!.TeamId : null,
-            CreatedAt = st.CreatedAt,
-            UpdatedAt = st.UpdatedAt,
-            SubTasksCount = st.Task!.SubTasks.Count(s => s.DeletedAt == null),
-            CompletedSubTasksCount = st.Task!.SubTasks.Count(s => s.IsCompleted && s.DeletedAt == null)
-        }).ToListAsync(cancellationToken);
+        var items = await projectToDto(itemsQuery).ToListAsync(cancellationToken);
 
         return new MyTasksResponseDto
         {
@@ -261,8 +277,11 @@ public class GetMyTasksQueryHandler : IRequestHandler<GetMyTasksQuery, MyTasksRe
             TotalTasksCount = totalTasksCount,
             CompletedTasksCount = completedTasksCount,
             UncompletedTasksCount = uncompletedTasksCount,
+            InactiveTasksCount = inactiveTasksCount,
             OverdueTasks = overdueTasks,
-            TodayTasks = todayTasks
+            TodayTasks = todayTasks,
+            UpcomingTasks = upcomingTasks,
+            UrgentTasks = urgentTasks
         };
     }
 }

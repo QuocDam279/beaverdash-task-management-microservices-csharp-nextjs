@@ -87,7 +87,7 @@ export function TaskSubtasks({
             <path d="m9 11-4 4 4 4m6-14 4 4-4 4" />
           </svg>
           <label className="text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 uppercase tracking-wider block">
-            Nhiệm vụ (Subtasks)
+            Nhiệm vụ
           </label>
         </div>
         {totalCount > 0 && (

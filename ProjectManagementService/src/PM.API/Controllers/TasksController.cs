@@ -27,7 +27,8 @@ public class TasksController : ControllerBase
         [FromQuery] string? priority = null,
         [FromQuery] string? status = null,
         [FromQuery] string? dueDateFilter = null,
-        [FromQuery] string? sortBy = null)
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sprintFilter = null)
     {
         var query = new GetMyTasksQuery
         {
@@ -38,7 +39,8 @@ public class TasksController : ControllerBase
             Priority = priority,
             Status = status,
             DueDateFilter = dueDateFilter,
-            SortBy = sortBy
+            SortBy = sortBy,
+            SprintFilter = sprintFilter
         };
         var result = await _mediator.Send(query);
         return Ok(result);

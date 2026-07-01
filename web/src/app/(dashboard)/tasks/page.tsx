@@ -53,6 +53,10 @@ export default function MyTasksPage() {
         onProjectChange={state.setSelectedProject}
         selectedStatus={state.selectedStatus}
         onStatusChange={state.setSelectedStatus}
+        selectedPriority={state.selectedPriority}
+        onPriorityChange={state.setSelectedPriority}
+        selectedSprintFilter={state.selectedSprintFilter}
+        onSprintFilterChange={state.setSelectedSprintFilter}
         selectedDueDateFilter={state.selectedDueDateFilter}
         onDueDateFilterChange={state.setSelectedDueDateFilter}
         sortBy={state.sortBy}
@@ -107,6 +111,7 @@ export default function MyTasksPage() {
             showParentTaskColumn={false}
             hideSubTasksColumn={true}
             titleColumnName="Nhiệm vụ"
+            hideStartDateColumn={true}
           />
 
           {/* 5. Pagination Toolbar */}

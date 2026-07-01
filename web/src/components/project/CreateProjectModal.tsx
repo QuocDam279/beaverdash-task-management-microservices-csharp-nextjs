@@ -219,21 +219,6 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
                 />
               </div>
             </div>
-
-            {/* Quyền riêng tư */}
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="checkbox"
-                id="isPublic"
-                checked={isPublic}
-                disabled={isSubmitting}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                className="h-3.5 w-3.5 accent-[#1868db] cursor-pointer rounded disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-              <label htmlFor="isPublic" className="text-xs text-[#292a2e] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
-                Công khai dự án này (Ai có link đều có thể xem)
-              </label>
-            </div>
           </div>
 
           <div className="px-5 py-3 border-t border-slate-200 bg-slate-50/50 flex justify-end gap-2">

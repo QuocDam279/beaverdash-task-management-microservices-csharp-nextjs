@@ -20,6 +20,7 @@ interface ProjectListTableProps {
   showParentTaskColumn?: boolean;
   hideSubTasksColumn?: boolean;
   titleColumnName?: string;
+  hideStartDateColumn?: boolean;
 }
 
 export function ProjectListTable({
@@ -32,6 +33,7 @@ export function ProjectListTable({
   showParentTaskColumn = false,
   hideSubTasksColumn = false,
   titleColumnName = "Công việc",
+  hideStartDateColumn = false,
 }: ProjectListTableProps) {
   const getStatusName = (columnId: string): string => {
     return columns.find((c) => c.id === columnId)?.name || "Chưa rõ";
@@ -161,7 +163,9 @@ export function ProjectListTable({
               <th className="py-2.5 px-3 w-[10%] min-w-[80px] text-center whitespace-nowrap">
                 Ưu tiên
               </th>
-              <th className="py-2.5 px-3 w-[8%] min-w-[75px] whitespace-nowrap">Bắt đầu</th>
+              {!hideStartDateColumn && (
+                <th className="py-2.5 px-3 w-[8%] min-w-[75px] whitespace-nowrap">Bắt đầu</th>
+              )}
               <th className="py-2.5 px-3 w-[8%] min-w-[80px] whitespace-nowrap">
                 Hạn chót
               </th>
@@ -220,7 +224,9 @@ export function ProjectListTable({
                   )}
                   <td className="py-3 px-3 text-center whitespace-nowrap">{renderStatusBadge(t.boardColumnId, (t as any).columnName)}</td>
                   <td className="py-3 px-3 text-center whitespace-nowrap">{renderPriorityBadge(t.priority)}</td>
-                  <td className="py-3 px-3 whitespace-nowrap">{renderDate(t.startDate)}</td>
+                  {!hideStartDateColumn && (
+                    <td className="py-3 px-3 whitespace-nowrap">{renderDate(t.startDate)}</td>
+                  )}
                   <td className="py-3 px-3 whitespace-nowrap">{renderDate(t.dueDate, true, isTaskCompleted)}</td>
                   {!hideSubTasksColumn && (
                     <td className="py-3 px-3 text-center whitespace-nowrap">

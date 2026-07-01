@@ -22,8 +22,11 @@ export interface BackendStats {
   totalTasksCount: number;
   completedTasksCount: number;
   uncompletedTasksCount: number;
+  inactiveTasksCount?: number;
   overdueTasks: TaskItem[];
   todayTasks: TaskItem[];
+  upcomingTasks: TaskItem[];
+  urgentTasks: TaskItem[];
 }
 
 export interface PaginationInfo {
@@ -67,7 +70,9 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState("");
   const [selectedProject, setSelectedProject] = React.useState("all");
-  const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [selectedStatus, setSelectedStatus] = React.useState("uncompleted");
+  const [selectedPriority, setSelectedPriority] = React.useState("all");
+  const [selectedSprintFilter, setSelectedSprintFilter] = React.useState("active");
   const [selectedDueDateFilter, setSelectedDueDateFilter] = React.useState("all");
   const [sortBy, setSortBy] = React.useState("dueDate");
 
@@ -148,6 +153,12 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
       if (selectedStatus !== "all") {
         params.set("status", selectedStatus);
       }
+      if (selectedPriority !== "all") {
+        params.set("priority", selectedPriority);
+      }
+      if (selectedSprintFilter !== "active") {
+        params.set("sprintFilter", selectedSprintFilter);
+      }
       if (selectedDueDateFilter !== "all") {
         params.set("dueDateFilter", selectedDueDateFilter);
       }
@@ -168,21 +179,38 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
           totalTasksCount: data.totalTasksCount ?? 0,
           completedTasksCount: data.completedTasksCount ?? 0,
           uncompletedTasksCount: data.uncompletedTasksCount ?? 0,
+          inactiveTasksCount: data.inactiveTasksCount ?? 0,
           overdueTasks: (data.overdueTasks || []).map((t: TaskItem) => ({
             ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
           })),
           todayTasks: (data.todayTasks || []).map((t: TaskItem) => ({
             ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
           })),
+          upcomingTasks: (data.upcomingTasks || []).map((t: TaskItem) => ({
+            ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
+          })),
+          urgentTasks: (data.urgentTasks || []).map((t: TaskItem) => ({
+            ...t, columnName: t.isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"
+          })),
         });
 
         // Extract unique projects from the items + overdue + today tasks for filter dropdown
-        const allTasks = [...items, ...(data.overdueTasks || []), ...(data.todayTasks || [])];
-        const projs = new Map<string, string>();
-        allTasks.forEach((t: TaskItem) => {
-          if (t.projectId && t.projectName) projs.set(t.projectId, t.projectName);
+        const allTasks = [
+          ...items,
+          ...(data.overdueTasks || []),
+          ...(data.todayTasks || []),
+          ...(data.upcomingTasks || []),
+          ...(data.urgentTasks || [])
+        ];
+        
+        setUniqueProjects((prev) => {
+          const map = new Map<string, string>();
+          prev.forEach((p) => map.set(p.id, p.name));
+          allTasks.forEach((t: TaskItem) => {
+            if (t.projectId && t.projectName) map.set(t.projectId, t.projectName);
+          });
+          return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
         });
-        setUniqueProjects(Array.from(projs.entries()).map(([id, name]) => ({ id, name })));
       }
     } catch (err: unknown) {
       console.error(err);
@@ -191,7 +219,7 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, effectivePageSize, debouncedSearchQuery, selectedProject, selectedStatus, selectedDueDateFilter, sortBy]);
+  }, [currentPage, effectivePageSize, debouncedSearchQuery, selectedProject, selectedStatus, selectedPriority, selectedSprintFilter, selectedDueDateFilter, sortBy]);
 
   // Re-fetch when any filter/sort/page changes
   React.useEffect(() => { fetchTasks(); }, [fetchTasks]);
@@ -199,16 +227,16 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   // Reset to page 1 when filters or sort or search change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedProject, selectedStatus, selectedDueDateFilter, sortBy, effectivePageSize]);
+  }, [debouncedSearchQuery, selectedProject, selectedStatus, selectedPriority, selectedSprintFilter, selectedDueDateFilter, sortBy, effectivePageSize]);
 
   // Since backend handles filtering/sorting, tasks from API are already filtered and sorted
   const filteredTasks = tasks;
   const sortedTasks = tasks;
 
-  const hasActiveFilters = !!searchQuery || selectedProject !== "all" || selectedStatus !== "all" || selectedDueDateFilter !== "all";
+  const hasActiveFilters = !!searchQuery || selectedProject !== "all" || selectedStatus !== "uncompleted" || selectedPriority !== "all" || selectedSprintFilter !== "active" || selectedDueDateFilter !== "all";
 
   const handleResetFilters = React.useCallback(() => {
-    setSearchQuery(""); setSelectedProject("all"); setSelectedStatus("all"); setSelectedDueDateFilter("all"); setSortBy("dueDate");
+    setSearchQuery(""); setSelectedProject("all"); setSelectedStatus("uncompleted"); setSelectedPriority("all"); setSelectedSprintFilter("active"); setSelectedDueDateFilter("all"); setSortBy("dueDate");
   }, []);
 
   const goToPage = React.useCallback((page: number) => {
@@ -288,7 +316,8 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
     tasks, isLoading, error, fetchTasks,
     showAnnouncement, notifications, isNotifLoading, unreadNotifications, handleCloseAnnouncement, announcementStats,
     searchQuery, setSearchQuery, selectedProject, setSelectedProject,
-    selectedStatus, setSelectedStatus,
+    selectedStatus, setSelectedStatus, selectedPriority, setSelectedPriority,
+    selectedSprintFilter, setSelectedSprintFilter,
     selectedDueDateFilter, setSelectedDueDateFilter, sortBy, setSortBy,
     selectedTask, setSelectedTask, clickedSubtaskId, setClickedSubtaskId,
     modalColumns, setModalColumns, modalAssignees, setModalAssignees,

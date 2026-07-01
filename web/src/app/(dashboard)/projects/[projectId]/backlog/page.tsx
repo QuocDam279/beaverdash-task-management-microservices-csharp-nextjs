@@ -139,7 +139,7 @@ export default function BacklogPage({ params }: PageProps) {
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-250">Backlog</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Lên kế hoạch cho các Sprint và quản lý danh sách công việc tồn đọng (Product Backlog).
+            Lên kế hoạch cho các Sprint và quản lý danh sách công việc tồn đọng.
           </p>
         </div>
         <button
