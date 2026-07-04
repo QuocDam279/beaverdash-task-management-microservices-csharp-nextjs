@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "BeaverDash - Quản lý dự án cho nhóm sinh viên",
+    default: "BeaverDash - Quản lý dự án cho nhóm sinh viên với trợ lý AI",
     template: "%s | BeaverDash",
   },
   description: "BeaverDash - Hệ thống quản lý công việc và dự án học tập thông minh cho học sinh, sinh viên. Tối ưu hóa làm việc nhóm, quản lý tiến độ đồ án trực quan với bảng Kanban và Trợ lý AI hỗ trợ học tập.",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   openGraph: {
-    title: "BeaverDash - Quản lý dự án cho nhóm sinh viên",
+    title: "BeaverDash - Quản lý dự án cho nhóm sinh viên với trợ lý AI",
     description: "Hệ thống quản lý công việc, dự án học tập và bảng Kanban thông minh tối ưu cho học sinh, sinh viên làm việc nhóm.",
     url: "https://www.beaverdash.xyz",
     siteName: "BeaverDash",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "BeaverDash - Quản lý dự án cho nhóm sinh viên",
+    title: "BeaverDash - Quản lý dự án cho nhóm sinh viên với trợ lý AI",
     description: "Hệ thống quản lý công việc, dự án học tập và bảng Kanban thông minh tối ưu cho học sinh, sinh viên làm việc nhóm.",
     images: ["/logo.png"],
   },
@@ -97,7 +97,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "BeaverDash",
-    "alternateName": "BeaverDash - Quản lý dự án cho nhóm sinh viên",
+    "alternateName": "BeaverDash - Quản lý dự án cho nhóm sinh viên với trợ lý AI",
     "url": "https://www.beaverdash.xyz",
     "description": "Hệ thống quản lý công việc, tiến độ dự án học tập và bảng Kanban thông minh tối ưu cho học sinh, sinh viên làm việc nhóm.",
     "logo": "https://www.beaverdash.xyz/logo.png",

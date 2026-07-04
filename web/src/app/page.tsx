@@ -10,7 +10,7 @@ import {
 } from "@/components/LandingPage";
 
 export const metadata: Metadata = {
-  title: "BeaverDash - Quản lý công việc thông minh với AI",
+  title: "BeaverDash - Quản lý dự án cho nhóm sinh viên với trợ lý AI",
   description: "Trực quan hóa bảng Kanban, sơ đồ Gantt và tối ưu hóa tiến độ làm việc đội nhóm tự động nhờ Trợ lý AI.",
 };
 
