@@ -46,11 +46,71 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
         if (requestingMember == null)
             throw new UnauthorizedAccessException("Bạn không có quyền sửa SubTask này.");
 
+        bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
+        bool isTaskCreator = subTask.Task!.CreatedByUserId == currentUserId;
+        bool hasAssignedSubTask = await _dbContext.SubTasks
+            .AnyAsync(st => st.TaskId == subTask.TaskId && st.AssigneeUserId == currentUserId && st.DeletedAt == null, cancellationToken);
+
         if (request.AssigneeUserId.HasValue)
         {
             var isAssigneeMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == request.AssigneeUserId.Value, cancellationToken);
             if (!isAssigneeMember)
                 throw new InvalidOperationException("Người nhận nhiệm vụ phải là thành viên trong nhóm.");
+        }
+
+        if (!isLeader && !isTaskCreator)
+        {
+            // 1. Regular members with no assigned tasks can only self-assign an unassigned task
+            if (!hasAssignedSubTask)
+            {
+                bool isSelfAssign = !subTask.AssigneeUserId.HasValue && request.AssigneeUserId == currentUserId;
+                if (!isSelfAssign)
+                {
+                    throw new UnauthorizedAccessException("Bạn không có quyền thao tác trên nhiệm vụ của công việc này.");
+                }
+            }
+
+            // 2. Regular members can only toggle isCompleted for their own tasks
+            if (subTask.IsCompleted != request.IsCompleted)
+            {
+                if (subTask.AssigneeUserId != currentUserId)
+                {
+                    throw new UnauthorizedAccessException("Bạn chỉ được phép hoàn thành nhiệm vụ được giao cho chính mình.");
+                }
+            }
+
+            // 3. Regular members cannot edit Title, DueDate, or Priority
+            SubTaskPriority? requestPriority = null;
+            if (!string.IsNullOrEmpty(request.Priority) && Enum.TryParse<SubTaskPriority>(request.Priority, true, out var parsedReqPriority))
+            {
+                requestPriority = parsedReqPriority;
+            }
+
+            if (subTask.Title != request.Title || subTask.DueDate != request.DueDate || subTask.Priority != requestPriority)
+            {
+                throw new UnauthorizedAccessException("Chỉ trưởng nhóm hoặc người tạo công việc mới có quyền sửa đổi thông tin nhiệm vụ.");
+            }
+        }
+
+        if (subTask.AssigneeUserId != request.AssigneeUserId)
+        {
+            if (!isLeader && !isTaskCreator)
+            {
+                bool isSelfAssign = !subTask.AssigneeUserId.HasValue && request.AssigneeUserId == currentUserId;
+                bool isSelfUnassign = subTask.AssigneeUserId == currentUserId && !request.AssigneeUserId.HasValue;
+
+                if (!isSelfAssign && !isSelfUnassign)
+                {
+                    if (subTask.AssigneeUserId.HasValue)
+                    {
+                        throw new UnauthorizedAccessException("Nhiệm vụ này đã có người nhận. Bạn không có quyền thay đổi phân công.");
+                    }
+                    else
+                    {
+                        throw new UnauthorizedAccessException("Bạn chỉ được phép tự nhận nhiệm vụ này hoặc giao cho người khác trong công việc do chính mình tạo ra.");
+                    }
+                }
+            }
         }
 
         // Validate deadline
@@ -69,6 +129,19 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
         if (subTask.IsCompleted != request.IsCompleted)
         {
             changedFields.Add(new FieldChange("IsCompleted", subTask.IsCompleted.ToString(), request.IsCompleted.ToString()));
+            if (!subTask.IsCompleted && request.IsCompleted)
+            {
+                subTask.AddDomainEvent(new PM.Domain.Events.SubTaskCompletedEvent(
+                    project.Id,
+                    subTask.Id,
+                    subTask.Task.Id,
+                    subTask.Task.Title,
+                    subTask.Title,
+                    currentUserId,
+                    subTask.Task.CreatedByUserId,
+                    subTask.AssigneeUserId
+                ));
+            }
         }
 
         if (subTask.AssigneeUserId != request.AssigneeUserId)

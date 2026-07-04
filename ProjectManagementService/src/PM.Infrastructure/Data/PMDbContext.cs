@@ -63,6 +63,7 @@ public class PMDbContext : DbContext, PM.Application.Contracts.IPMDbContext
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<ProjectShare> ProjectShares => Set<ProjectShare>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<NotificationTracking> NotificationTrackings => Set<NotificationTracking>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -51,7 +51,130 @@ export function ChatContainer({ roomId, roomType, roomName }: ChatContainerProps
     sharedMedia,
     sharedFiles,
     sharedLinks,
+    members,
   } = useChat(roomId, roomType);
+
+  // Mentions UI State
+  const [showMentionDropdown, setShowMentionDropdown] = React.useState(false);
+  const [mentionSearch, setMentionSearch] = React.useState("");
+  const [mentionIndex, setMentionIndex] = React.useState(0);
+  const [mentionTriggerPos, setMentionTriggerPos] = React.useState(-1);
+  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  const filteredMembers = React.useMemo(() => {
+    if (!showMentionDropdown) return [];
+    
+    // Normalize member object
+    const users = (members || []).map((m: any) => ({
+      userId: m.userId || m.id,
+      displayName: m.displayName || m.user?.displayName || "Thành viên",
+      avatar: m.avatar || m.user?.avatar || null,
+      email: m.email || m.user?.email || ""
+    }));
+
+    // Add @all option
+    const options = [
+      { userId: "all", displayName: "all", avatar: null, email: "Nhắc cả nhóm" },
+      ...users
+    ];
+
+    if (!mentionSearch) return options;
+
+    return options.filter(u => 
+      u.displayName.toLowerCase().includes(mentionSearch.toLowerCase()) ||
+      u.email.toLowerCase().includes(mentionSearch.toLowerCase())
+    );
+  }, [members, showMentionDropdown, mentionSearch]);
+
+  React.useEffect(() => {
+    if (showMentionDropdown && filteredMembers.length === 0) {
+      setShowMentionDropdown(false);
+    }
+  }, [filteredMembers, showMentionDropdown]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setInputText(val);
+
+    const selectionStart = e.target.selectionStart;
+    const textBeforeCursor = val.slice(0, selectionStart);
+    
+    const lastAtOffset = textBeforeCursor.lastIndexOf("@");
+    
+    if (lastAtOffset !== -1) {
+      const textAfterAt = textBeforeCursor.slice(lastAtOffset + 1);
+      const hasSpace = /\s/.test(textAfterAt);
+      
+      const charBeforeAt = lastAtOffset > 0 ? textBeforeCursor[lastAtOffset - 1] : "";
+      const isValidTrigger = lastAtOffset === 0 || /\s/.test(charBeforeAt);
+
+      if (!hasSpace && isValidTrigger) {
+        setShowMentionDropdown(true);
+        setMentionSearch(textAfterAt);
+        setMentionTriggerPos(lastAtOffset);
+        setMentionIndex(0);
+        return;
+      }
+    }
+    
+    setShowMentionDropdown(false);
+  };
+
+  const handleSelectMember = (user: any) => {
+    if (!textareaRef.current) return;
+    
+    const val = inputText;
+    const cursor = textareaRef.current.selectionStart;
+    const beforeMention = val.slice(0, mentionTriggerPos);
+    const afterMention = val.slice(cursor);
+    
+    const insertText = `@${user.displayName} `;
+    const newVal = beforeMention + insertText + afterMention;
+    setInputText(newVal);
+    setShowMentionDropdown(false);
+
+    const newCursorPos = mentionTriggerPos + insertText.length;
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 50);
+  };
+
+  const handleKeyDownWithMention = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showMentionDropdown && filteredMembers.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex((prev) => (prev + 1) % filteredMembers.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex((prev) => (prev - 1 + filteredMembers.length) % filteredMembers.length);
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSelectMember(filteredMembers[mentionIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setShowMentionDropdown(false);
+        return;
+      }
+    }
+
+    handleKeyDown(e);
+  };
+
+  const handleBlur = () => {
+    // Timeout to allow mouse clicks to register before closing dropdown
+    setTimeout(() => {
+      setShowMentionDropdown(false);
+    }, 200);
+  };
 
   return (
     <div 
@@ -212,7 +335,46 @@ export function ChatContainer({ roomId, roomType, roomName }: ChatContainerProps
         </div>
 
         {/* Typing Footer */}
-        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-[#1d2125]">
+        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-[#1d2125] relative">
+          
+          {/* Mention Suggestions Dropdown */}
+          {showMentionDropdown && filteredMembers.length > 0 && (
+            <div className="absolute bottom-full left-5 mb-2 w-64 max-h-48 bg-white dark:bg-[#22272b] border border-slate-200 dark:border-[#353e47] rounded-lg shadow-xl overflow-y-auto z-50 py-1 flex flex-col custom-chat-scrollbar">
+              {filteredMembers.map((user, idx) => (
+                <button
+                  key={user.userId}
+                  type="button"
+                  onClick={() => handleSelectMember(user)}
+                  className={`w-full px-3 py-2 flex items-center gap-2.5 text-left text-xs font-semibold transition-colors cursor-pointer ${
+                    idx === mentionIndex
+                      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold"
+                      : "text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-[#2c3338]"
+                  }`}
+                >
+                  {user.userId === "all" ? (
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-[10px] shrink-0">
+                      @
+                    </div>
+                  ) : user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.displayName}
+                      className="w-6 h-6 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-[10px] shrink-0">
+                      {user.displayName.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate font-bold">{user.displayName}</p>
+                    <p className="text-[10px] text-slate-450 dark:text-slate-500 truncate">{user.email}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2.5">
             {/* Actions panel */}
             <div className="flex items-center shrink-0">
@@ -230,9 +392,11 @@ export function ChatContainer({ roomId, roomType, roomName }: ChatContainerProps
             {/* Text Input area - Pill design */}
             <form onSubmit={handleSend} className="flex-1 flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-full pl-4 pr-2 py-1.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:bg-slate-100/70 dark:focus-within:bg-slate-800">
               <textarea
+                ref={textareaRef}
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDownWithMention}
+                onBlur={handleBlur}
                 onPaste={handlePaste}
                 placeholder={`Nhập tin nhắn (hỗ trợ dán ảnh)...`}
                 rows={1}

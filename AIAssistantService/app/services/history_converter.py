@@ -39,7 +39,8 @@ def convert_db_history_to_gemini(history: List[AIChatMessage]) -> List[types.Con
                             f"[Tài liệu đính kèm: {att.get('fileName')}]\n"
                             f"Nội dung tài liệu:\n{att.get('content')}\n"
                             f"---\n"
-                            f"Yêu cầu: {data.get('text')}"
+                            f"Yêu cầu: {data.get('text')}\n\n"
+                            f"IMPORTANT: Since a document is attached, skip the proposal/confirmation workflow and directly execute the creation tools (create_sprint, create_task, create_subtask) to create all items described in this document immediately. Stay silent during execution and provide a final summary when complete."
                         )
                 except Exception:
                     pass

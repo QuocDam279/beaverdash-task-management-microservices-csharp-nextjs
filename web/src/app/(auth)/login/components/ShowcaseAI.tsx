@@ -12,10 +12,10 @@ export function ShowcaseAI() {
     const runSequence = async () => {
       while (active) {
         setStep(0);
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1800));
         if (!active) break;
         
-        setStep(1); // User message
+        setStep(1); // User message (with attachment)
         await new Promise((r) => setTimeout(r, 2200));
         if (!active) break;
         
@@ -23,12 +23,20 @@ export function ShowcaseAI() {
         await new Promise((r) => setTimeout(r, 1200));
         if (!active) break;
         
-        setStep(3); // AI response text
-        await new Promise((r) => setTimeout(r, 2500));
+        setStep(3); // AI proposes plan (sprint + tasks + assignees)
+        await new Promise((r) => setTimeout(r, 4500));
         if (!active) break;
-        
-        setStep(4); // AI task list card pops up
-        await new Promise((r) => setTimeout(r, 5500)); // Keep displayed before loop restarts
+
+        setStep(4); // User confirms
+        await new Promise((r) => setTimeout(r, 1500));
+        if (!active) break;
+
+        setStep(5); // AI executes tools (sprints first, then tasks/subtasks)
+        await new Promise((r) => setTimeout(r, 3800));
+        if (!active) break;
+
+        setStep(6); // AI completes and outputs final message
+        await new Promise((r) => setTimeout(r, 6500)); // Keep displayed before loop restarts
       }
     };
 
@@ -44,15 +52,15 @@ export function ShowcaseAI() {
       {/* AI Assistant Chat Showcase (Left 3 columns) */}
       <div className="xl:col-span-3 space-y-4 text-left min-h-[480px] flex flex-col justify-between">
         <div className="flex flex-col gap-1 select-none">
-          <span className="text-[10px] font-bold tracking-widest text-[#1868db] uppercase">Trợ lý trí tuệ nhân tạo</span>
-          <h2 className="text-xl font-bold text-slate-800">Tự động hóa công việc thông minh</h2>
+          <span className="text-[10px] font-bold tracking-widest text-[#1868db] uppercase">Trợ lý Trí tuệ Nhân tạo</span>
+          <h2 className="text-xl font-bold text-slate-800">Tự động hóa Quy trình & Lập kế hoạch</h2>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Chỉ với những câu lệnh hội thoại tự nhiên, Trợ lý AI sẽ giúp bạn tự động hóa quy trình quản lý dự án, phân tích công việc và lập kế hoạch ngay lập tức.
+            Phân tích tài liệu kế hoạch, lập giai đoạn làm việc và tự động khởi tạo, phân công công việc chính xác cho từng thành viên theo chuyên môn.
           </p>
         </div>
 
         {/* Animated Chat Container */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[350px] justify-between transition-all duration-500 ease-in-out">
+        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[360px] justify-between transition-all duration-500 ease-in-out">
           {/* Header */}
           <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -66,21 +74,24 @@ export function ShowcaseAI() {
           </div>
 
           {/* Conversation Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs scrollbar-none min-h-[220px]">
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs scrollbar-none min-h-[250px] max-h-[280px]">
             {/* Initial empty message state */}
             {step === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-center text-slate-350 py-8 select-none">
+              <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 py-12 select-none">
                 <span className="text-3xl mb-2">🤖</span>
                 <p className="text-[10px] font-bold">Trợ lý AI sẵn sàng hỗ trợ</p>
-                <p className="text-[9px] max-w-[200px] mt-1 text-slate-400">Đặt câu hỏi để bắt đầu lập kế hoạch dự án tự động...</p>
+                <p className="text-[9px] max-w-[220px] mt-1 text-slate-400">Đính kèm tài liệu yêu cầu hoặc chat trực tiếp để bắt đầu lập kế hoạch tự động...</p>
               </div>
             )}
 
             {/* User Message */}
             {step >= 1 && (
-              <div className="flex justify-end animate-fade-slide-up">
-                <div className="max-w-[80%] bg-[#1868db] text-white px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow-sm shadow-[#1868db]/10">
-                  <p className="leading-relaxed font-medium">Hãy lập kế hoạch thiết kế giao diện trang chủ Beaverdash trong tuần này.</p>
+              <div className="flex flex-col items-end gap-1.5 animate-fade-slide-up">
+                <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-100 rounded-lg px-2.5 py-1 text-[9px] font-bold text-[#1868db]">
+                  📄 Kế_hoạch_Dự_án.pdf (35 KB)
+                </div>
+                <div className="max-w-[85%] bg-[#1868db] text-white px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow-sm shadow-[#1868db]/10">
+                  <p className="leading-relaxed font-medium">Hãy phân tích tài liệu đính kèm này, lên kế hoạch Giai đoạn 1 và phân công công việc cho cả nhóm giúp tôi.</p>
                 </div>
               </div>
             )}
@@ -99,63 +110,80 @@ export function ShowcaseAI() {
             {/* AI Response Text */}
             {step >= 3 && (
               <div className="flex justify-start animate-fade-slide-up">
-                <div className="max-w-[85%] bg-slate-100 text-slate-800 px-3.5 py-2.5 rounded-2xl rounded-tl-none leading-relaxed border border-slate-200/30">
-                  Chào bạn! Dựa trên yêu cầu của bạn, tôi đã phân tích và tự động đề xuất kế hoạch triển khai dưới đây:
+                <div className="max-w-[88%] bg-slate-100 text-slate-800 px-3.5 py-2.5 rounded-2xl rounded-tl-none leading-relaxed border border-slate-200/20 text-left space-y-1">
+                  <p>Tôi đã đọc hiểu tài liệu <b>Kế_hoạch_Dự_án.pdf</b>. Dưới đây là kế hoạch đề xuất cho dự án của bạn:</p>
+                  <div className="pl-2.5 border-l-2 border-amber-600/60 my-1.5 space-y-1 text-[10.5px]">
+                    <p>📅 <b>Giai đoạn 1 (02/07 - 16/07):</b> Phát triển trang chủ bán hàng</p>
+                    <p>• <b>Công việc (Bắt buộc):</b> Thiết kế giao diện Figma (Người thực hiện: Linh Chi)</p>
+                    <p>• <b>Công việc (Quan trọng):</b> Cài đặt hệ thống dữ liệu (Người thực hiện: Minh Anh)</p>
+                  </div>
+                  <p className="text-[10px] text-slate-500">Bạn có đồng ý khởi tạo toàn bộ giai đoạn, công việc và nhiệm vụ này lên bảng không?</p>
                 </div>
               </div>
             )}
 
-            {/* AI Created Tasks */}
+            {/* User Confirm */}
             {step >= 4 && (
-              <div className="flex justify-start animate-fade-slide-up delay-100">
-                <div className="max-w-[95%] w-full bg-white border border-slate-200/80 rounded-xl shadow-md p-3.5 space-y-3 relative overflow-hidden">
-                  {/* Decorative Left Accent Border */}
+              <div className="flex justify-end animate-fade-slide-up">
+                <div className="max-w-[85%] bg-[#1868db] text-white px-3.5 py-2 rounded-2xl rounded-tr-none shadow-sm">
+                  <p className="leading-relaxed font-medium">Đồng ý, tạo kế hoạch này lên bảng giúp tôi.</p>
+                </div>
+              </div>
+            )}
+
+            {/* AI Tool Execution log */}
+            {step >= 5 && (
+              <div className="flex justify-start animate-fade-slide-up">
+                <div className="max-w-[90%] w-full bg-white border border-slate-200/80 rounded-xl shadow-md p-3 space-y-2 relative overflow-hidden">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#1868db] to-purple-500" />
-                  
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <span className="text-[9.5px] font-bold text-[#1868db] uppercase tracking-wider">Kế hoạch đề xuất tự động</span>
-                    <span className="text-[8.5px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100">Hoàn thành</span>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 font-bold">
+                    <span className="text-[#1868db] text-[9.5px]">⚙️ TRỢ LÝ AI ĐANG KHỞI TẠO CÔNG VIỆC</span>
+                    {step >= 6 ? (
+                      <span className="text-emerald-600 text-[8.5px] font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">HOÀN THÀNH</span>
+                    ) : (
+                      <span className="text-amber-600 text-[8.5px] font-extrabold animate-pulse">ĐANG CHẠY...</span>
+                    )}
                   </div>
-
-                  <div className="space-y-2">
-                    {/* Task Item 1 */}
-                    <div className="flex items-start gap-2.5">
-                      <div className="mt-0.5 w-4 h-4 rounded border border-emerald-500 bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 text-[11px] leading-tight">Thiết kế khung dây Wireframe sơ bộ</p>
-                        <p className="text-[8.5px] text-slate-400 mt-0.5">Ưu tiên: <span className="text-red-500 font-bold">Cao</span></p>
-                      </div>
+                  <div className="space-y-1 text-[9.5px] text-slate-600 font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-emerald-500">✔</span>
+                      <span>Khởi tạo Giai đoạn 1 (Mục tiêu: Phát triển trang chủ bán hàng)</span>
                     </div>
-
-                    {/* Task Item 2 */}
-                    <div className="flex items-start gap-2.5">
-                      <div className="mt-0.5 w-4 h-4 rounded border border-slate-300 bg-slate-50 flex items-center justify-center shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 text-[11px] leading-tight">Xây dựng bản vẽ giao diện chi tiết trên Figma</p>
-                        <p className="text-[8.5px] text-slate-400 mt-0.5">Ưu tiên: <span className="text-red-500 font-bold">Cao</span></p>
-                        
-                        {/* Subtasks */}
-                        <div className="mt-2 ml-1 pl-3 border-l border-slate-200 space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3.5 h-3.5 rounded-full border border-emerald-500 bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                              <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                            <span className="text-[9px] text-slate-400 line-through">Phác thảo bố cục và cấu trúc</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3.5 h-3.5 rounded-full border border-slate-300 bg-slate-50 shrink-0" />
-                            <span className="text-[9px] text-slate-600">Định nghĩa bảng màu sắc và phông chữ</span>
-                          </div>
+                    {step >= 6 ? (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-emerald-500">✔</span>
+                          <span>Tạo công việc chính: Thiết kế giao diện Figma (Mức độ: Bắt buộc)</span>
                         </div>
+                        <div className="flex items-center gap-1.5 pl-3.5 border-l border-slate-200 text-slate-500 text-[9px]">
+                          <span className="text-emerald-500">✔</span>
+                          <span>Giao nhiệm vụ: Vẽ khung giao diện trang chủ cho Linh Chi</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-emerald-500">✔</span>
+                          <span>Tạo công việc chính: Cài đặt hệ thống dữ liệu (Mức độ: Quan trọng)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 pl-3.5 border-l border-slate-200 text-slate-500 text-[9px]">
+                          <span className="text-emerald-500">✔</span>
+                          <span>Giao nhiệm vụ: Thiết kế sơ đồ dữ liệu cho Minh Anh</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                        <span className="animate-spin text-amber-500">⏳</span>
+                        <span>Đang khởi tạo các công việc và phân bổ nhiệm vụ con...</span>
                       </div>
-                    </div>
+                    )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* AI Final Response */}
+            {step >= 6 && (
+              <div className="flex justify-start animate-fade-slide-up">
+                <div className="max-w-[88%] bg-emerald-50/60 text-slate-800 px-3.5 py-2.5 rounded-2xl rounded-tl-none leading-relaxed border border-emerald-100/50">
+                  Tôi đã khởi tạo thành công <b>Giai đoạn 1</b> và tự động phân bổ công việc, nhiệm vụ cho <b>Linh Chi</b> và <b>Minh Anh</b> lên bảng công việc tức thì! 🎉
                 </div>
               </div>
             )}
@@ -165,9 +193,9 @@ export function ShowcaseAI() {
           <div className="border-t border-slate-100 p-3 bg-slate-50/70 flex items-center gap-2 select-none">
             <div className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-[10px] text-slate-400 flex items-center justify-between">
               <span>Hỏi Beaver AI hoặc giao việc...</span>
-              <div className="flex items-center gap-2 text-slate-350 text-xs">
+              <div className="flex items-center gap-2 text-slate-400 text-xs">
                 <span className="cursor-pointer hover:text-slate-600">🎙️</span>
-                <span className="cursor-pointer hover:text-slate-600">📎</span>
+                <span className="cursor-pointer hover:text-slate-[#1868db] font-bold">📎</span>
               </div>
             </div>
             <button className="bg-[#1868db] hover:bg-blue-600 text-white p-2 rounded-xl text-[10px] transition-colors shadow-md shadow-blue-500/10 cursor-pointer">
@@ -206,7 +234,7 @@ export function ShowcaseAI() {
             </div>
           </div>
 
-          {/* Node 1: Auto-create Task */}
+          {/* Node 1: Work Planning */}
           <div
             onMouseEnter={() => setHoveredNode(1)}
             onMouseLeave={() => setHoveredNode(null)}
@@ -214,10 +242,10 @@ export function ShowcaseAI() {
               hoveredNode === 1 ? "border-blue-500 text-blue-600 shadow-md shadow-blue-500/5" : "border-slate-200/80 text-slate-600"
             }`}
           >
-            <span className="text-[9px] font-extrabold text-center leading-tight">Tự động tạo Công việc</span>
+            <span className="text-[9px] font-extrabold text-center leading-tight">Lập kế hoạch làm việc</span>
           </div>
 
-          {/* Node 2: Suggest Checklist */}
+          {/* Node 2: Auto-assign Member */}
           <div
             onMouseEnter={() => setHoveredNode(2)}
             onMouseLeave={() => setHoveredNode(null)}
@@ -225,10 +253,10 @@ export function ShowcaseAI() {
               hoveredNode === 2 ? "border-purple-500 text-purple-600 shadow-md shadow-purple-500/5" : "border-slate-200/80 text-slate-600"
             }`}
           >
-            <span className="text-[9px] font-extrabold text-center leading-tight">Đề xuất Việc cần làm</span>
+            <span className="text-[9px] font-extrabold text-center leading-tight">Phân việc tự động</span>
           </div>
 
-          {/* Node 3: Project Analysis */}
+          {/* Node 3: Read Attachments */}
           <div
             onMouseEnter={() => setHoveredNode(3)}
             onMouseLeave={() => setHoveredNode(null)}
@@ -236,10 +264,10 @@ export function ShowcaseAI() {
               hoveredNode === 3 ? "border-cyan-500 text-cyan-600 shadow-md shadow-cyan-500/5" : "border-slate-200/80 text-slate-600"
             }`}
           >
-            <span className="text-[9px] font-extrabold text-center leading-tight">Đọc hiểu Dự án</span>
+            <span className="text-[9px] font-extrabold text-center leading-tight">Đọc tệp đính kèm</span>
           </div>
 
-          {/* Node 4: Update Progress */}
+          {/* Node 4: Progress Report */}
           <div
             onMouseEnter={() => setHoveredNode(4)}
             onMouseLeave={() => setHoveredNode(null)}
@@ -247,10 +275,11 @@ export function ShowcaseAI() {
               hoveredNode === 4 ? "border-emerald-500 text-emerald-600 shadow-md shadow-emerald-500/5" : "border-slate-200/80 text-slate-600"
             }`}
           >
-            <span className="text-[9px] font-extrabold text-center leading-tight">Cập nhật Tiến độ</span>
+            <span className="text-[9px] font-extrabold text-center leading-tight">Báo cáo tiến độ</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

@@ -16,81 +16,82 @@ logger = logging.getLogger(__name__)
 class AIAssistantService:
     SYSTEM_INSTRUCTION = (
         "You are Beaverdash AI Assistant, a powerful tool designed to assist with project management and planning.\n"
-        "Your primary mission is to help users plan, draft, and create necessary tasks (Task) and missions (Subtask) for the project based on the information they provide.\n\n"
-        "RESPONSE & TASK CREATION RULES:\n"
+        "Your primary mission is to help users plan, draft, and create công việc and nhiệm vụ for the project based on the information they provide.\n\n"
+
+        "═══ A. COMMUNICATION ═══\n"
         "1. Always communicate in Vietnamese, professionally, positively, and clearly.\n"
-        "2. DO NOT call any creation tools (create_sprint, create_task, create_subtask) immediately when a user requests planning or task/sprint creation.\n"
-        "3. When a user requests planning or task creation, you must first LIST the proposed tasks and subtasks as text and ask for the user's confirmation. The proposed list must include all REQUIRED fields for each task type (see rules 10 and 11).\n"
-        "4. If the user asks to modify the proposed list (add, remove, edit titles, change priority, etc.), you must update and list the new proposal again for their confirmation.\n"
-        "5. ONLY when the user explicitly agrees or confirms in writing (e.g., 'Đồng ý', 'Ok', 'Tạo đi', 'Xác nhận', 'Chấp nhận', etc.), are you allowed to invoke the tools to create/modify sprints or tasks.\n"
-        "6. SEQUENTIAL TOOL CALLING PROCESS (CRITICAL):\n"
-        "   - SPRINT-FIRST RULE: If the plan assigns tasks to Sprints that DO NOT YET EXIST in the project, you MUST create ALL required Sprints FIRST (via `create_sprint`) and obtain their IDs BEFORE creating any tasks. ABSOLUTELY NEVER call `create_task` if the target Sprint does not exist yet.\n"
-        "   - After all necessary Sprints are created, proceed to create tasks: finish each task group completely (create a parent task, retrieve its returned ID, then immediately create all of its subtasks) before moving on to the next parent task group.\n"
-        "   - Specifically: Create all Sprints first → then invoke `create_task` (with `sprint_id` from the created Sprint) for the first parent task → upon receiving the parent task's ID, call `create_subtask` for all of its subtasks → only after completing this group, move to the next parent task.\n"
-        "7. When you are invoking tools to create or update tasks/subtasks, you MUST NOT output any text or explanatory messages during the tool execution turns (stay silent). Just execute the tools sequentially. Once all tool executions are fully completed, provide a final text response summarizing the results to the user.\n"
-        "8. Never fabricate parent task IDs when creating or updating subtasks; only operate on subtasks when you know the exact ID.\n"
-        "9. PREVENT DUPLICATE TITLES: Main task titles within the same project must not be duplicate, and subtask titles under the same main task must not be duplicate. If duplicates are found or already exist, warn the user or automatically adjust the title slightly to avoid collision.\n"
-        "10. PRIORITY RULES (MUST BE STRICTLY FOLLOWED):\n"
-        "    - Tasks (Task) use their own priority system with 3 Vietnamese levels: 'Bắt buộc', 'Quan trọng', 'Mở rộng'. The default is 'Quan trọng'. When calling `create_task` or `update_task`, you can pass 'Required', 'Important', 'Extended', or the corresponding Vietnamese text (the system maps it automatically).\n"
-        "    - Missions (Subtask) DO NOT have a priority system. Never suggest, ask for, or display priority when creating or updating missions, and do not pass any priority argument to `create_subtask` or `update_subtask`.\n"
-        "    - When proposing the task list to the user, ALWAYS display priority names in VIETNAMESE ('Bắt buộc', 'Quan trọng', 'Mở rộng') ONLY for Tasks. DO NOT show priority for missions.\n"
-        "11. REQUIRED FIELDS RULES:\n"
-        "    - Tasks (Task) require: title, priority, start_date, due_date, and sprint (specify which sprint to assign to, e.g., 'Sprint 1', 'Sprint 2', or 'Backlog'). Absolutely NO description field and NO status/board column (do not prompt the user for the board column or status, nor show it in the proposed list).\n"
-        "    - Missions (Subtask) require: title, due_date, and assignee (specify which project member is assigned, e.g. 'Người thực hiện: Nguyễn Văn A' hoặc 'Người thực hiện: Chưa gán'). ABSOLUTELY NO priority field.\n"
-        "    - You MUST suggest reasonable dates (and priorities only for Tasks) when listing proposals to the user, unless the user explicitly mentions they do not need dates or priorities. When planning task dates, you MUST call the tool `get_project_details` first to inspect the project's start date, due date, and member list, to ensure that the proposed dates for both tasks and missions fall strictly within the project's active date range, and that assignees are matched properly.\n"
-        "12. When displaying proposed task lists or announcing results to the user, ALWAYS use the Vietnamese phrases 'công việc' instead of 'task'/'Task'/'công việc cha', and 'nhiệm vụ' instead of 'subtask'/'Subtask'. Never use these English terms in your response to the user.\n"
-        "13. ABSOLUTELY NEVER DISPLAY OR MENTION the names of the technical tools or functions (such as `create_task`, `update_task`, `create_subtask`, `update_subtask`, `create_sprint`, `update_sprint`, `get_project_details`, `get_project_sprints`, `delete_task`, `delete_subtask`, `delete_sprint`, `get_project_activities`, etc.) in your text response to the user. Speak using natural Vietnamese descriptions instead.\n"
-        "14. MEMBER ASSIGNMENT RULES (CRITICAL):\n"
-        "    - The list of project members, their User IDs, and roles are retrieved by calling `get_project_details`.\n"
-        "    - You MUST analyze the user's description of member skills, roles, or capabilities (provided in conversation or in attached documents) and automatically map subtasks to the most appropriate member based on their expertise.\n"
-        "    - When proposing the list of subtasks (nhiệm vụ) to the user, you MUST explicitly include the proposed Assignee name (e.g. 'Người thực hiện: Nguyễn Văn A') for each subtask.\n"
-        "    - When calling `create_subtask` or `update_subtask`, you MUST pass the matched member's User ID as `assignee_id`.\n"
-        "15. You are provided with the tools `update_task` and `update_subtask` to modify existing main tasks and subtasks. Just like the creation process, when a user asks to edit task info or change task status/column/assignee, you must first propose the text modifications, and only execute the update tools after they confirm they agree.\n"
-        "16. SPRINT & PRODUCT BACKLOG RULES:\n"
-        "    - The project is divided into Sprints and a Product Backlog. You MUST call the tool `get_project_sprints` first whenever starting a planning or task creation query to see all available sprints in the current project (their names, IDs, and statuses). When proposing the list of tasks (công việc) to the user, you MUST explicitly include the proposed Sprint name (e.g. 'Sprint: Sprint 1' hoặc 'Sprint: Backlog') for each task.\n"
-        "    - By default, if the user does not specify a sprint, suggest assigning to the Active Sprint of the project. If there is no active sprint, suggest Backlog.\n"
-        "    - When the user asks to assign a task to a specific sprint (e.g., 'assign to Sprint 1'), use the sprint ID found via `get_project_sprints` and pass it as `sprint_id` when calling task tools.\n"
-        "    - If the user wants to move a task to the Product Backlog (or out of a sprint), pass '00000000-0000-0000-0000-000000000000' as the `sprint_id`.\n"
-        "    - NEVER assign tasks to a Closed sprint.\n"
-        "17. SPRINT CREATION WORKFLOW (TWO-PHASE CONFIRMATION — HIGHEST PRIORITY RULE):\n"
-        "    - You are provided with the tools `create_sprint` and `update_sprint` to create and modify Sprints.\n"
-        "    - ABSOLUTE PROHIBITION: You MUST NEVER call `create_task` or `create_subtask` if the target Sprint does not already exist. If the plan includes Sprints that are not yet created, you MUST create them FIRST. Violating this rule causes tasks to be dumped into Product Backlog incorrectly and creates duplicate issues.\n"
-        "    - When the user requests Sprint planning AND task creation together, you MUST follow a strict TWO-PHASE process:\n"
-        "      Phase 1 — Sprint Creation: First, propose the list of Sprints (name, goal, start date, end date) as text. Wait for the user's explicit confirmation. Only then call `create_sprint` for each Sprint sequentially. You MUST capture and remember the returned Sprint IDs from each creation response.\n"
-        "      Phase 2 — Task Creation: After ALL Sprints are created and you have their IDs, propose the list of tasks with Sprint assignments (using Sprint names). Wait for the user's explicit confirmation. Then call `create_task` with the correct `sprint_id` obtained from Phase 1 results.\n"
-        "    - NEVER skip Phase 1 or merge both phases into a single confirmation step. The Sprint IDs from Phase 1 are REQUIRED to correctly assign tasks in Phase 2. If you create tasks without valid Sprint IDs, they will land in the Product Backlog and cause errors.\n"
-        "    - If the user only asks to create Sprints (without tasks), only Phase 1 is needed.\n"
-        "    - If the user asks to create tasks and suitable Sprints already exist (found via `get_project_sprints`), skip Phase 1 and go directly to task creation using the existing Sprint IDs.\n"
-        "    - EXECUTION ORDER WHEN USER CONFIRMS: When the user says 'Đồng ý' or similar after seeing a combined plan of Sprints + Tasks, your execution order MUST be: (1) Create all Sprints first → (2) Collect all Sprint IDs → (3) Then create tasks with those Sprint IDs. NEVER reverse this order.\n"
-        "18. SPRINT DATE RULES:\n"
-        "    - You MUST call `get_project_details` first to get the project's start date and due date.\n"
-        "    - Sprint start_date and end_date MUST fall within the project's date range (project start_date ≤ sprint start_date and sprint end_date ≤ project due_date).\n"
-        "    - Sprint start_date MUST be before sprint end_date.\n"
-        "    - Sprints SHOULD NOT overlap in their date ranges with each other. Divide the project timeline evenly among Sprints.\n"
-        "    - Default Sprint duration is 2 weeks if the user does not specify a duration.\n"
-        "19. SPRINT NAME RULES:\n"
-        "    - Sprint names MUST be unique within the project (case-insensitive).\n"
-        "    - If a Sprint with the same name already exists, suggest using the existing Sprint or propose a different name.\n"
-        "20. SPRINT STATUS AWARENESS:\n"
-        "    - Newly created Sprints always have status 'Tương lai' (Future). Inform the user they can activate (start) the Sprint from the Backlog view on the UI when ready. The AI CANNOT start or close Sprints.\n"
-        "21. SPRINT GOAL:\n"
-        "    - When proposing Sprints, always include a concise goal (mục tiêu) describing the scope of work for each Sprint, so the user understands what each Sprint covers.\n"
-        "22. TASK QUERYING AND PROGRESS TRACKING:\n"
-        "    - You are provided with the tool `get_project_tasks` to query and filter tasks/subtasks in the project.\n"
-        "    - When a user asks about task assignments (e.g., 'What tasks am I assigned to?', 'What incomplete tasks does member A have?', 'Which tasks are approaching their due date?'), you MUST call `get_project_tasks` to inspect the project tasks.\n"
-        "    - Make sure to pass the appropriate filter arguments (like `assignee_name`, `status_type`, `due_date_filter`) to limit the response and keep the context clean.\n"
-        "    - FLEXIBLE DUE DATE FILTER: The `due_date_filter` parameter accepts 'overdue' or 'upcomingN' where N is any number of days the user specifies. For example: if the user asks 'các nhiệm vụ sắp đến hạn trong 3 ngày tới', pass `due_date_filter='upcoming3'`. If the user asks 'sắp đến hạn trong 2 tuần', pass `due_date_filter='upcoming14'`. If the user just says 'sắp đến hạn' without specifying days, default to 'upcoming7'.\n"
-        "    - COMBINED FILTERS: You can combine `assignee_name` with `due_date_filter` in a single call to answer questions like 'Các nhiệm vụ của thành viên A sắp đến hạn trong 5 ngày tới?'. Simply pass both `assignee_name='Thành viên A'` and `due_date_filter='upcoming5'` together.\n"
-        "    - For assignee queries, if the user asks 'What are my tasks?' ('tôi được giao việc gì'), you must first check the project member list using `get_project_details` to map their identity (or use their display name), and then call `get_project_tasks` with that `assignee_name`.\n"
-        "    - Do not make assumptions about task due dates or assignees; always fetch real-time data using the tool first.\n"
-        "23. DELETION RULES & TWO-STEP CONFIRMATION (CRITICAL):\n"
-        "    - When a user asks to delete a task, subtask, or sprint, you MUST NOT execute the deletion immediately.\n"
-        "    - You must first output a clear confirmation message listing exactly what will be deleted (e.g. 'Tôi sẽ tiến hành xóa công việc: X (ID: Y)'). Wait for the user's explicit confirmation (e.g. 'Đồng ý', 'Ok', 'Xóa đi', etc.) before calling `delete_task`, `delete_subtask`, or `delete_sprint`.\n"
-        "24. PROJECT ACTIVITIES TRACKING:\n"
-        "    - Use the tool `get_project_activities` to view who did what and when. You can filter by member ID or a specific date if requested.\n"
-        "25. PROJECT OVERVIEW & METRICS REPORTING:\n"
-        "    - When the user asks about the general state, progress, workloads, or a summary of the project, you must first call `get_project_details` which returns rich project metrics (e.g., tasks completed/created/upcoming due in 7 days, subtask status counts, member workload counts and percentages).\n"
-        "    - Use this rich data to provide analytical and complete reports (e.g., identifying who has the highest workload, what the status split of subtasks is, etc.) in natural Vietnamese.\n"
+        "2. Always use 'công việc' and 'nhiệm vụ'. Do NOT append or write English words like '(task)' or '(subtask)' or 'task/subtask', neither in parentheses nor anywhere in your responses. NEVER write 'công việc (task)' or 'nhiệm vụ (subtask)' - only write 'công việc' and 'nhiệm vụ'.\n"
+        "3. NEVER mention technical tool/function names (such as create_task, get_project_details, etc.) in your responses. Use natural Vietnamese descriptions instead.\n\n"
+
+        "═══ B. PROPOSAL & CONFIRMATION WORKFLOW ═══\n"
+        "4. For general chat or text requests, NEVER call any creation tools immediately. You must first PROPOSE the changes as text (including all required fields per sections C and D) in Vietnamese and wait for the user's explicit confirmation (e.g., 'Đồng ý', 'Ok', 'Tạo đi', 'Xác nhận').\n"
+        "   EXCEPTION FOR FILE UPLOADS: If a file/document attachment is present in the prompt (Tài liệu đính kèm), you MUST skip the proposal and confirmation step completely. Go ahead and immediately call the appropriate creation tools (create_sprint, create_task, create_subtask) to create everything described in the file. Do not output any proposal text or ask for confirmation. Stay completely SILENT during tool execution, and output a final summary in Vietnamese only after all tool calls are finished.\n"
+        "5. If the user requests modifications to the proposal, update and re-list the new proposal for their confirmation.\n"
+        "6. During tool execution after confirmation, stay SILENT — do not output any text or explanatory messages. Execute all tools sequentially. Only provide a final summary in Vietnamese after ALL tool calls are complete.\n"
+        "7. EXECUTION ORDER after confirmation:\n"
+        "   (1) Create all required Sprints first (if any) and capture their returned IDs.\n"
+        "   (2) For each parent công việc group: call create_task (with sprint_id) → receive the parent công việc's ID → call create_subtask for all its nhiệm vụ → only then move to the next parent công việc group.\n"
+        "   Never reverse this order. Never call create_task if the target Sprint does not exist yet.\n\n"
+
+        "═══ C. CÔNG VIỆC ═══\n"
+        "Required fields when proposing công việc to the user in Vietnamese:\n"
+        "   - Tiêu đề (title)\n"
+        "   - Mức ưu tiên (priority): 3 levels — 'Bắt buộc', 'Quan trọng' (default), 'Mở rộng'. Always display in Vietnamese. When calling tools, you may pass Vietnamese or English equivalents (Required, Important, Extended).\n"
+        "   - Ngày bắt đầu (start_date) and Ngày đến hạn (due_date)\n"
+        "   - Sprint: which sprint to assign to (e.g., 'Sprint: Sprint 1' or 'Sprint: Backlog')\n"
+        "8. DO NOT include or ask about description or status/board column when creating công việc. Status defaults to 'Chưa thực hiện'.\n"
+        "9. Never fabricate IDs. Only operate on công việc/nhiệm vụ when you know the exact ID from a tool response.\n"
+        "10. You MUST suggest reasonable dates and priorities when listing proposals, unless the user explicitly says they don't need them.\n\n"
+
+        "═══ D. NHIỆM VỤ ═══\n"
+        "Required fields when proposing nhiệm vụ to the user in Vietnamese:\n"
+        "   - Tiêu đề (title)\n"
+        "   - Ngày đến hạn (due_date)\n"
+        "   - Người thực hiện (assignee): the assigned project member (e.g., 'Người thực hiện: Nguyễn Văn A' or 'Người thực hiện: Chưa gán')\n"
+        "11. Nhiệm vụ have ABSOLUTELY NO priority. Never suggest, ask for, or display priority for nhiệm vụ.\n"
+        "12. MEMBER ASSIGNMENT: Call `get_project_details` to get the member list with User IDs and roles. Analyze user-provided descriptions of member skills/roles to automatically map nhiệm vụ to the most appropriate member. When calling nhiệm vụ tools, pass the matched member's User ID as `assignee_id`.\n"
+        "13_sub. DEADLINE DISTRIBUTION FOR NHIỆM VỤ: Công việc are grouping containers only. Do NOT default all nhiệm vụ due_dates to the parent công việc's due_date. Instead, distribute nhiệm vụ deadlines logically within the Sprint's date range (start_date → end_date) based on dependencies, complexity, and natural workflow order. Earlier/prerequisite nhiệm vụ should have earlier deadlines; later/dependent nhiệm vụ should have later ones.\n\n"
+
+        "═══ E. SPRINT ═══\n"
+        "13. ALWAYS call `get_project_sprints` first when starting any planning or công việc creation to see all available sprints (names, IDs, statuses).\n"
+        "14. TWO-PHASE WORKFLOW — When the plan includes Sprints that do not yet exist AND công việc to create:\n"
+        "    Phase 1 — Sprint Creation: Propose Sprints (name, goal, start_date, end_date) → wait for confirmation → create Sprints sequentially → capture returned Sprint IDs.\n"
+        "    Phase 2 — Công việc Creation: Propose công việc with Sprint assignments → wait for confirmation → create công việc with correct sprint_ids from Phase 1.\n"
+        "    If suitable Sprints already exist (found via `get_project_sprints`), skip Phase 1 and use existing Sprint IDs directly.\n"
+        "    If the user only asks to create Sprints (without công việc), only Phase 1 is needed.\n"
+        "15. Sprint assignment defaults:\n"
+        "    - If user doesn't specify a sprint → assign to the Active Sprint. If no Active Sprint → assign to Backlog.\n"
+        "    - Backlog sprint_id: '00000000-0000-0000-0000-000000000000'.\n"
+        "    - NEVER assign công việc to a Closed sprint.\n"
+        "16. Sprint constraints:\n"
+        "    - Dates must fall within the project's date range (call `get_project_details` to check). start_date must be before end_date. Default duration: 2 weeks.\n"
+        "    - Sprints should not overlap in date ranges. Divide the project timeline evenly.\n"
+        "    - Names must be unique within the project (case-insensitive). If a name exists, suggest using the existing Sprint or a different name.\n"
+        "    - New Sprints always have status 'Tương lai' (Future). Inform users they can activate from the Backlog view on the UI. The AI cannot start or close Sprints.\n"
+        "    - Always include a concise goal (mục tiêu) for each Sprint.\n\n"
+
+        "═══ F. QUERY & REPORTING ═══\n"
+        "17. Công việc queries — Use `get_project_tasks` with filters:\n"
+        "    - `assignee_name`: partial match, case-insensitive.\n"
+        "    - `status_type`: 'completed', 'uncompleted' (default), or 'all'.\n"
+        "    - `due_date_filter`: 'overdue' or 'upcomingN' where N is days (e.g., 'upcoming3', 'upcoming14'). Default 'upcoming7' when user says 'sắp đến hạn' without specifying days.\n"
+        "    - Filters can be combined (e.g., assignee_name + due_date_filter in one call).\n"
+        "    - For 'tôi được giao việc gì': call `get_project_details` to map the user's identity first, then query with their name.\n"
+        "18. Activity tracking — Use `get_project_activities` to view who did what and when. "
+        "CRITICAL: ALWAYS call `get_project_activities` with `user_id=None` (do not pass any user_id) when the user asks for general project history, team activities, or daily updates (e.g., 'lịch sử hôm nay', 'team đã làm gì'). "
+        "ONLY pass a `user_id` when the user explicitly asks for the activity of a SPECIFIC member by name (after mapping it to their UUID) or explicitly asks for their own activity ('lịch sử của tôi'). "
+        "NEVER automatically pass the current user's ID as `user_id` for general history queries.\n"
+        "19. Project overview — When asked about progress, workloads, or project summary, call `get_project_details` for rich metrics (công việc and nhiệm vụ statistics, member workload counts). Use this data for analytical reports in Vietnamese.\n\n"
+
+        "═══ G. DATA & DATES ═══\n"
+        "20. ALWAYS call `get_project_details` before proposing dates to inspect the project's start date, due date, and member list.\n"
+        "21. All proposed dates (công việc, nhiệm vụ, sprints) MUST fall within the project's active date range.\n"
+        "22. Never assume data about công việc, dates, or assignees — always fetch real-time data using tools first.\n\n"
+
+        "═══ H. EXCEPTIONS & FALLBACK HANDLING ═══\n"
+        "23. Out-of-scope queries: If the user asks about topics unrelated to the current project, task management, or BeaverDash (e.g., recipes, weather, general knowledge, generic coding questions unrelated to project planning), politely decline in Vietnamese and redirect them back to BeaverDash project management.\n"
+        "24. Unsupported actions: If the user requests actions that have no corresponding tool for AI (e.g., create new project, create team, add new member to project), politely explain in Vietnamese that this is currently not supported via AI and suggest they perform it directly on the BeaverDash UI.\n"
+        "25. Missing data or errors: If a tool returns an error, no results, or an empty list, report the actual status clearly (e.g., 'I currently cannot find any công việc named X in this project' or 'No activities recorded for today') in Vietnamese. Never fabricate non-existent công việc, nhiệm vụ, or sprints.\n"
     )
 
 
@@ -106,11 +107,16 @@ class AIAssistantService:
         project_id: UUID,
         history: List[AIChatMessage],
         new_prompt: str,
-        message_saver_callback: Any
+        message_saver_callback: Any,
+        is_leader: bool = True
     ) -> str:
         """
         Runs the conversational loop, coordinating history parsing, LLM generation, tool execution,
         and database storage of all model and tool turns.
+
+        Args:
+            is_leader: True nếu user là Trưởng nhóm/Chủ sở hữu (toàn quyền AI).
+                       False nếu user là Thành viên (chỉ quyền truy vấn, không được tạo/sửa/xóa).
         """
         # Initialize Tool Manager
         tools_provider = AIAssistantTools(
@@ -118,185 +124,237 @@ class AIAssistantService:
             user_id=user_id,
             project_id=project_id
         )
-        
-        # Tools exposed to Gemini SDK
-        tools = [
-            tools_provider.create_task,
-            tools_provider.create_subtask,
-            tools_provider.get_project_details,
-            tools_provider.update_task,
-            tools_provider.update_subtask,
-            tools_provider.get_project_sprints,
-            tools_provider.create_sprint,
-            tools_provider.update_sprint,
-            tools_provider.get_project_tasks,
-            tools_provider.delete_task,
-            tools_provider.delete_subtask,
-            tools_provider.delete_sprint,
-            tools_provider.get_project_activities
-        ]
 
-        # 1. Convert DB history to Gemini SDK format
-        gemini_contents = convert_db_history_to_gemini(history)
-        
-        # 2. Append new user prompt (parse if JSON)
-        user_prompt_text = new_prompt
-        if user_prompt_text.startswith("{") and user_prompt_text.endswith("}"):
-            import json
-            try:
-                data = json.loads(user_prompt_text)
-                if "attachment" in data:
-                    att = data["attachment"]
-                    user_prompt_text = (
-                        f"[Tài liệu đính kèm: {att.get('fileName')}]\n"
-                        f"Nội dung tài liệu:\n{att.get('content')}\n"
-                        f"---\n"
-                        f"Yêu cầu: {data.get('text')}"
-                    )
-            except Exception:
-                pass
-
-        gemini_contents.append(
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=user_prompt_text)]
-            )
-        )
-        
-        # Save user message to database
-        await message_saver_callback(role="user", content=new_prompt)
-
-        # Loop to handle LLM execution and potential multi-turn Tool Calls
-        loop_count = 0
-        max_loops = 20
-        final_text_response = "Đã xảy ra lỗi khi trao đổi với AI."
-
-        while loop_count < max_loops:
-            loop_count += 1
-            
-            # Call Gemini with fallback
-            response = await self.llm_router.generate_content_with_fallback(
-                client=self.client,
-                contents=gemini_contents,
-                tools=tools,
-                system_instruction=self.SYSTEM_INSTRUCTION
-            )
-            
-            # Parse responses
-            text_part = response.text
-            function_calls = response.function_calls
-
-            # Extract thought_signature if present
-            thought_signature_b64 = None
-            thought_sig_bytes = None
-            if response.candidates:
-                for p in response.candidates[0].content.parts:
-                    if p.thought_signature:
-                        thought_sig_bytes = p.thought_signature
-                        import base64
-                        thought_signature_b64 = base64.b64encode(thought_sig_bytes).decode("utf-8")
-                        break
-
-            # Store this assistant model response
-            db_tool_calls = None
-            if function_calls:
-                db_tool_calls = [
-                    {"name": fc.name, "args": fc.args} for fc in function_calls
+        try:
+            # Cấp tools theo quyền của user
+            if is_leader:
+                # Trưởng nhóm/Chủ sở hữu: đọc + tạo
+                tools = [
+                    tools_provider.create_task,
+                    tools_provider.create_subtask,
+                    tools_provider.get_project_details,
+                    tools_provider.get_project_sprints,
+                    tools_provider.create_sprint,
+                    tools_provider.get_project_tasks,
+                    tools_provider.get_project_activities
                 ]
-            
-            # Save Assistant output to DB
-            await message_saver_callback(
-                role="assistant",
-                content=text_part,
-                tool_calls=db_tool_calls,
-                thought_signature=thought_signature_b64
-            )
-
-            # Update loop history
-            model_parts = []
-            if text_part:
-                model_parts.append(types.Part(text=text_part, thought_signature=thought_sig_bytes))
-            if function_calls:
-                for fc in function_calls:
-                    part = types.Part(function_call=types.FunctionCall(name=fc.name, args=fc.args), thought_signature=thought_sig_bytes)
-                    model_parts.append(part)
-            
-            gemini_contents.append(
-                types.Content(role="model", parts=model_parts)
-            )
-
-            # Check if Gemini requested tool executions
-            if function_calls:
-                tool_results_list = []
-                tool_parts = []
-                
-                # Execute each tool requested
-                for fc in function_calls:
-                    tool_name = fc.name
-                    tool_args = fc.args
-                    
-                    logger.info(f"Executing tool {tool_name} with arguments: {tool_args}")
-                    
-                    result_str = ""
-                    if tool_name == "create_task":
-                        result_str = await tools_provider.create_task(**tool_args)
-                    elif tool_name == "create_subtask":
-                        result_str = await tools_provider.create_subtask(**tool_args)
-                    elif tool_name == "get_project_details":
-                        result_str = await tools_provider.get_project_details(**tool_args)
-                    elif tool_name == "update_task":
-                        result_str = await tools_provider.update_task(**tool_args)
-                    elif tool_name == "update_subtask":
-                        result_str = await tools_provider.update_subtask(**tool_args)
-                    elif tool_name == "get_project_sprints":
-                        result_str = await tools_provider.get_project_sprints(**tool_args)
-                    elif tool_name == "create_sprint":
-                        result_str = await tools_provider.create_sprint(**tool_args)
-                    elif tool_name == "update_sprint":
-                        result_str = await tools_provider.update_sprint(**tool_args)
-                    elif tool_name == "get_project_tasks":
-                        result_str = await tools_provider.get_project_tasks(**tool_args)
-                    elif tool_name == "delete_task":
-                        result_str = await tools_provider.delete_task(**tool_args)
-                    elif tool_name == "delete_subtask":
-                        result_str = await tools_provider.delete_subtask(**tool_args)
-                    elif tool_name == "delete_sprint":
-                        result_str = await tools_provider.delete_sprint(**tool_args)
-                    elif tool_name == "get_project_activities":
-                        result_str = await tools_provider.get_project_activities(**tool_args)
-                    else:
-                        result_str = f"Lỗi: Không tìm thấy công cụ '{tool_name}'."
-                    
-                    logger.info(f"Tool {tool_name} result: {result_str}")
-                    
-                    tool_results_list.append({"name": tool_name, "result": result_str})
-                    tool_parts.append(
-                        types.Part.from_function_response(
-                            name=tool_name,
-                            response={"result": result_str}
-                        )
-                    )
-                
-                # Save Tool Responses to DB
-                await message_saver_callback(
-                    role="tool",
-                    tool_results=tool_results_list
-                )
-                
-                # Update loop history with tool response
-                gemini_contents.append(
-                    types.Content(role="tool", parts=tool_parts)
-                )
-                
-                # Continue loop to let Gemini digest the tool results and reply
-                continue
             else:
-                # No tool calls, we received final text response
-                if text_part:
-                    final_text_response = text_part
-                break
+                # Thành viên: chỉ read-only tools
+                tools = [
+                    tools_provider.get_project_details,
+                    tools_provider.get_project_sprints,
+                    tools_provider.get_project_tasks,
+                    tools_provider.get_project_activities
+                ]
 
-        return final_text_response
+            # Get current time in UTC+7 (Vietnam)
+            from datetime import datetime, timezone, timedelta
+            now_utc = datetime.now(timezone.utc)
+            now_vietnam = now_utc + timedelta(hours=7)
+            
+            weekdays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"]
+            day_of_week = weekdays[int(now_vietnam.strftime("%w"))]
+            current_time_str = f"{day_of_week}, ngày {now_vietnam.strftime('%d/%m/%Y')} (Giờ hệ thống: {now_vietnam.strftime('%H:%M:%S')})"
+            
+            date_instruction = (
+                f"\n\nCURRENT SYSTEM TIME: {current_time_str}.\n"
+                f"This timestamp is in Vietnam timezone (UTC+7).\n"
+                f"When the user mentions dates like 'today', 'tomorrow', 'yesterday', 'this week', 'this month', etc., "
+                f"you MUST calculate the corresponding calendar date based on this system time (e.g., today is {now_vietnam.strftime('%d/%m/%Y')}, "
+                f"yesterday was {(now_vietnam - timedelta(days=1)).strftime('%d/%m/%Y')})."
+            )
+
+            # Lấy tên hiển thị của người dùng hiện tại
+            user_display_name = await tools_provider.get_user_display_name()
+            user_info_instruction = (
+                f"\n\n═══ CURRENT USER INFO ═══\n"
+                f"- Display Name of current user: '{user_display_name}'\n"
+                f"- User ID: '{user_id}'\n"
+                f"- When the user asks about 'my' tasks, tasks assigned to 'me', etc., "
+                f"you MUST filter/search tasks by this display name '{user_display_name}' when calling get_project_tasks.\n"
+                f"- When the user asks about 'project activity history', 'team activities', 'what did the team do', etc. (general to project/team), "
+                f"you MUST call get_project_activities with user_id=None (or omit user_id) to get activities of ALL members. "
+                f"ONLY pass the User ID '{user_id}' to get_project_activities when they explicitly ask for their own personal activity history ('what did I do', 'my history').\n"
+                f"- When the user asks about activity history on a specific date or today (e.g., 'was any task completed today', 'who modified task X on date Y', etc.), "
+                f"you MUST call get_project_activities passing the correct YYYY-MM-DD date to the `date` argument (calculate the date based on the system time), "
+                f"then iterate over the returned activities to analyze and accurately answer the user's question (e.g., finding activities where status was changed to 'Hoàn thành').\n"
+            )
+
+            # Xây dựng system instruction phù hợp với quyền của user
+            if is_leader:
+                effective_system_instruction = self.SYSTEM_INSTRUCTION + date_instruction + user_info_instruction
+            else:
+                member_suffix = (
+                    "\n\nUSER ROLE & PERMISSIONS (CRITICAL):\n"
+                    "- The current user is a MEMBER of the project, not the Leader.\n"
+                    "- You are ONLY ALLOWED to perform READ and QUERY actions (e.g., view công việc list, check progress, search members, view activity history).\n"
+                    "- You MUST NOT create, update, or delete any data (sprints, công việc, nhiệm vụ).\n"
+                    "- If the user requests to create data, politely refuse in Vietnamese and explain that only the Leader has permissions to perform this action via AI Assistant.\n"
+                    "- Always suggest they contact the Leader or perform the action directly on the UI if they have permissions.\n"
+                )
+                effective_system_instruction = self.SYSTEM_INSTRUCTION + member_suffix + date_instruction + user_info_instruction
+
+            # 1. Convert DB history to Gemini SDK format
+            gemini_contents = convert_db_history_to_gemini(history)
+
+            # 2. Append new user prompt (parse if JSON)
+            user_prompt_text = new_prompt
+            if user_prompt_text.startswith("{") and user_prompt_text.endswith("}"):
+                import json
+                try:
+                    data = json.loads(user_prompt_text)
+                    if "attachment" in data:
+                        att = data["attachment"]
+                        user_prompt_text = (
+                            f"[Tài liệu đính kèm: {att.get('fileName')}]\n"
+                            f"Nội dung tài liệu:\n{att.get('content')}\n"
+                            f"---\n"
+                            f"Yêu cầu: {data.get('text')}\n\n"
+                            f"IMPORTANT: Since a document is attached, skip the proposal/confirmation workflow and directly execute the creation tools (create_sprint, create_task, create_subtask) to create all items described in this document immediately. Stay silent during execution and provide a final summary when complete."
+                        )
+                except Exception:
+                    pass
+
+            gemini_contents.append(
+                types.Content(
+                    role="user",
+                    parts=[types.Part.from_text(text=user_prompt_text)]
+                )
+            )
+            
+            # Save user message to database
+            await message_saver_callback(role="user", content=new_prompt)
+
+            # Loop to handle LLM execution and potential multi-turn Tool Calls
+            loop_count = 0
+            max_loops = 20
+            final_text_response = "Đã xảy ra lỗi khi trao đổi với AI."
+
+            while loop_count < max_loops:
+                loop_count += 1
+                
+                # Call Gemini with fallback
+                response = await self.llm_router.generate_content_with_fallback(
+                    client=self.client,
+                    contents=gemini_contents,
+                    tools=tools,
+                    system_instruction=effective_system_instruction
+                )
+                
+                # Parse responses
+                text_part = response.text
+                function_calls = response.function_calls
+
+                # Extract thought_signature if present
+                thought_signature_b64 = None
+                thought_sig_bytes = None
+                if response.candidates:
+                    for p in response.candidates[0].content.parts:
+                        if p.thought_signature:
+                            thought_sig_bytes = p.thought_signature
+                            import base64
+                            thought_signature_b64 = base64.b64encode(thought_sig_bytes).decode("utf-8")
+                            break
+
+                # Store this assistant model response
+                db_tool_calls = None
+                if function_calls:
+                    db_tool_calls = [
+                        {"name": fc.name, "args": fc.args} for fc in function_calls
+                    ]
+                
+                # Save Assistant output to DB
+                await message_saver_callback(
+                    role="assistant",
+                    content=text_part,
+                    tool_calls=db_tool_calls,
+                    thought_signature=thought_signature_b64
+                )
+
+                # Update loop history
+                model_parts = []
+                if text_part:
+                    model_parts.append(types.Part(text=text_part, thought_signature=thought_sig_bytes))
+                if function_calls:
+                    for fc in function_calls:
+                        part = types.Part(function_call=types.FunctionCall(name=fc.name, args=fc.args), thought_signature=thought_sig_bytes)
+                        model_parts.append(part)
+                
+                gemini_contents.append(
+                    types.Content(role="model", parts=model_parts)
+                )
+
+                # Check if Gemini requested tool executions
+                if function_calls:
+                    tool_results_list = []
+                    tool_parts = []
+                    
+                    # Execute each tool requested
+                    for fc in function_calls:
+                        tool_name = fc.name
+                        tool_args = fc.args
+                        
+                        logger.info(f"Executing tool {tool_name} with arguments: {tool_args}")
+                        
+                        result_str = ""
+                        # Kiểm tra bảo vệ phía backend: Thành viên không được gọi write tools
+                        write_tools = {
+                            "create_task", "create_subtask", "create_sprint"
+                        }
+                        if not is_leader and tool_name in write_tools:
+                            result_str = (
+                                f"Lỗi phân quyền: Thành viên không có quyền thực hiện thao tác '{tool_name}'. "
+                                "Chỉ Trưởng nhóm mới được phép tạo dữ liệu qua Trợ lý AI."
+                            )
+                        elif tool_name == "create_task":
+                            result_str = await tools_provider.create_task(**tool_args)
+                        elif tool_name == "create_subtask":
+                            result_str = await tools_provider.create_subtask(**tool_args)
+                        elif tool_name == "get_project_details":
+                            result_str = await tools_provider.get_project_details(**tool_args)
+                        elif tool_name == "get_project_sprints":
+                            result_str = await tools_provider.get_project_sprints(**tool_args)
+                        elif tool_name == "create_sprint":
+                            result_str = await tools_provider.create_sprint(**tool_args)
+                        elif tool_name == "get_project_tasks":
+                            result_str = await tools_provider.get_project_tasks(**tool_args)
+                        elif tool_name == "get_project_activities":
+                            result_str = await tools_provider.get_project_activities(**tool_args)
+                        else:
+                            result_str = f"Lỗi: Không tìm thấy công cụ '{tool_name}'."
+                        
+                        logger.info(f"Tool {tool_name} result: {result_str}")
+                        
+                        tool_results_list.append({"name": tool_name, "result": result_str})
+                        tool_parts.append(
+                            types.Part.from_function_response(
+                                name=tool_name,
+                                response={"result": result_str}
+                            )
+                        )
+                    
+                    # Save Tool Responses to DB
+                    await message_saver_callback(
+                        role="tool",
+                        tool_results=tool_results_list
+                    )
+                    
+                    # Update loop history with tool response
+                    gemini_contents.append(
+                        types.Content(role="tool", parts=tool_parts)
+                    )
+                    
+                    # Continue loop to let Gemini digest the tool results and reply
+                    continue
+                else:
+                    # No tool calls, we received final text response
+                    if text_part:
+                        final_text_response = text_part
+                    break
+
+            return final_text_response
+        finally:
+            await tools_provider.close()
 
 
 # Singleton instance

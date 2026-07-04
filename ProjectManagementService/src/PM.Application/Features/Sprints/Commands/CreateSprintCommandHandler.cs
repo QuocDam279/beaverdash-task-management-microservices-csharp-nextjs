@@ -35,12 +35,12 @@ public class CreateSprintCommandHandler : IRequestHandler<CreateSprintCommand, G
             throw new UnauthorizedAccessException("Bạn không có quyền thêm Sprint vào Project này.");
         }
 
-        var isMember = await _dbContext.TeamMembers.AnyAsync(
+        var member = await _dbContext.TeamMembers.FirstOrDefaultAsync(
             tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, 
             cancellationToken);
 
-        if (!isMember)
-            throw new UnauthorizedAccessException("Bạn không có quyền thêm Sprint vào Project này.");
+        if (member == null || (member.Role != "leader" && member.Role != "Owner"))
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền thêm Sprint vào Project này.");
 
         // Validate name uniqueness in the project
         var normalizedName = request.Name.Trim().ToLower();

@@ -51,12 +51,7 @@ public class RestoreTaskCommandHandler : IRequestHandler<RestoreTaskCommand, boo
 
         bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
 
-        var lastDeleteLog = await _dbContext.ActivityLogs
-            .Where(al => al.EntityType == "task" && al.EntityId == request.TaskId && al.ActionType == "deleted")
-            .OrderByDescending(al => al.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        bool isDeleter = lastDeleteLog != null && lastDeleteLog.UserId == currentUserId;
+        bool isDeleter = task.DeletedByUserId == currentUserId;
 
         if (!isLeader && !isDeleter)
             throw new UnauthorizedAccessException("Chỉ có người xóa công việc hoặc trưởng nhóm mới có quyền khôi phục.");

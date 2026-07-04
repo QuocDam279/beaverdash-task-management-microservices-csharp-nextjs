@@ -53,6 +53,17 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
         if (requestingMember == null)
             throw new UnauthorizedAccessException("Bạn không có quyền di chuyển Task trong Project này.");
 
+        bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
+        if (!isLeader)
+        {
+            var hasSubtaskOwnership = await _dbContext.SubTasks
+                .AnyAsync(st => st.TaskId == task.Id && st.AssigneeUserId == currentUserId && st.DeletedAt == null, cancellationToken);
+            if (!hasSubtaskOwnership)
+            {
+                throw new UnauthorizedAccessException("Bạn chỉ được di chuyển thẻ công việc nếu được giao nhiệm vụ con trong công việc đó.");
+            }
+        }
+
         var oldColumnId = task.BoardColumnId;
         var newColumnId = request.NewBoardColumnId;
 
@@ -65,6 +76,17 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
 
             if (newColumn == null)
                 throw new InvalidOperationException("Target column not found.");
+
+            if (newColumn.IsDone)
+            {
+                var hasIncompleteSubtasks = await _dbContext.SubTasks
+                    .AnyAsync(st => st.TaskId == task.Id && !st.IsCompleted && st.DeletedAt == null, cancellationToken);
+                
+                if (hasIncompleteSubtasks)
+                {
+                    throw new InvalidOperationException("Không thể chuyển công việc sang cột hoàn thành vì vẫn còn nhiệm vụ con chưa hoàn thành.");
+                }
+            }
 
             // Cập nhật trường CompletedAt
             task.CompletedAt = newColumn.IsDone ? DateTime.UtcNow : null;

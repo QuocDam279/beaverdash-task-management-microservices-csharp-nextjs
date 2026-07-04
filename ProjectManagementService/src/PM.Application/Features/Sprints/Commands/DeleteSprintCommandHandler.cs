@@ -46,12 +46,12 @@ public class DeleteSprintCommandHandler : IRequestHandler<DeleteSprintCommand, b
             throw new UnauthorizedAccessException("Bạn không có quyền quản lý Sprint của Project này.");
         }
 
-        var isMember = await _dbContext.TeamMembers.AnyAsync(
+        var member = await _dbContext.TeamMembers.FirstOrDefaultAsync(
             tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, 
             cancellationToken);
 
-        if (!isMember)
-            throw new UnauthorizedAccessException("Bạn không có quyền quản lý Sprint của Project này.");
+        if (member == null || (member.Role != "leader" && member.Role != "Owner"))
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền quản lý Sprint của Project này.");
 
         // Đẩy tất cả task của Sprint về Backlog
         foreach (var task in sprint.TaskItems)

@@ -77,6 +77,13 @@ public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand,
         };
         _dbContext.BoardColumns.AddRange(defaultColumns);
 
+        project.AddDomainEvent(new PM.Domain.Events.ProjectCreatedEvent(
+            project.Id,
+            project.Name,
+            project.TeamId!.Value,
+            currentUserId
+        ));
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         // --- Đồng bộ sang AIAssistant Service qua Event Bus ---

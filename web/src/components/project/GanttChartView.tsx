@@ -223,7 +223,7 @@ export function GanttChartView({
                     {hasDates ? (
                       overlapsCurrentMonth && sDateObj && dDateObj ? (
                         <div
-                          className={`absolute h-7 rounded-md border shadow-xs bg-gradient-to-r flex flex-col justify-between overflow-hidden p-0.5 select-none ${getPriorityColor(task.priority)}`}
+                          className={`absolute h-8.5 rounded-md border shadow-sm bg-gradient-to-r flex flex-col justify-between overflow-hidden p-1 select-none ${getPriorityColor(task.priority)}`}
                           style={{ 
                             left: `calc(((${startDay} - 1) / ${daysInMonth}) * 100% + 2px)`, 
                             width: `calc((${spanDays} / ${daysInMonth}) * 100% - 4px)`, 
@@ -231,8 +231,8 @@ export function GanttChartView({
                           }}
                           title={`${task.title} (${sDateObj.toLocaleDateString("vi-VN")} - ${dDateObj.toLocaleDateString("vi-VN")})`}
                         >
-                          <span className="text-[9px] font-extrabold truncate px-1 mt-0.5">{percent}%</span>
-                          <div className="w-full bg-black/15 h-1 rounded-sm overflow-hidden">
+                          <span className="text-[11px] font-black truncate px-1 select-none leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">{percent}%</span>
+                          <div className="w-full bg-black/20 h-1.25 rounded-sm overflow-hidden">
                             <div className="bg-white h-full transition-all duration-300" style={{ width: `${percent}%` }} />
                           </div>
                         </div>

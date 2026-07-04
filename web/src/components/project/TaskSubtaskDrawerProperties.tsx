@@ -3,6 +3,8 @@
 import * as React from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { SubTask } from "@/types/task";
+import { User } from "@/types/auth";
+import { useAlertConfirm } from "@/components/providers/AlertConfirmProvider";
 
 /**
  * @component TaskSubtaskDrawerProperties
@@ -19,6 +21,8 @@ interface TaskSubtaskDrawerPropertiesProps {
   canManageSubtasks: boolean;
   readOnly?: boolean;
   isPersonalProject?: boolean;
+  currentUser: User | null;
+  canModifyAssigneeDirectly: boolean;
 }
 
 export function TaskSubtaskDrawerProperties({
@@ -31,7 +35,10 @@ export function TaskSubtaskDrawerProperties({
   canManageSubtasks,
   readOnly = false,
   isPersonalProject = false,
+  currentUser,
+  canModifyAssigneeDirectly,
 }: TaskSubtaskDrawerPropertiesProps) {
+  const { confirm } = useAlertConfirm();
   const [localDueDate, setLocalDueDate] = React.useState(subtask.dueDate ? subtask.dueDate.substring(0, 10) : "");
 
   React.useEffect(() => {
@@ -49,39 +56,98 @@ export function TaskSubtaskDrawerProperties({
           <div className="flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Người thực hiện:</span>
             <div className="relative h-7 w-40 flex items-center justify-end">
-              <select
-                value={subtask.assigneeUserId || ""}
-                onChange={(e) => onSubtaskAssigneeChange(subtask.id, e.target.value)}
-                disabled={!canManageSubtasks || readOnly}
-                className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
-                  canManageSubtasks && !readOnly ? "cursor-pointer" : "cursor-not-allowed"
-                }`}
-              >
-                <option value="">Chưa giao</option>
-                {assignees.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.displayName}
-                  </option>
-                ))}
-              </select>
-              
-              <div className="flex items-center gap-1.5 pointer-events-none bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs">
-                {subtask.assigneeUser ? (
-                  <>
-                    <Avatar
-                      src={subtask.assigneeUser.avatar}
-                      alt={subtask.assigneeUser.displayName}
-                      className="h-4 w-4 rounded-full"
-                    />
-                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
-                      {subtask.assigneeUser.displayName}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Chưa giao</span>
-                )}
-                {canManageSubtasks && !readOnly && <span className="text-[9px] text-slate-400 dark:text-slate-500">▼</span>}
-              </div>
+              {canModifyAssigneeDirectly ? (
+                <>
+                  <select
+                    value={subtask.assigneeUserId || ""}
+                    onChange={(e) => onSubtaskAssigneeChange(subtask.id, e.target.value)}
+                    disabled={!canManageSubtasks || readOnly}
+                    className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
+                      canManageSubtasks && !readOnly ? "cursor-pointer" : "cursor-not-allowed"
+                    }`}
+                  >
+                    <option value="">Chưa giao</option>
+                    {assignees.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <div className="flex items-center gap-1.5 pointer-events-none bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs">
+                    {subtask.assigneeUser ? (
+                      <>
+                        <Avatar
+                          src={subtask.assigneeUser.avatar}
+                          alt={subtask.assigneeUser.displayName}
+                          className="h-4 w-4 rounded-full"
+                        />
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+                          {subtask.assigneeUser.displayName}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Chưa giao</span>
+                    )}
+                    {canManageSubtasks && !readOnly && <span className="text-[9px] text-slate-400 dark:text-slate-500">▼</span>}
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                  {!subtask.assigneeUserId ? (
+                    <button
+                      onClick={() => currentUser && onSubtaskAssigneeChange(subtask.id, currentUser.id)}
+                      className="text-[#1868db] dark:text-[#579dff] hover:underline cursor-pointer border border-[#1868db]/30 dark:border-[#579dff]/30 px-2 py-0.5 rounded-[4px] bg-blue-50/30 dark:bg-blue-950/10 text-[10px]"
+                      title="Nhận thực hiện nhiệm vụ này"
+                    >
+                      Nhận nhiệm vụ
+                    </button>
+                  ) : subtask.assigneeUserId === currentUser?.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1 bg-white dark:bg-[#2c3338] border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs select-none">
+                        <Avatar
+                          src={subtask.assigneeUser?.avatar}
+                          alt={subtask.assigneeUser?.displayName || ""}
+                          className="h-4 w-4 rounded-full"
+                        />
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[80px]">
+                          {subtask.assigneeUser?.displayName}
+                        </span>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const confirmLeave = await confirm(
+                            "Bạn có chắc chắn muốn hủy nhận (rời khỏi) nhiệm vụ này?",
+                            {
+                              title: "Hủy nhận nhiệm vụ",
+                              confirmLabel: "Rời nhiệm vụ",
+                              variant: "danger",
+                            }
+                          );
+                          if (confirmLeave) {
+                            onSubtaskAssigneeChange(subtask.id, "");
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-755 hover:underline cursor-pointer text-[10px]"
+                        title="Hủy nhận nhiệm vụ"
+                      >
+                        Rời
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-[#2c3338]/30 border border-slate-200 dark:border-[#353e47] px-2 py-0.5 rounded shadow-2xs opacity-80 cursor-default select-none pointer-events-none">
+                      <Avatar
+                        src={subtask.assigneeUser?.avatar}
+                        alt={subtask.assigneeUser?.displayName || ""}
+                        className="h-4 w-4 rounded-full"
+                      />
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+                        {subtask.assigneeUser?.displayName}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -106,7 +172,7 @@ export function TaskSubtaskDrawerProperties({
             </svg>
             <input
               type="date"
-              disabled={!canManageSubtasks || readOnly}
+              disabled={!canModifyAssigneeDirectly || readOnly}
               value={localDueDate}
               min={taskStartDate ? taskStartDate.substring(0, 10) : undefined}
               max={taskDueDate ? taskDueDate.substring(0, 10) : undefined}
@@ -122,7 +188,9 @@ export function TaskSubtaskDrawerProperties({
                   e.currentTarget.blur();
                 }
               }}
-              className="text-[11px] text-[#292a2e] dark:text-[#deebff] font-bold bg-transparent border-none focus:outline-none w-24 cursor-pointer"
+              className={`text-[11px] text-[#292a2e] dark:text-[#deebff] font-bold bg-transparent border-none focus:outline-none w-24 ${
+                canModifyAssigneeDirectly && !readOnly ? "cursor-pointer" : "cursor-not-allowed"
+              }`}
             />
           </div>
         </div>

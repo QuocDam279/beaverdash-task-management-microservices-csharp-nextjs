@@ -26,6 +26,8 @@ export function CalendarGrid({
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const [tooltipPos, setTooltipPos] = React.useState({ top: 0, left: 0 });
 
+  const [activeMoreDate, setActiveMoreDate] = React.useState<{ date: Date; tasks: TaskItem[] } | null>(null);
+
   React.useEffect(() => {
     if (hoveredTask) {
       const tooltipHeight = tooltipRef.current?.offsetHeight || 180;
@@ -115,7 +117,7 @@ export function CalendarGrid({
   const todayStr = getLocalDateString(new Date());
 
   return (
-    <div className="flex-1 min-h-0 w-full overflow-hidden border border-slate-200 dark:border-[#353e47] rounded-lg flex flex-col shadow-xs bg-slate-50/20 dark:bg-[#161a1d]/30">
+    <div className="w-full border border-slate-200 dark:border-[#353e47] rounded-lg flex flex-col shadow-xs bg-slate-50/20 dark:bg-[#161a1d]/30">
       <div className="grid grid-cols-7 border-b border-slate-200 dark:border-[#353e47] bg-slate-50/70 dark:bg-[#1d2125] select-none text-center">
         {weekdayHeaders.map((day) => (
           <div key={day} className="py-2.5 text-[11px] font-bold text-[#6b6e76] dark:text-slate-400 border-r border-slate-200 dark:border-[#2c3338] last:border-r-0 uppercase tracking-wide">
@@ -124,7 +126,7 @@ export function CalendarGrid({
         ))}
       </div>
 
-      <div className={`flex-1 grid grid-cols-7 ${viewMode === "month" ? "grid-rows-5 md:grid-rows-6" : "grid-rows-1"} min-h-[480px] divide-x divide-y divide-slate-200 dark:divide-[#2c3338]`}>
+      <div className="grid grid-cols-7 divide-x divide-y divide-slate-200 dark:divide-[#2c3338]">
         {cells.map((cell, index) => {
           const dateStr = getLocalDateString(cell.date);
           const isToday = todayStr === dateStr;
@@ -132,16 +134,19 @@ export function CalendarGrid({
             ? tasks.filter((t) => getLocalDateString(t.dueDate) === dateStr)
             : [];
 
+          const showMore = cellTasks.length > 3;
+          const visibleTasks = showMore ? cellTasks.slice(0, 3) : cellTasks;
+
           return (
             <div
               key={index}
-              className={`p-1.5 flex flex-col justify-between border-b border-r border-slate-200 dark:border-[#2c3338] last:border-r-0 transition-all min-h-[96px] ${
+              className={`p-1.5 flex flex-col justify-start gap-1 border-b border-r border-slate-200 dark:border-[#2c3338] last:border-r-0 transition-all min-h-[96px] ${
                 cell.isCurrentMonth 
                   ? "bg-white dark:bg-[#22272b] hover:bg-slate-50/30 dark:hover:bg-[#2c3338]/10" 
                   : "bg-slate-50/40 dark:bg-[#161a1d]/40 text-slate-400 dark:text-slate-500"
               }`}
             >
-              <div className="flex justify-between items-center text-[11px] font-bold">
+              <div className="flex justify-between items-center text-[11px] font-bold w-full">
                 {cell.isCurrentMonth ? (
                   isToday ? (
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1868db] dark:bg-[#579dff] text-white dark:text-[#1d2125] font-bold">
@@ -162,8 +167,8 @@ export function CalendarGrid({
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto mt-1.5 space-y-1 max-h-[85px] scrollbar-none">
-                {cellTasks.map((task) => (
+              <div className="w-full mt-1 space-y-1 pb-1">
+                {visibleTasks.map((task) => (
                   <div
                     key={task.id}
                     onClick={() => onTaskClick(task)}
@@ -184,6 +189,21 @@ export function CalendarGrid({
                     {task.title}
                   </div>
                 ))}
+
+                {showMore && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMoreDate({
+                        date: cell.date,
+                        tasks: cellTasks
+                      });
+                    }}
+                    className="w-full text-left text-[9px] font-extrabold text-[#1868db] dark:text-[#579dff] hover:underline cursor-pointer pt-0.5"
+                  >
+                    + {cellTasks.length - 3} thêm
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -283,6 +303,56 @@ export function CalendarGrid({
               </>
             );
           })()}
+        </div>
+      )}
+
+      {activeMoreDate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop with blur */}
+          <div 
+            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setActiveMoreDate(null)} 
+          />
+          
+          {/* Centered Modal Card */}
+          <div
+            className="relative bg-white dark:bg-[#1c2126] w-full max-w-sm rounded-xl border border-slate-200 dark:border-[#353e47] shadow-2xl flex flex-col p-4 animate-in fade-in zoom-in-95 duration-150 text-xs text-[#292a2e] dark:text-[#deebff]"
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center pb-2.5 mb-3 border-b border-slate-100 dark:border-[#2c3338]">
+              <div>
+                <span className="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide block mb-0.5">Danh sách công việc</span>
+                <span className="text-xs font-extrabold text-slate-850 dark:text-white capitalize">
+                  {activeMoreDate.date.toLocaleDateString("vi-VN", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveMoreDate(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer flex items-center justify-center p-1 rounded-full hover:bg-slate-50 dark:hover:bg-[#2c3338] transition-colors"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scrollable Event List */}
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5 max-h-64 custom-scrollbar">
+              {activeMoreDate.tasks.map((task) => (
+                <div
+                  key={task.id}
+                  onClick={() => {
+                    onTaskClick(task);
+                    setActiveMoreDate(null);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-md border text-[11px] font-bold cursor-pointer transition-all hover:shadow-2xs select-none truncate ${getTaskColorClass(task)}`}
+                >
+                  {task.title}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

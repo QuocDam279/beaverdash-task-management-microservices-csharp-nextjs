@@ -90,7 +90,7 @@ export default function MyTasksPage() {
           <button onClick={() => state.fetchTasks()} className="text-[#1868db] hover:underline cursor-pointer">Thử lại</button>
         </div>
       ) : state.viewMode === "calendar" ? (
-        <div className="flex-1 flex flex-col min-h-0 bg-white">
+        <div className="w-full bg-white">
           <CalendarView
             tasks={state.sortedTasks}
             viewContext="my-tasks"

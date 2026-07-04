@@ -62,6 +62,7 @@ builder.Services.AddScoped<PM.Application.Contracts.ICurrentUserService, PM.API.
 builder.Services.AddScoped<PM.Application.Contracts.IPMDbContext>(provider => provider.GetRequiredService<PMDbContext>());
 
 builder.Services.AddHostedService<PM.Infrastructure.Services.OutboxBackgroundService>();
+builder.Services.AddHostedService<PM.Infrastructure.Services.DeadlineReminderBackgroundService>();
 
 builder.Services.AddExceptionHandler<PM.API.Middlewares.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

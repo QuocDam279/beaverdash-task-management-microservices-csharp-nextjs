@@ -44,8 +44,25 @@ public class UpdateTeamMemberRoleCommandHandler : IRequestHandler<UpdateTeamMemb
         if (normalizedRole != "leader" && normalizedRole != "member")
             throw new ArgumentException("Role không hợp lệ. Chỉ chấp nhận 'leader' hoặc 'member'.");
 
-        // 4. Cập nhật Role
-        targetMember.Role = normalizedRole; // "leader" hoặc "member"
+        if (targetMember.Role != normalizedRole)
+        {
+            var teamName = await _dbContext.Teams
+                .Where(t => t.Id == request.TeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync(cancellationToken) ?? "Nhóm";
+
+            targetMember.AddDomainEvent(new PM.Domain.Events.TeamMemberRoleChangedEvent(
+                request.TeamId,
+                teamName,
+                request.TargetUserId,
+                targetMember.Role,
+                normalizedRole,
+                currentUserId
+            ));
+
+            // 4. Cập nhật Role
+            targetMember.Role = normalizedRole; // "leader" hoặc "member"
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

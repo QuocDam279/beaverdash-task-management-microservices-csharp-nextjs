@@ -5,12 +5,14 @@ import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { AIAssistantSidebar } from "./AIAssistantSidebar";
 import { AIAssistantChatViewport } from "./AIAssistantChatViewport";
 import { AIAssistantInput } from "./AIAssistantInput";
+import { AIAssistantQuickSuggestions } from "./AIAssistantQuickSuggestions";
 
 interface ContainerProps {
   projectId: string;
+  isLeader: boolean;
 }
 
-export function AIAssistantContainer({ projectId }: ContainerProps) {
+export function AIAssistantContainer({ projectId, isLeader }: ContainerProps) {
   const {
     sessions,
     activeSessionId,
@@ -70,11 +72,20 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
 
         {/* Message Container Viewport */}
         <AIAssistantChatViewport
+          projectId={projectId}
           messages={messages}
           isHistoryLoading={isHistoryLoading}
           isSending={isSending}
-          onSuggestionClick={handleSuggestionClick}
           messagesEndRef={messagesEndRef}
+          isLeader={isLeader}
+        />
+
+        {/* Quick Suggestions Bar */}
+        <AIAssistantQuickSuggestions
+          projectId={projectId}
+          isLeader={isLeader}
+          isSending={isSending}
+          onSuggestionClick={handleSuggestionClick}
         />
 
         {/* Input Bar Section */}
@@ -87,6 +98,7 @@ export function AIAssistantContainer({ projectId }: ContainerProps) {
           onSubmit={handleSendMessage}
           onStop={handleStopAssistant}
           hasActiveSession={!!activeSessionId}
+          isLeader={isLeader}
         />
       </div>
     </div>

@@ -32,6 +32,7 @@ interface TaskSubtaskDrawerProps {
   canManageSubtasks: boolean;
   readOnly?: boolean;
   isPersonalProject?: boolean;
+  parentCreatedByUserId?: string;
 }
 
 export function TaskSubtaskDrawer({
@@ -52,13 +53,18 @@ export function TaskSubtaskDrawer({
   canManageSubtasks,
   readOnly = false,
   isPersonalProject = false,
+  parentCreatedByUserId,
 }: TaskSubtaskDrawerProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const { confirm } = useAlertConfirm();
 
   if (!subtask) return null;
 
-  const canToggle = !readOnly && (canManageSubtasks || (currentUser && subtask.assigneeUserId === currentUser.id));
+  const currentMember = assignees.find((u) => u.id === currentUser?.id);
+  const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
+  const isTaskCreator = parentCreatedByUserId === currentUser?.id;
+  const canModifyAssigneeDirectly = isLeader || isTaskCreator;
+  const canToggle = !readOnly && (isLeader || isTaskCreator || (currentUser && subtask.assigneeUserId === currentUser.id));
   const comments = subtask.comments || [];
 
   return (
@@ -116,11 +122,11 @@ export function TaskSubtaskDrawer({
                   title={subtask.title}
                   isCompleted={subtask.isCompleted}
                   onUpdateTitle={(title) => onSubtaskTitleChange(subtask.id, title)}
-                  readOnly={readOnly || !canManageSubtasks}
+                  readOnly={readOnly || !canModifyAssigneeDirectly}
                 />
               </div>
               
-              {canManageSubtasks && !readOnly && (
+              {canModifyAssigneeDirectly && !readOnly && (
                 <button
                   onClick={async () => {
                     const confirmDelete = await confirm(
@@ -157,6 +163,8 @@ export function TaskSubtaskDrawer({
               canManageSubtasks={canManageSubtasks}
               readOnly={readOnly}
               isPersonalProject={isPersonalProject}
+              currentUser={currentUser}
+              canModifyAssigneeDirectly={canModifyAssigneeDirectly}
             />
           </div>
 

@@ -29,6 +29,7 @@ interface TaskSubtasksProps {
   isPersonalProject?: boolean;
   activeSubtaskId?: string | null;
   onSelectSubtask?: (subTaskId: string | null) => void;
+  parentCreatedByUserId?: string;
 }
 
 export function TaskSubtasks({
@@ -47,6 +48,7 @@ export function TaskSubtasks({
   isPersonalProject = false,
   activeSubtaskId = null,
   onSelectSubtask,
+  parentCreatedByUserId,
 }: TaskSubtasksProps) {
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState("");
 
@@ -159,6 +161,7 @@ export function TaskSubtasks({
               isPersonalProject={isPersonalProject}
               isActive={st.id === activeSubtaskId}
               onSelect={() => onSelectSubtask?.(st.id === activeSubtaskId ? null : st.id)}
+              parentCreatedByUserId={parentCreatedByUserId}
             />
           ))
         ) : (

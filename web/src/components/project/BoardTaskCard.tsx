@@ -107,7 +107,8 @@ export function BoardTaskCard({
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
-  const canDrag = !readOnly;
+  const hasSubtaskOwnership = task.subTasks && task.subTasks.some((st) => st.assigneeUserId === currentUser?.id);
+  const canDrag = !readOnly && (isLeader || !!hasSubtaskOwnership);
 
   // Lọc ra các thành viên phụ trách subtask duy nhất và không trùng với người phụ trách chính
   const subtaskAssignees = React.useMemo(() => {

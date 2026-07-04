@@ -6,7 +6,7 @@ import logging
 
 from app.core.database import get_db, AsyncSessionLocal
 from app.core.config import settings
-from app.core.security import get_current_user_id
+from app.core.security import get_current_user_id, get_project_member_role
 from app.schemas.chat_schema import (
     AIChatSessionCreate,
     AIChatSessionResponse,
@@ -72,7 +72,15 @@ async def run_assistant_background(session_id: UUID, user_id: UUID, new_prompt_c
             # 1. Load session with history
             session = await ChatService.get_session_with_messages(db=db, session_id=session_id, user_id=user_id)
             history = session.messages
-            
+
+            # 2. Kiểm tra quyền của user trong dự án (Leader hay Member)
+            is_leader = await get_project_member_role(
+                user_id=user_id,
+                project_id=session.project_id,
+                pm_base_url=settings.PM_SERVICE_BASE_URL
+            )
+            logger.info(f"[RoleCheck] User {user_id} is_leader={is_leader} for project {session.project_id}")
+
             # The last message is the user prompt we just saved in the route.
             # We pass history[:-1] to chat_with_assistant to avoid duplicating the prompt in Gemini history.
             # To optimize token usage and avoid rate limits, we limit the active context to the last 20 messages (sliding window).
@@ -103,13 +111,14 @@ async def run_assistant_background(session_id: UUID, user_id: UUID, new_prompt_c
                     await write_db.commit()
                     return msg
             
-            # 2. Run assistant service
+            # 3. Run assistant service
             await ai_assistant_service.chat_with_assistant(
                 user_id=user_id,
                 project_id=session.project_id,
                 history=history_before_prompt,
                 new_prompt=new_prompt_content,
-                message_saver_callback=save_message_callback
+                message_saver_callback=save_message_callback,
+                is_leader=is_leader
             )
             
         except Exception as e:

@@ -28,8 +28,9 @@ public class TaskItem : BaseEntity
     public Guid CreatedByUserId { get; set; }
     public User? CreatedByUser { get; set; }
     
-public DateTime? CompletedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public Guid? DeletedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

@@ -32,7 +32,7 @@ function LoginContent() {
   const navSections: NavSection[] = [
     {
       title: "Không gian làm việc",
-      desc: "Quản lý công việc bằng bảng kéo thả, lịch biểu và sơ đồ Gantt.",
+      desc: "Quản lý công việc bằng bảng kéo thả, lịch biểu và sơ đồ tiến độ.",
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
@@ -49,8 +49,8 @@ function LoginContent() {
       ),
     },
     {
-      title: "Đồng bộ thời gian thực",
-      desc: "Cập nhật tiến độ dự án thời gian thực và kết nối đội nhóm tức thì.",
+      title: "Cập nhật tức thì",
+      desc: "Cập nhật tiến độ dự án ngay lập tức và kết nối đội nhóm tức thì.",
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -226,7 +226,7 @@ function LoginContent() {
                   </div>
                   <div className="space-y-0.5 min-w-0">
                     <h4 className="text-xs font-bold text-[#2b221a] leading-none">{sec.title}</h4>
-                    <p className="text-[10px] text-stone-550 truncate leading-tight">{sec.desc}</p>
+                    <p className="text-[10px] text-stone-500 truncate leading-tight">{sec.desc}</p>
                   </div>
                 </button>
               );

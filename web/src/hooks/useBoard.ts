@@ -21,6 +21,7 @@ export function useBoard(projectId: string) {
   const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
   const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
   const [isPersonalProject, setIsPersonalProject] = React.useState(false);
+  const [isLeaderOrOwner, setIsLeaderOrOwner] = React.useState(false);
   const [activeSprintId, setActiveSprintId] = React.useState<string | null>(null);
   const [activeSprintName, setActiveSprintName] = React.useState<string | null>(null);
   const [activeSprintEndDate, setActiveSprintEndDate] = React.useState<string | null>(null);
@@ -60,6 +61,12 @@ export function useBoard(projectId: string) {
         setProjectStartDate(overview.startDate || null);
         setProjectDueDate(overview.dueDate || null);
         setIsPersonalProject(overview.teamId === null || !overview.teamId);
+
+        const userWorkload = overview.memberWorkloads?.find((w: any) => w.userId === currentUser?.id);
+        const isLeader = overview.teamId
+          ? userWorkload?.role === "Trưởng nhóm"
+          : overview.createdByUserId === currentUser?.id || userWorkload?.role === "Chủ sở hữu";
+        setIsLeaderOrOwner(!!isLeader);
       }
       
       if (board) {
@@ -617,6 +624,7 @@ export function useBoard(projectId: string) {
     projectDueDate,
     assignees,
     isPersonalProject,
+    isLeaderOrOwner,
     activeSprintId,
     activeSprintName,
     activeSprintEndDate,

@@ -22,9 +22,9 @@ export function ShowcaseGantt() {
 
         {/* Timeline Tasks Rows */}
         {[
-          { name: "Xây dựng UI login", color: "from-blue-50 to-blue-100 text-blue-700 border-blue-200", start: 0, span: 3 },
-          { name: "Thêm hoạt họa login", color: "from-amber-50 to-amber-100 text-amber-800 border-amber-200", start: 2, span: 3 },
-          { name: "Tối ưu hóa Auth API", color: "from-purple-50 to-purple-100 text-purple-700 border-purple-200", start: 4, span: 4 },
+          { name: "Thiết kế giao diện đăng nhập", color: "from-blue-50 to-blue-100 text-blue-700 border-blue-200", start: 0, span: 3 },
+          { name: "Làm hiệu ứng đăng nhập", color: "from-amber-50 to-amber-100 text-amber-800 border-amber-200", start: 2, span: 3 },
+          { name: "Tối ưu hệ thống đăng nhập", color: "from-purple-50 to-purple-100 text-purple-700 border-purple-200", start: 4, span: 4 },
         ].map((taskRow, idx) => (
           <div key={idx} className="grid grid-cols-10 border-b border-slate-200/40 last:border-b-0 py-3 relative items-center text-center min-h-[40px]">
             <div className="col-span-3 text-left pl-3 text-slate-700 font-bold truncate pr-1">{taskRow.name}</div>

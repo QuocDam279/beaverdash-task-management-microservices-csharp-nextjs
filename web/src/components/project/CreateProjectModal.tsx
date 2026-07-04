@@ -186,7 +186,7 @@ export function CreateProjectModal({ isOpen, onClose, onProjectCreated }: Create
                 </select>
               ) : (
                 <div className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 p-2.5 rounded-[4px] font-bold leading-normal">
-                  ⚠️ Bạn cần là Trưởng nhóm (Leader) của ít nhất một nhóm để tạo dự án. Vui lòng tạo nhóm mới trước.
+                  ⚠️ Vui lòng tạo nhóm trước khi bắt đầu tạo dự án.
                 </div>
               )}
             </div>

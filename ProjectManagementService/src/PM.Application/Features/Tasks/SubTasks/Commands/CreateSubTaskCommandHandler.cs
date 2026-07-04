@@ -42,11 +42,29 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
         if (requestingMember == null)
             throw new UnauthorizedAccessException("Bạn không có quyền thêm SubTask vào Task này.");
 
+        bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
+        bool isTaskCreator = task.CreatedByUserId == currentUserId;
+        bool hasAssignedSubTask = await _dbContext.SubTasks
+            .AnyAsync(st => st.TaskId == task.Id && st.AssigneeUserId == currentUserId && st.DeletedAt == null, cancellationToken);
+
+        if (!isLeader && !isTaskCreator && !hasAssignedSubTask)
+        {
+            if (request.AssigneeUserId != currentUserId)
+            {
+                throw new UnauthorizedAccessException("Bạn không có quyền thêm nhiệm vụ vào công việc này trừ khi tự giao cho chính mình.");
+            }
+        }
+
         if (request.AssigneeUserId.HasValue)
         {
             var isAssigneeMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == task.BoardColumn!.Project!.TeamId!.Value && tm.UserId == request.AssigneeUserId.Value, cancellationToken);
             if (!isAssigneeMember)
                 throw new InvalidOperationException("Người nhận nhiệm vụ phải là thành viên trong nhóm.");
+
+            if (!isLeader && !isTaskCreator && request.AssigneeUserId.Value != currentUserId)
+            {
+                throw new UnauthorizedAccessException("Bạn chỉ có quyền giao nhiệm vụ cho người khác trong công việc do chính mình tạo ra.");
+            }
         }
 
         // Check for duplicate subtask title under the same parent task (case-insensitive)

@@ -1,8 +1,3 @@
-/**
- * Script to generate the project plan template DOCX file.
- * Run: node scripts/generate-template.mjs
- * Output: public/templates/project_plan_template.docx
- */
 import {
   Document,
   Packer,
@@ -39,6 +34,16 @@ function instruction(text) {
   });
 }
 
+function metaLine(label, value) {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: label, bold: true, size: 22, font: "Arial" }),
+      new TextRun({ text: value, size: 22, font: "Arial" }),
+    ],
+    spacing: { after: 60, before: 40 },
+  });
+}
+
 function bullet(text) {
   return new Paragraph({
     children: [new TextRun({ text, size: 22, font: "Arial" })],
@@ -56,9 +61,22 @@ function createHeaderCell(text, widthPct) {
     children: [new Paragraph({
       children: [new TextRun({ text, bold: true, size: 20, font: "Arial", color: "FFFFFF" })],
       alignment: AlignmentType.CENTER,
+      spacing: { before: 80, after: 80 },
     })],
-    shading: { type: ShadingType.SOLID, color: "4472C4" },
+    shading: { type: ShadingType.SOLID, color: "1868DB" },
     width: { size: widthPct, type: WidthType.PERCENTAGE },
+    margins: {
+      top: 120,
+      bottom: 120,
+      left: 150,
+      right: 150,
+    },
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 1, color: "1868DB" },
+      bottom: { style: BorderStyle.SINGLE, size: 1, color: "1868DB" },
+      left: { style: BorderStyle.SINGLE, size: 1, color: "1868DB" },
+      right: { style: BorderStyle.SINGLE, size: 1, color: "1868DB" },
+    },
   });
 }
 
@@ -66,8 +84,15 @@ function createCell(text, widthPct) {
   return new TableCell({
     children: [new Paragraph({
       children: [new TextRun({ text, size: 20, font: "Arial", color: "888888", italics: true })],
+      spacing: { before: 60, after: 60 },
     })],
     width: { size: widthPct, type: WidthType.PERCENTAGE },
+    margins: {
+      top: 120,
+      bottom: 120,
+      left: 150,
+      right: 150,
+    },
     borders: {
       top: { style: BorderStyle.SINGLE, size: 1, color: "D9D9D9" },
       bottom: { style: BorderStyle.SINGLE, size: 1, color: "D9D9D9" },
@@ -93,31 +118,30 @@ const doc = new Document({
         // -- Title --
         new Paragraph({
           children: [
-            new TextRun({ text: "MẪU KẾ HOẠCH DỰ ÁN NHÓM", bold: true, size: 32, font: "Arial", color: "1F4E79" }),
+            new TextRun({ text: "KẾ HOẠCH DỰ ÁN", bold: true, size: 28, font: "Arial", color: "1F4E79" }),
           ],
           alignment: AlignmentType.CENTER,
           spacing: { after: 60 },
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: "Điền thông tin dự án của nhóm bạn vào các mục bên dưới, sau đó đính kèm file này vào trợ lý AI BeaverDash để được hỗ trợ lập kế hoạch tự động.", italics: true, size: 20, font: "Arial", color: "666666" }),
+            new TextRun({ text: "Tài liệu lập kế hoạch chi tiết cho dự án và phân rã công việc WBS.", italics: true, size: 18, font: "Arial", color: "666666" }),
           ],
           alignment: AlignmentType.CENTER,
           spacing: { after: 200 },
         }),
 
-        // ── PHẦN 1: THÔNG TIN DỰ ÁN ──
-        heading("1. THÔNG TIN DỰ ÁN"),
-        instruction("(Điền các thông tin cơ bản của dự án)"),
-        bullet("Tên dự án:"),
-        bullet("Mô tả ngắn gọn dự án:"),
-        bullet("Ngày bắt đầu:"),
-        bullet("Ngày kết thúc:"),
+        // ── PHẦN 1: THÔNG TIN DỰ ÁN TỔNG QUAN ──
+        heading("1. THÔNG TIN DỰ ÁN TỔNG QUAN"),
+        instruction("(Điền các thông tin cơ bản của dự án tốt nghiệp)"),
+        metaLine("Tên dự án: ", "[Nhập tên dự án]"),
+        metaLine("Mô tả ngắn gọn: ", "[Mô tả mục tiêu và phạm vi dự án ngắn gọn từ 2-3 câu]"),
+        metaLine("Thời gian thực hiện: ", "[DD/MM/YYYY] – [DD/MM/YYYY]"),
         emptyLine(),
 
-        // ── PHẦN 2: THÀNH VIÊN NHÓM ──
-        heading("2. THÀNH VIÊN NHÓM"),
-        instruction("(Liệt kê các thành viên trong nhóm và thế mạnh của từng người để AI phân công công việc phù hợp)"),
+        // ── PHẦN 2: THÀNH VIÊN NHÓM & VAI TRÒ ──
+        heading("2. THÀNH VIÊN NHÓM & VAI TRÒ"),
+        instruction("(Liệt kê các thành viên trong nhóm, vai trò chính và thế mạnh kỹ năng của từng người)"),
 
         new Table({
           width: { size: 100, type: WidthType.PERCENTAGE },
@@ -125,22 +149,22 @@ const doc = new Document({
             new TableRow({
               children: [
                 createHeaderCell("Họ và tên", 30),
-                createHeaderCell("Vai trò", 30),
-                createHeaderCell("Thế mạnh / Kỹ năng", 40),
+                createHeaderCell("Vai trò chính", 30),
+                createHeaderCell("Thế mạnh / Kỹ năng cốt lõi", 40),
               ],
             }),
             new TableRow({
               children: [
-                createCell("[Họ tên thành viên]", 30),
-                createCell("[Trưởng nhóm / Thành viên]", 30),
-                createCell("[Lĩnh vực giỏi, kỹ năng nổi bật]", 40),
+                createCell("[Nguyễn Văn A]", 30),
+                createCell("[Trưởng nhóm]", 30),
+                createCell("[Lập trình Backend, thiết kế cơ sở dữ liệu]", 40),
               ],
             }),
             new TableRow({
               children: [
-                createCell("[...]", 30),
-                createCell("[...]", 30),
-                createCell("[...]", 40),
+                createCell("[Trần Thị B]", 30),
+                createCell("[Thành viên]", 30),
+                createCell("[Thiết kế giao diện UI/UX, lập trình Frontend]", 40),
               ],
             }),
             new TableRow({
@@ -154,132 +178,40 @@ const doc = new Document({
         }),
         emptyLine(),
 
-        // ── PHẦN 3: CÁC GIAI ĐOẠN THỰC HIỆN (SPRINT) ──
-        heading("3. CÁC GIAI ĐOẠN THỰC HIỆN (SPRINT)"),
-        instruction("(Chia dự án thành các giai đoạn để AI gán công việc vào từng giai đoạn tương ứng)"),
+        // ── PHẦN 3: KẾ HOẠCH CHIA NHỎ CÔNG VIỆC THEO TỪNG SPRINT (WBS) ──
+        heading("3. KẾ HOẠCH CHIA NHỎ CÔNG VIỆC THEO TỪNG SPRINT (WBS)"),
+        instruction("(Bản phân rã công việc WBS chi tiết cho từng nhiệm vụ con trong Sprint)"),
 
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [
-            new TableRow({
-              children: [
-                createHeaderCell("Tên giai đoạn", 25),
-                createHeaderCell("Mục tiêu", 40),
-                createHeaderCell("Thời gian", 35),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[VD: Giai đoạn 1]", 25),
-                createCell("[VD: Tìm hiểu yêu cầu, khảo sát]", 40),
-                createCell("[VD: 01/07 - 15/07]", 35),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[VD: Giai đoạn 2]", 25),
-                createCell("[VD: Thực hiện chính]", 40),
-                createCell("[VD: 16/07 - 15/08]", 35),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[...]", 25),
-                createCell("[...]", 40),
-                createCell("[...]", 35),
-              ],
-            }),
-          ],
+        new Paragraph({
+          children: [new TextRun({ text: "Sprint 1: [Nhập tên Sprint, VD: Khởi động & Khảo sát] (Từ [DD/MM/YYYY] đến [DD/MM/YYYY])", bold: true, size: 22, font: "Arial", color: "1868DB" })],
+          spacing: { before: 80, after: 60 },
         }),
-        emptyLine(),
-
-        // ── PHẦN 4: DANH SÁCH CÔNG VIỆC CẦN LÀM ──
-        heading("4. DANH SÁCH CÔNG VIỆC CẦN LÀM"),
-        instruction("(Liệt kê các công việc chính và danh sách nhiệm vụ bên trong. AI sẽ dựa vào đây để tạo công việc, nhiệm vụ và phân công cho thành viên.)"),
+        new Paragraph({
+          children: [new TextRun({ text: "Công việc 1.1: [Nhập tên công việc chính, VD: Khảo sát yêu cầu khách hàng]", bold: true, size: 20, font: "Arial" })],
+          spacing: { before: 80, after: 40 },
+        }),
+        bullet("Nhiệm vụ 1.1.1: [Nhập nhiệm vụ con 1] — Người thực hiện: [Nguyễn Văn A]"),
+        bullet("Nhiệm vụ 1.1.2: [Nhập nhiệm vụ con 2] — Người thực hiện: [Trần Thị B]"),
         emptyLine(),
 
         new Paragraph({
-          children: [new TextRun({ text: "Công việc 1: [Tên công việc chính]", bold: true, size: 22, font: "Arial" })],
+          children: [new TextRun({ text: "Sprint 2: [Nhập tên Sprint, VD: Thiết kế & Xây dựng API] (Từ [DD/MM/YYYY] đến [DD/MM/YYYY])", bold: true, size: 22, font: "Arial", color: "1868DB" })],
           spacing: { before: 80, after: 60 },
         }),
-        bullet("Mức độ ưu tiên: [Bắt buộc / Quan trọng / Mở rộng]"),
-        bullet("Giai đoạn dự kiến: [Giai đoạn 1 / Giai đoạn 2 / ...]"),
-        bullet("Danh sách nhiệm vụ:"),
-        emptyLine(),
-
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [
-            new TableRow({
-              children: [
-                createHeaderCell("Tên nhiệm vụ", 40),
-                createHeaderCell("Phân công cho ai", 30),
-                createHeaderCell("Hạn chót", 30),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[VD: Thiết kế giao diện]", 40),
-                createCell("[VD: Nguyễn Văn A]", 30),
-                createCell("[VD: 10/07/2026]", 30),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[VD: Viết tài liệu API]", 40),
-                createCell("[VD: Trần Thị B]", 30),
-                createCell("[VD: 12/07/2026]", 30),
-              ],
-            }),
-          ],
-        }),
-        emptyLine(),
-
         new Paragraph({
-          children: [new TextRun({ text: "Công việc 2: [Tên công việc chính]", bold: true, size: 22, font: "Arial" })],
-          spacing: { before: 80, after: 60 },
+          children: [new TextRun({ text: "Công việc 2.1: [Nhập tên công việc chính, VD: Thiết kế giao diện Figma]", bold: true, size: 20, font: "Arial" })],
+          spacing: { before: 80, after: 40 },
         }),
-        bullet("Mức độ ưu tiên: [Bắt buộc / Quan trọng / Mở rộng]"),
-        bullet("Giai đoạn dự kiến: [...]"),
-        bullet("Danh sách nhiệm vụ:"),
+        bullet("Nhiệm vụ 2.1.1: [Nhập nhiệm vụ con 1] — Người thực hiện: [Trần Thị B]"),
         emptyLine(),
 
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [
-            new TableRow({
-              children: [
-                createHeaderCell("Tên nhiệm vụ", 40),
-                createHeaderCell("Phân công cho ai", 30),
-                createHeaderCell("Hạn chót", 30),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[Tên nhiệm vụ]", 40),
-                createCell("[Họ tên thành viên]", 30),
-                createCell("[Ngày/Tháng/Năm]", 30),
-              ],
-            }),
-            new TableRow({
-              children: [
-                createCell("[...]", 40),
-                createCell("[...]", 30),
-                createCell("[...]", 30),
-              ],
-            }),
-          ],
-        }),
+        instruction("(Thêm các công việc và nhiệm vụ tiếp theo theo cùng cấu trúc...)"),
         emptyLine(),
 
-        instruction("(Thêm các công việc tiếp theo theo cùng cấu trúc...)"),
-        emptyLine(),
-
-        // ── PHẦN 5: GHI CHÚ ──
-        heading("5. GHI CHÚ THÊM"),
-        instruction("(Ghi bất kỳ yêu cầu hoặc lưu ý đặc biệt nào cho dự án)"),
-        bullet("[VD: Cần nộp báo cáo giữa kỳ vào ngày ...]"),
-        bullet("[VD: Giáo viên hướng dẫn yêu cầu ...]"),
+        // ── PHẦN 4: GHI CHÚ BỔ SUNG ──
+        heading("4. GHI CHÚ BỔ SUNG"),
+        instruction("(Ghi bất kỳ yêu cầu hoặc lưu ý đặc biệt nào về dự án tốt nghiệp)"),
+        bullet("[Điền bất kỳ lưu ý, thời hạn nộp báo cáo hoặc yêu cầu đặc biệt nào tại đây]"),
         emptyLine(),
 
         // -- Footer --
@@ -292,10 +224,10 @@ const doc = new Document({
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: "Hướng dẫn: ", bold: true, size: 20, font: "Arial", color: "1F4E79" }),
-            new TextRun({ text: "Điền xong -> mở trợ lý AI BeaverDash -> đính kèm file này -> gõ ", size: 20, font: "Arial", color: "666666" }),
+            new TextRun({ text: "Hướng dẫn từ BeaverDash: ", bold: true, size: 20, font: "Arial", color: "1F4E79" }),
+            new TextRun({ text: "Điền đầy đủ thông tin -> mở trợ lý ảo AI BeaverDash -> đính kèm file này -> gõ yêu cầu ", size: 20, font: "Arial", color: "666666" }),
             new TextRun({ text: "\"Hãy lập kế hoạch dự án dựa trên tài liệu đính kèm\"", bold: true, italics: true, size: 20, font: "Arial", color: "1F4E79" }),
-            new TextRun({ text: ". AI sẽ tự động tạo công việc, phân công cho thành viên và sắp xếp vào từng giai đoạn.", size: 20, font: "Arial", color: "666666" }),
+            new TextRun({ text: ". Hệ thống AI sẽ tự động phân tích cấu trúc WBS để lập kế hoạch và phân công nhiệm vụ tự động.", size: 20, font: "Arial", color: "666666" }),
           ],
           alignment: AlignmentType.CENTER,
           spacing: { after: 100 },

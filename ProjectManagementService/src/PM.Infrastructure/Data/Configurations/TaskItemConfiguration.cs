@@ -27,6 +27,7 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(t => t.CreatedByUserId).HasColumnName("created_by_user_id").HasColumnType("uuid").IsRequired();
         builder.Property(t => t.CompletedAt).HasColumnName("completed_at").HasColumnType("timestamp with time zone").IsRequired(false);
         builder.Property(t => t.DeletedAt).HasColumnName("deleted_at").HasColumnType("timestamp with time zone").IsRequired(false);
+        builder.Property(t => t.DeletedByUserId).HasColumnName("deleted_by_user_id").HasColumnType("uuid").IsRequired(false);
         builder.Property(t => t.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
         builder.Property(t => t.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
 

@@ -17,6 +17,7 @@ export function useBacklog(projectId: string) {
   const [projectStartDate, setProjectStartDate] = React.useState<string | null>(null);
   const [projectDueDate, setProjectDueDate] = React.useState<string | null>(null);
   
+  const [isLeaderOrOwner, setIsLeaderOrOwner] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -39,6 +40,12 @@ export function useBacklog(projectId: string) {
       if (overview) {
         setProjectStartDate(overview.startDate || null);
         setProjectDueDate(overview.dueDate || null);
+
+        const userWorkload = overview.memberWorkloads?.find((w: any) => w.userId === currentUser?.id);
+        const isLeader = overview.teamId
+          ? userWorkload?.role === "Trưởng nhóm"
+          : overview.createdByUserId === currentUser?.id || userWorkload?.role === "Chủ sở hữu";
+        setIsLeaderOrOwner(!!isLeader);
       }
 
       if (board) {
@@ -223,6 +230,7 @@ export function useBacklog(projectId: string) {
     projectDueDate,
     isLoading,
     error,
+    isLeaderOrOwner,
     fetchBacklogData,
     handleCreateSprint,
     handleUpdateSprint,

@@ -8,7 +8,7 @@ import { ShowcaseGantt } from "./ShowcaseGantt";
 export function ShowcaseWorkspace() {
   const [isBoardHovered, setIsBoardHovered] = React.useState(false);
   const [currentSubTab, setCurrentSubTab] = React.useState<number>(0);
-  const lastInteractionTime = React.useRef<number>(Date.now());
+  const lastInteractionTime = React.useRef<number>(0);
 
   React.useEffect(() => {
     lastInteractionTime.current = Date.now();
@@ -78,12 +78,11 @@ export function ShowcaseWorkspace() {
         {/* Floating Widget 3: Active Members Card */}
         <div className="absolute -bottom-3 -right-2 bg-white/95 border border-slate-200/80 shadow-xl rounded-xl p-3 flex flex-col gap-2 z-20 transition-all duration-300 hover:scale-105 select-none w-44 hover:shadow-2xl">
           <p className="text-[9.5px] font-bold text-slate-800 border-b border-slate-100 pb-1 flex items-center justify-between">
-            <span>Hoạt động (4)</span>
+            <span>Hoạt động (3)</span>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </p>
           <div className="flex items-center justify-between">
             <div className="flex -space-x-1.5">
-              <div className="w-5.5 h-5.5 rounded-full bg-blue-500 text-[8px] font-extrabold flex items-center justify-center text-white border border-white">QĐ</div>
               <div className="w-5.5 h-5.5 rounded-full bg-emerald-500 text-[8px] font-extrabold flex items-center justify-center text-white border border-white">LC</div>
               <div className="w-5.5 h-5.5 rounded-full bg-purple-500 text-[8px] font-extrabold flex items-center justify-center text-white border border-white">AI</div>
               <div className="w-5.5 h-5.5 rounded-full bg-pink-500 text-[8px] font-extrabold flex items-center justify-center text-white border border-white">MA</div>
@@ -115,66 +114,18 @@ export function ShowcaseWorkspace() {
               <svg className="w-2.5 h-2.5 text-slate-400 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              beaverdash.xyz/workspace/tasks
+              workspace/tasks
             </div>
           </div>
 
-          {/* Mock App Container (Sidebar + main content) */}
+          {/* Mock App Container (Main content area only) */}
           <div className="flex flex-1 min-h-[380px] text-left">
-            {/* Mock Sidebar */}
-            <div className="w-44 bg-slate-50/70 border-r border-slate-200/50 p-3 flex flex-col justify-between shrink-0 select-none text-[10px] text-slate-500 font-medium">
-              <div className="space-y-4">
-                {/* Workspace Name */}
-                <div className="flex items-center gap-2 border-b border-slate-200/40 pb-2">
-                  <div className="w-5 h-5 rounded-md bg-[#1868db] flex items-center justify-center text-white font-bold text-[9px]">B</div>
-                  <span className="font-bold text-slate-800 text-[10.5px]">BeaverDash App</span>
-                </div>
-
-                {/* Navigation Menu */}
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-slate-200/60 text-slate-800 font-bold">
-                    <span className="text-[11px]">📋</span> Không gian việc
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-100 hover:text-slate-800 transition-colors">
-                    <span className="text-[11px]">💬</span> Thảo luận
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-100 hover:text-slate-800 transition-colors">
-                    <span className="text-[11px]">🤖</span> Trợ lý AI
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-100 hover:text-slate-800 transition-colors">
-                    <span className="text-[11px]">⚙️</span> Thiết lập
-                  </div>
-                </div>
-
-                {/* Projects list */}
-                <div className="space-y-1 pt-1">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2">Dự án chính</span>
-                  <div className="flex items-center gap-2 px-2 py-1 hover:text-slate-800 cursor-pointer">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <span>Thiết kế Web App</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1 hover:text-slate-800 cursor-pointer">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                    <span>Tích hợp Trợ lý AI</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* User profile section */}
-              <div className="flex items-center gap-2 border-t border-slate-200/40 pt-2">
-                <div className="w-5.5 h-5.5 rounded-full bg-gradient-to-tr from-blue-500 to-sky-400 text-white font-bold flex items-center justify-center text-[8px] shrink-0">QĐ</div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 leading-none truncate">Quốc Đàm</span>
-                  <span className="text-[8px] text-slate-400 mt-0.5 truncate leading-none">quocdam@gmail.com</span>
-                </div>
-              </div>
-            </div>
 
             {/* Mock Main Content Area */}
             <div className="flex-1 p-5 flex flex-col justify-start overflow-hidden">
               {/* Tabs Switcher inside Mockup */}
               <div className="flex gap-1.5 mb-4 bg-slate-200/40 p-0.5 rounded-lg w-fit border border-slate-200/60 text-[11px]">
-                {["Bảng kéo thả", "Lịch biểu", "Sơ đồ Gantt"].map((t, idx) => {
+                {["Bảng công việc", "Lịch biểu", "Sơ đồ tiến độ"].map((t, idx) => {
                   const isSubActive = idx === currentSubTab;
                   return (
                     <button
@@ -210,7 +161,7 @@ export function ShowcaseWorkspace() {
         <div className="text-center max-w-[500px]">
           <h2 className="text-lg font-bold text-slate-800 mb-2">Không gian làm việc và Bảng nhiệm vụ</h2>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Theo dõi và quản lý toàn bộ công việc trực quan trên bảng Kanban. Sắp xếp các cột trạng thái và phân công công việc dễ dàng.
+            Theo dõi và quản lý toàn bộ công việc trực quan trên bảng kéo thả. Sắp xếp các cột trạng thái và phân công công việc dễ dàng.
           </p>
         </div>
       </div>

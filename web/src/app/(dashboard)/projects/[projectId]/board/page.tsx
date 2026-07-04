@@ -109,7 +109,7 @@ export default function BoardPage({ params }: PageProps) {
         sprints={b.sprints}
         selectedSprintId={b.selectedSprintId}
         setSelectedSprintId={b.setSelectedSprintId}
-        onCloseSprintClick={handleCloseSprintClick}
+        onCloseSprintClick={b.isLeaderOrOwner ? handleCloseSprintClick : undefined}
         groupBy={b.groupBy}
         onGroupByChange={b.setGroupBy}
         readOnly={isSprintClosed}

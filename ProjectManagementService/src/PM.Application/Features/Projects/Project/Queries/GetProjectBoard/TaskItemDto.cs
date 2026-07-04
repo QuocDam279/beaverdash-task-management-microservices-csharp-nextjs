@@ -20,6 +20,7 @@ public class TaskItemDto
 {
     public Guid Id { get; set; }
     public Guid BoardColumnId { get; set; }
+    public Guid CreatedByUserId { get; set; }
     public string Title { get; set; } = null!;
     public string? Priority { get; set; }
     public double? SortOrder { get; set; }

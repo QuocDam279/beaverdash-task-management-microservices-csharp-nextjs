@@ -74,18 +74,44 @@ public class SignalRNotificationService : INotificationService
                 // Tạo tiêu đề email dựa trên loại thông báo
                 var subject = type switch
                 {
+                    "chat_mention" => "Bạn được nhắc đến trong cuộc trò chuyện - Beaverdash",
                     "subtask_assigned" => "Bạn được giao một công việc con mới - Beaverdash",
                     "subtask_comment" => "Có bình luận mới trên công việc con của bạn - Beaverdash",
                     "team_invited" => "Bạn được mời vào nhóm mới - Beaverdash",
+                    "sprint_started" => "Sprint mới đã bắt đầu - Beaverdash",
+                    "sprint_closed" => "Sprint đã hoàn thành/đóng - Beaverdash",
+                    "sprint_ending_reminder" => "Nhắc nhở: Sprint sắp kết thúc - Beaverdash",
+                    "subtask_completed" => "Nhiệm vụ con đã hoàn thành - Beaverdash",
+                    "task_completed" => "Công việc đã hoàn thành - Beaverdash",
+                    "team_member_removed" => "Bạn đã bị xóa khỏi nhóm - Beaverdash",
+                    "team_role_changed" => "Thay đổi vai trò trong nhóm - Beaverdash",
+                    "project_created_in_team" => "Dự án mới trong nhóm của bạn - Beaverdash",
+                    "subtask_deadline_reminder" or "task_deadline_reminder" => "Nhắc nhở: Hạn hoàn thành công việc sắp tới - Beaverdash",
+                    "project_deadline_reminder" => "Nhắc nhở: Hạn hoàn thành dự án sắp tới - Beaverdash",
+                    "subtask_overdue" or "task_overdue" => "Cảnh báo: Công việc đã quá hạn hoàn thành! - Beaverdash",
+                    "project_overdue_leader" => "Cảnh báo: Dự án đã quá hạn hoàn thành! - Beaverdash",
                     _ => "Thông báo mới từ Beaverdash"
                 };
 
                 // Tạo label loại thông báo
                 var typeLabel = type switch
                 {
+                    "chat_mention" => "Nhắc đến",
                     "subtask_assigned" => "Giao công việc",
                     "subtask_comment" => "Bình luận mới",
                     "team_invited" => "Mời tham gia nhóm",
+                    "sprint_started" => "Sprint bắt đầu",
+                    "sprint_closed" => "Sprint kết thúc",
+                    "sprint_ending_reminder" => "Sprint sắp hết hạn",
+                    "subtask_completed" => "Nhiệm vụ hoàn thành",
+                    "task_completed" => "Công việc hoàn thành",
+                    "team_member_removed" => "Bị xóa khỏi nhóm",
+                    "team_role_changed" => "Thay đổi vai trò",
+                    "project_created_in_team" => "Dự án mới",
+                    "subtask_deadline_reminder" or "task_deadline_reminder" => "Sắp đến hạn",
+                    "project_deadline_reminder" => "Dự án sắp đến hạn",
+                    "subtask_overdue" or "task_overdue" => "Quá hạn",
+                    "project_overdue_leader" => "Dự án quá hạn",
                     _ => "Thông báo"
                 };
 
@@ -98,7 +124,8 @@ public class SignalRNotificationService : INotificationService
                     actionUrl: fullActionUrl,
                     actorName: actorDisplayName,
                     typeLabel: typeLabel,
-                    logoUrl: logoUrl
+                    logoUrl: logoUrl,
+                    type: type
                 );
 
                 await emailService.SendEmailAsync(user.Email, subject, emailBody, isHtml: true);
@@ -132,12 +159,48 @@ public class SignalRNotificationService : INotificationService
         string actionUrl,
         string actorName,
         string typeLabel,
-        string logoUrl)
+        string logoUrl,
+        string type)
     {
+        // Dynamic styling based on notification type
+        string accentColor = "#1868db"; // Atlassian Blue
+        string emoji = "🦫";
+
+        if (type.Contains("overdue"))
+        {
+            accentColor = "#de350b"; // Red
+            emoji = "🚨";
+        }
+        else if (type.Contains("deadline") || type.Contains("ending"))
+        {
+            accentColor = "#ffab00"; // Orange/Yellow
+            emoji = "⏰";
+        }
+        else if (type.Contains("completed"))
+        {
+            accentColor = "#36b37e"; // Green
+            emoji = "✅";
+        }
+        else if (type == "sprint_started")
+        {
+            accentColor = "#36b37e"; // Green
+            emoji = "🚀";
+        }
+        else if (type == "sprint_closed")
+        {
+            accentColor = "#0052cc"; // Blue
+            emoji = "🏁";
+        }
+        else if (type == "team_member_removed")
+        {
+            accentColor = "#de350b"; // Red
+            emoji = "🚪";
+        }
+
         // Build logo HTML: use image if URL is configured, otherwise use styled text fallback
         var logoHtml = !string.IsNullOrWhiteSpace(logoUrl)
             ? $@"<img src=""{System.Net.WebUtility.HtmlEncode(logoUrl)}"" alt=""Beaverdash Logo"" width=""36"" height=""36"" style=""display: block; border: 0; border-radius: 6px;"" />"
-            : @"<div style=""width: 36px; height: 36px; background: linear-gradient(135deg, #1868db 0%, #0747a6 100%); border-radius: 6px; text-align: center; line-height: 36px; font-size: 20px;"">🦫</div>";
+            : $@"<div style=""width: 36px; height: 36px; background: {accentColor}; border-radius: 6px; text-align: center; line-height: 36px; font-size: 20px;"">{emoji}</div>";
 
         return $@"
 <!DOCTYPE html>
@@ -153,9 +216,9 @@ public class SignalRNotificationService : INotificationService
             <td align=""center"">
                 <!-- Outer Card -->
                 <table role=""presentation"" width=""580"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #ffffff; border-radius: 8px; border: 1px solid #dfe1e6; box-shadow: 0 4px 12px rgba(9, 30, 66, 0.08); overflow: hidden;"">
-                    <!-- Brand Top Bar (Atlassian Blue Accent) -->
+                    <!-- Brand Top Bar -->
                     <tr>
-                        <td height=""4"" style=""background-color: #1868db; line-height: 4px; font-size: 1px;"">&nbsp;</td>
+                        <td height=""4"" style=""background-color: {accentColor}; line-height: 4px; font-size: 1px;"">&nbsp;</td>
                     </tr>
                     
                     <!-- Header with Logo -->
@@ -170,7 +233,7 @@ public class SignalRNotificationService : INotificationService
                                         <span style=""font-size: 18px; font-weight: 600; color: #292a2e; letter-spacing: -0.2px;"">Beaverdash</span>
                                     </td>
                                     <td style=""text-align: right; vertical-align: middle;"">
-                                        <span style=""font-size: 12px; color: #505258; font-weight: 500; background-color: #dfe1e6; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;"">{System.Net.WebUtility.HtmlEncode(typeLabel)}</span>
+                                        <span style=""font-size: 12px; color: #ffffff; font-weight: 600; background-color: {accentColor}; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;"">{System.Net.WebUtility.HtmlEncode(typeLabel)}</span>
                                     </td>
                                 </tr>
                             </table>
@@ -191,7 +254,7 @@ public class SignalRNotificationService : INotificationService
                             </p>
 
                             <!-- Notification Bubble (Atlassian Style Card) -->
-                            <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #fafbfc; border: 1px solid #dfe1e6; border-radius: 6px; border-left: 4px solid #1868db;"">
+                            <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #fafbfc; border: 1px solid #dfe1e6; border-radius: 6px; border-left: 4px solid {accentColor};"">
                                 <tr>
                                     <td style=""padding: 20px 24px;"">
                                         <!-- Actor info -->
@@ -214,8 +277,8 @@ public class SignalRNotificationService : INotificationService
                             <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""margin-top: 32px;"">
                                 <tr>
                                     <td align=""left"">
-                                        <a href=""{System.Net.WebUtility.HtmlEncode(actionUrl)}"" style=""display: inline-block; background-color: #1868db; color: #ffffff !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600;"" target=""_blank"">
-                                            Xem chi tiết công việc
+                                        <a href=""{System.Net.WebUtility.HtmlEncode(actionUrl)}"" style=""display: inline-block; background-color: {accentColor}; color: #ffffff !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600;"" target=""_blank"">
+                                            Xem chi tiết
                                         </a>
                                     </td>
                                 </tr>

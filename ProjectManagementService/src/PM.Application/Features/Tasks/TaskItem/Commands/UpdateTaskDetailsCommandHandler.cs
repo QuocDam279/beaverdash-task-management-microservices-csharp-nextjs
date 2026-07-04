@@ -42,7 +42,12 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
         if (requestingMember == null)
             throw new UnauthorizedAccessException("Bạn không có quyền cập nhật Task này.");
         
-        bool isLeader = requestingMember.Role == "leader";
+        bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
+
+        if (!isLeader && task.CreatedByUserId != currentUserId)
+        {
+            throw new UnauthorizedAccessException("Bạn chỉ có quyền chỉnh sửa công việc do chính mình tạo ra.");
+        }
 
 
 

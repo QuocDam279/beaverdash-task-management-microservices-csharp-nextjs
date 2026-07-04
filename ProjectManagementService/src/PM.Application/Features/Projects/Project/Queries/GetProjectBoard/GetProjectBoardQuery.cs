@@ -115,6 +115,7 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
                     {
                         Id = t.Id,
                         BoardColumnId = t.BoardColumnId,
+                        CreatedByUserId = t.CreatedByUserId,
                         Title = t.Title,
                         Priority = t.Priority != null ? t.Priority.ToString() : null,
                         SortOrder = t.SortOrder,

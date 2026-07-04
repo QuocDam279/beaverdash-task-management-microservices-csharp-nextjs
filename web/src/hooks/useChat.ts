@@ -32,6 +32,27 @@ export function useChat(roomId: string, roomType: "project" | "team") {
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const [isSendingFile, setIsSendingFile] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [members, setMembers] = React.useState<any[]>([]);
+
+  // Load room members (for mentions)
+  React.useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        if (roomType === "project") {
+          const data = await api.get(`/projects/${roomId}/overview`);
+          setMembers(data?.memberWorkloads || []);
+        } else {
+          const data = await api.get(`/teams/${roomId}`);
+          setMembers(data?.members || []);
+        }
+      } catch (err) {
+        console.error("Failed to load room members for mentions:", err);
+      }
+    };
+    if (token) {
+      fetchMembers();
+    }
+  }, [roomId, roomType, token]);
 
   // Scroll and Pagination States
   const [chatLimit, setChatLimit] = React.useState(30);
@@ -410,5 +431,6 @@ export function useChat(roomId: string, roomType: "project" | "team") {
     sharedMedia,
     sharedFiles,
     sharedLinks,
+    members,
   };
 }

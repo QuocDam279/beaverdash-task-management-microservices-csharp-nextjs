@@ -13,6 +13,7 @@ interface SprintSectionProps {
   onTaskClick: (task: any) => void;
   onMoveTasks: (taskIds: string[], sprintId: string | null) => void;
   onCreateTaskClick: (sprintId: string) => void;
+  isLeaderOrOwner?: boolean;
 }
 
 const formatDateRange = (start: string | null, end: string | null) => {
@@ -31,7 +32,8 @@ export function SprintSection({
   onDeleteSprint,
   onTaskClick,
   onMoveTasks,
-  onCreateTaskClick
+  onCreateTaskClick,
+  isLeaderOrOwner = false
 }: SprintSectionProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [isDragOver, setIsDragOver] = React.useState(false);
@@ -117,15 +119,7 @@ export function SprintSection({
             </span>
           )}
 
-          {/* Goal preview */}
-          {sprint.goal && (
-            <span
-              className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[200px] italic hidden sm:block"
-              title={`Mục tiêu: ${sprint.goal}`}
-            >
-              - "{sprint.goal}"
-            </span>
-          )}
+
         </div>
 
         {/* Right side controls: Stats, actions */}
@@ -146,49 +140,60 @@ export function SprintSection({
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center gap-1.5">
-            {sprint.status === "Future" && (
-              <button
-                onClick={() => onStartSprint(sprint.id)}
-                className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 text-white dark:text-[#1d2125] text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
-              >
-                Bắt đầu Sprint
-              </button>
-            )}
+          {isLeaderOrOwner && (
+            <div className="flex items-center gap-1.5">
+              {sprint.status === "Future" && (
+                <button
+                  onClick={() => onStartSprint(sprint.id)}
+                  className="bg-[#1868db] dark:bg-[#579dff] hover:bg-[#0052cc] dark:hover:bg-blue-400 text-white dark:text-[#1d2125] text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
+                >
+                  Bắt đầu Sprint
+                </button>
+              )}
 
-            {sprint.status === "Active" && (
-              <button
-                onClick={() => onCloseSprint(sprint.id)}
-                className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
-              >
-                Kết thúc Sprint
-              </button>
-            )}
+              {sprint.status === "Active" && (
+                <button
+                  onClick={() => onCloseSprint(sprint.id)}
+                  className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
+                >
+                  Kết thúc Sprint
+                </button>
+              )}
 
-            {sprint.status === "Future" && (
-              <button
-                onClick={() => onEditSprint(sprint)}
-                className="bg-transparent hover:bg-slate-100 dark:hover:bg-[#22272b] text-slate-550 dark:text-slate-400 border border-slate-200 dark:border-[#353e47] text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
-              >
-                Sửa
-              </button>
-            )}
+              {sprint.status === "Future" && (
+                <button
+                  onClick={() => onEditSprint(sprint)}
+                  className="bg-transparent hover:bg-slate-100 dark:hover:bg-[#22272b] text-slate-550 dark:text-slate-400 border border-slate-200 dark:border-[#353e47] text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
+                >
+                  Sửa
+                </button>
+              )}
 
-            {sprint.status === "Future" && (
-              <button
-                onClick={() => onDeleteSprint(sprint.id)}
-                className="bg-transparent hover:bg-red-50 dark:hover:bg-red-950/10 text-red-500 dark:text-red-400 border border-transparent hover:border-red-200 dark:hover:border-red-900/30 text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
-              >
-                Xóa
-              </button>
-            )}
-          </div>
+              {sprint.status === "Future" && (
+                <button
+                  onClick={() => onDeleteSprint(sprint.id)}
+                  className="bg-transparent hover:bg-red-50 dark:hover:bg-red-950/10 text-red-500 dark:text-red-400 border border-transparent hover:border-red-200 dark:hover:border-red-900/30 text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors"
+                >
+                  Xóa
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Sprint Task List (Collapsible) */}
       {isExpanded && (
         <div className="divide-y divide-slate-100 dark:divide-[#2c3338] min-h-[50px] flex flex-col">
+          {sprint.goal && (
+            <div className="px-4 py-2.5 bg-slate-50/50 dark:bg-[#161a1d]/30 border-b border-slate-100 dark:border-[#2c3338] text-xs text-slate-550 dark:text-slate-400 flex items-start gap-2 select-text">
+              <span className="text-slate-450 dark:text-slate-500 mt-0.5 shrink-0">🎯</span>
+              <div>
+                <span className="font-bold text-slate-700 dark:text-slate-350 mr-1.5">Mục tiêu Sprint:</span>
+                <span className="italic leading-relaxed">{sprint.goal}</span>
+              </div>
+            </div>
+          )}
           {sprint.tasks && sprint.tasks.length > 0 ? (
             sprint.tasks.map((task) => (
               <BacklogTaskRow

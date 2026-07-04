@@ -23,12 +23,13 @@ interface TaskSubtaskItemProps {
   onSubtaskDueDateChange: (subTaskId: string, dueDate: string | null) => void;
   onDeleteSubtask: (subTaskId: string) => void;
   currentUser: User | null;
-  allUsers: User[];
+  allUsers: any[];
   canManage: boolean;
   readOnly?: boolean;
   isPersonalProject?: boolean;
   isActive?: boolean;
   onSelect?: () => void;
+  parentCreatedByUserId?: string;
 }
 
 export function TaskSubtaskItem({
@@ -46,9 +47,14 @@ export function TaskSubtaskItem({
   isPersonalProject = false,
   isActive = false,
   onSelect,
+  parentCreatedByUserId,
 }: TaskSubtaskItemProps) {
   const { confirm } = useAlertConfirm();
-  const canToggle = !readOnly && (canManage || (currentUser && subtask.assigneeUserId === currentUser.id));
+  const currentMember = allUsers.find((u) => u.id === currentUser?.id);
+  const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || allUsers.length <= 1;
+  const isTaskCreator = parentCreatedByUserId === currentUser?.id;
+  const canModifyAssigneeDirectly = isLeader || isTaskCreator;
+  const canToggle = !readOnly && (isLeader || isTaskCreator || (currentUser && subtask.assigneeUserId === currentUser.id));
   const comments = subtask.comments || [];
 
   const [localDueDate, setLocalDueDate] = React.useState(subtask.dueDate ? subtask.dueDate.substring(0, 10) : "");
@@ -128,7 +134,7 @@ export function TaskSubtaskItem({
         <div
           onClick={(e) => e.stopPropagation()}
           className={`flex items-center gap-1 bg-slate-50 dark:bg-[#2c3338] border border-slate-200/70 dark:border-[#353e47] rounded px-1.5 py-0.5 transition-all ${
-            canManage ? "hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-[#353e47]/50 cursor-pointer" : "opacity-60"
+            canModifyAssigneeDirectly ? "hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-[#353e47]/50 cursor-pointer" : "opacity-60"
           }`}
           title="Hạn chót nhiệm vụ"
         >
@@ -148,7 +154,7 @@ export function TaskSubtaskItem({
           </svg>
           <input
             type="date"
-            disabled={!canManage}
+            disabled={!canModifyAssigneeDirectly}
             value={localDueDate}
             min={taskStartDate ? taskStartDate.substring(0, 10) : undefined}
             max={taskDueDate ? taskDueDate.substring(0, 10) : undefined}
@@ -165,7 +171,7 @@ export function TaskSubtaskItem({
               }
             }}
             className={`text-[10px] text-[#292a2e] dark:text-[#deebff] font-semibold bg-transparent border-none focus:outline-none w-22 ${
-              canManage ? "cursor-pointer" : "cursor-not-allowed"
+              canModifyAssigneeDirectly ? "cursor-pointer" : "cursor-not-allowed"
             }`}
           />
         </div>
@@ -174,56 +180,106 @@ export function TaskSubtaskItem({
 
         {/* Subtask Assignee Selector */}
         {!isPersonalProject && (
-          <div className="relative h-6 w-6" onClick={(e) => e.stopPropagation()}>
-            <select
-              value={subtask.assigneeUserId || ""}
-              onChange={(e) => onSubtaskAssigneeChange(subtask.id, e.target.value)}
-              disabled={!canManage}
-              className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
-                canManage ? "cursor-pointer" : "cursor-not-allowed"
-              }`}
-              title={canManage ? "Giao việc cho thành viên" : "Bạn không có quyền giao việc"}
-            >
-              <option value="">Chưa giao</option>
-              {allUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.displayName}
-                </option>
-              ))}
-            </select>
-            {/* Avatar overlay */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              {subtask.assigneeUser ? (
-                <Avatar
-                  src={subtask.assigneeUser.avatar}
-                  alt={subtask.assigneeUser.displayName}
-                  title={`Giao cho: ${subtask.assigneeUser.displayName}`}
-                  className="h-5 w-5 rounded-full border border-slate-200 dark:border-[#353e47]"
-                />
-              ) : (
-                <div
-                  title="Chưa giao việc"
-                  className="h-5 w-5 rounded-full border-2 border-dashed border-slate-300 dark:border-[#353e47] bg-slate-50 dark:bg-[#2c3338] flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:border-slate-400 dark:group-hover:border-slate-450 group-hover:text-slate-500 dark:group-hover:text-slate-350 transition-all"
+          <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
+            {canModifyAssigneeDirectly ? (
+              <div className="relative h-6 w-6">
+                <select
+                  value={subtask.assigneeUserId || ""}
+                  onChange={(e) => onSubtaskAssigneeChange(subtask.id, e.target.value)}
+                  disabled={!canManage}
+                  className={`absolute inset-0 opacity-0 w-full h-full z-10 ${
+                    canManage ? "cursor-pointer" : "cursor-not-allowed"
+                  }`}
+                  title={canManage ? "Giao việc cho thành viên" : "Bạn không có quyền giao việc"}
                 >
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="8.5" cy="7" r="4" />
-                  </svg>
+                  <option value="">Chưa giao</option>
+                  {allUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.displayName}
+                    </option>
+                  ))}
+                </select>
+                {/* Avatar overlay */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  {subtask.assigneeUser ? (
+                    <Avatar
+                      src={subtask.assigneeUser.avatar}
+                      alt={subtask.assigneeUser.displayName}
+                      title={`Giao cho: ${subtask.assigneeUser.displayName}`}
+                      className="h-5 w-5 rounded-full border border-slate-200 dark:border-[#353e47]"
+                    />
+                  ) : (
+                    <div
+                      title="Chưa giao việc"
+                      className="h-5 w-5 rounded-full border-2 border-dashed border-slate-300 dark:border-[#353e47] bg-slate-50 dark:bg-[#2c3338] flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:border-slate-400 dark:group-hover:border-slate-450 group-hover:text-slate-500 dark:group-hover:text-slate-350 transition-all"
+                    >
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                {!subtask.assigneeUserId ? (
+                  <button
+                    onClick={() => currentUser && onSubtaskAssigneeChange(subtask.id, currentUser.id)}
+                    className="text-[#1868db] dark:text-[#579dff] hover:underline cursor-pointer border border-[#1868db]/30 dark:border-[#579dff]/30 px-2 py-0.5 rounded-[4px] bg-blue-50/30 dark:bg-blue-950/10 text-[10px]"
+                    title="Nhận thực hiện nhiệm vụ này"
+                  >
+                    Nhận nhiệm vụ
+                  </button>
+                ) : subtask.assigneeUserId === currentUser?.id ? (
+                  <div className="flex items-center gap-1">
+                    <Avatar
+                      src={subtask.assigneeUser?.avatar}
+                      alt={subtask.assigneeUser?.displayName || ""}
+                      className="h-5 w-5 rounded-full border border-slate-200 dark:border-[#353e47]"
+                    />
+                    <button
+                      onClick={async () => {
+                        const confirmLeave = await confirm(
+                          "Bạn có chắc chắn muốn hủy nhận (rời khỏi) nhiệm vụ này?",
+                          {
+                            title: "Hủy nhận nhiệm vụ",
+                            confirmLabel: "Rời nhiệm vụ",
+                            variant: "danger",
+                          }
+                        );
+                        if (confirmLeave) {
+                          onSubtaskAssigneeChange(subtask.id, "");
+                        }
+                      }}
+                      className="text-red-500 hover:text-red-750 hover:underline cursor-pointer text-[10px]"
+                      title="Hủy nhận nhiệm vụ"
+                    >
+                      Rời
+                    </button>
+                  </div>
+                ) : (
+                  <Avatar
+                    src={subtask.assigneeUser?.avatar}
+                    alt={subtask.assigneeUser?.displayName || ""}
+                    title={`Người thực hiện: ${subtask.assigneeUser?.displayName}`}
+                    className="h-5 w-5 rounded-full border border-slate-200 dark:border-[#353e47] opacity-80 cursor-default select-none pointer-events-none"
+                  />
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {/* Delete Button */}
-        {canManage && (
+        {canModifyAssigneeDirectly && (
           <button
             onClick={async (e) => {
               e.stopPropagation();

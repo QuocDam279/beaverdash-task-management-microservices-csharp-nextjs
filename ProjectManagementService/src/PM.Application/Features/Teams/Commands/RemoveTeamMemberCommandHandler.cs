@@ -59,6 +59,18 @@ public class RemoveTeamMemberCommandHandler : IRequestHandler<RemoveTeamMemberCo
                 throw new InvalidOperationException("Không thể xóa leader cuối cùng. Vui lòng chỉ định một leader khác trước khi thực hiện.");
         }
 
+        var teamName = await _dbContext.Teams
+            .Where(t => t.Id == request.TeamId)
+            .Select(t => t.Name)
+            .FirstOrDefaultAsync(cancellationToken) ?? "Nhóm";
+
+        targetMember.AddDomainEvent(new PM.Domain.Events.TeamMemberRemovedEvent(
+            request.TeamId,
+            teamName,
+            request.TargetUserId,
+            currentUserId
+        ));
+
         // 4. Thực thi xóa
         _dbContext.TeamMembers.Remove(targetMember);
         await _dbContext.SaveChangesAsync(cancellationToken);

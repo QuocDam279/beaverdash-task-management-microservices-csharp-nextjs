@@ -3,14 +3,17 @@
 import * as React from "react";
 import { ChatMessage } from "@/hooks/useAIAssistant";
 import { AIAssistantToolCard } from "./AIAssistantToolCard";
+import { downloadProjectTemplate } from "@/lib/templateGenerator";
 
 interface ViewportProps {
+  projectId: string;
   messages: ChatMessage[];
   isHistoryLoading: boolean;
   isSending: boolean;
-  onSuggestionClick: (promptText: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  isLeader: boolean;
 }
+
 
 function parseInlineMarkdown(text: string): React.ReactNode[] {
   const tokenRegex = /(\*\*.*?\*\*|`.*?`)/g;
@@ -114,6 +117,12 @@ function MarkdownRenderer({ content }: MarkdownRendererProps) {
 function formatMessageTime(dateStr: string): string {
   if (!dateStr) return "";
   let isoStr = dateStr;
+  
+  // Replace space with T to make it standard ISO 8601
+  if (isoStr.includes(" ") && !isoStr.includes("T")) {
+    isoStr = isoStr.replace(" ", "T");
+  }
+  
   if (!isoStr.endsWith("Z") && !isoStr.includes("+") && !isoStr.includes("-")) {
     isoStr = isoStr + "Z";
   }
@@ -127,12 +136,25 @@ function formatMessageTime(dateStr: string): string {
 }
 
 export function AIAssistantChatViewport({
+  projectId,
   messages,
   isHistoryLoading,
   isSending,
-  onSuggestionClick,
   messagesEndRef,
+  isLeader,
 }: ViewportProps) {
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+
+  const handleCopy = (id: string, text: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }).catch(err => {
+      console.error("Failed to copy message:", err);
+    });
+  };
+
   const creationProgress = React.useMemo(() => {
     let total = 0;
     let completed = 0;
@@ -214,32 +236,36 @@ export function AIAssistantChatViewport({
         <div className="space-y-1.5">
           <h3 className="text-base font-bold text-slate-800 dark:text-[#deebff] tracking-tight">Tôi có thể giúp gì cho bạn hôm nay?</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 leading-relaxed">
-            Hỏi trợ lý AI để lên kế hoạch dự án, phân tích công việc hoặc tạo tác vụ tự động.
+            {isLeader
+              ? "Tôi có thể giúp bạn tự động lập kế hoạch dự án, phân tích công việc và phân công nhiệm vụ từ file mẫu."
+              : "Tôi có thể hỗ trợ bạn tra cứu tiến độ công việc, kiểm tra các deadline sắp tới và xem lịch sử hoạt động của dự án."}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full pt-2">
-          <button
-            onClick={() => onSuggestionClick("Giúp tôi tạo công việc cho dự án")}
-            className="p-3.5 rounded-xl border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50/50 dark:hover:bg-[#2c3338] text-left text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-          >
-            💡 Giúp tôi tạo công việc cho dự án
-          </button>
-          <button
-            onClick={() => onSuggestionClick("Hỗ trợ tôi lập kế hoạch cho dự án")}
-            className="p-3.5 rounded-xl border border-slate-200 dark:border-[#353e47] bg-white dark:bg-[#22272b] hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50/50 dark:hover:bg-[#2c3338] text-left text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-          >
-            📅 Hỗ trợ tôi lập kế hoạch cho dự án
-          </button>
-          <a
-            href="/templates/project_plan_template.docx"
-            download="Mau_Ke_Hoach_Du_An_Nhom_BeaverDash.docx"
-            className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/15 hover:border-emerald-300 dark:hover:border-emerald-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/25 text-left text-xs font-bold text-emerald-700 dark:text-emerald-400 transition-colors cursor-pointer no-underline"
-          >
-            📄 Tải file mẫu kế hoạch dự án nhóm
-            <span className="block text-[10px] font-medium text-emerald-600/70 dark:text-emerald-500/60 mt-1">Điền thông tin → đính kèm → AI tự lập kế hoạch</span>
-          </a>
-        </div>
+        {isLeader && (
+          <div className="flex justify-center w-full pt-2">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                downloadProjectTemplate(projectId);
+              }}
+              className="max-w-md w-full p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/15 hover:border-emerald-300 dark:hover:border-emerald-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/25 text-left transition-colors cursor-pointer no-underline group"
+            >
+              <span className="flex items-center gap-2 mb-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0 group-hover:translate-y-0.5 transition-transform">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Tải file mẫu kế hoạch dự án nhóm
+              </span>
+              <span className="block text-[10px] font-medium text-emerald-600/70 dark:text-emerald-500/60 leading-relaxed">
+                Điền thông tin kế hoạch dự án → đính kèm file vào khung chat → Gửi để AI tự động thiết lập và phân công công việc.
+              </span>
+            </a>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
     );
@@ -284,13 +310,48 @@ export function AIAssistantChatViewport({
                     </div>
                   )}
                   {displayText && <p className="whitespace-pre-wrap font-medium">{displayText}</p>}
-                  <div className="text-[8px] mt-1 text-right font-semibold text-slate-400 dark:text-slate-500 select-none">
-                    {formatMessageTime(msg.created_at)}
+                  <div className="flex items-center justify-end gap-1 mt-1.5 select-none">
+                    <button
+                      onClick={() => handleCopy(msg.id, displayText || "")}
+                      className="p-0.5 rounded hover:bg-slate-200/60 dark:hover:bg-slate-750/60 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer flex items-center justify-center"
+                      title="Sao chép tin nhắn"
+                    >
+                      {copiedId === msg.id ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      )}
+                    </button>
+                    <span className="text-[8px] font-semibold text-slate-400 dark:text-slate-500">
+                      {formatMessageTime(msg.created_at)}
+                    </span>
                   </div>
                 </div>
               </div>
             );
           } else {
+            // Check if the current turn started with a file upload
+            let isFileUploadTurn = false;
+            for (let i = index; i >= 0; i--) {
+              if (messages[i].role === "user") {
+                const uMsg = messages[i];
+                if (uMsg.content && uMsg.content.startsWith("{") && uMsg.content.endsWith("}")) {
+                  try {
+                    const parsed = JSON.parse(uMsg.content);
+                    if (parsed.attachment) {
+                      isFileUploadTurn = true;
+                    }
+                  } catch (e) {}
+                }
+                break;
+              }
+            }
+
             // Find tool results for this assistant message by scanning forward in the message list
             const toolResults: any[] = [];
             if (msg.tool_calls && msg.tool_calls.length > 0) {
@@ -319,7 +380,7 @@ export function AIAssistantChatViewport({
                   <div className="text-sm leading-relaxed font-medium text-slate-800 dark:text-slate-350">
                     <MarkdownRenderer content={displayText || ""} />
                   </div>
-                  {msg.tool_calls && msg.tool_calls.length > 0 && (
+                  {msg.tool_calls && msg.tool_calls.length > 0 && !isFileUploadTurn && (
                     <div className="mt-2 space-y-1">
                       {msg.tool_calls.map((tc, idx) => (
                         <AIAssistantToolCard
@@ -330,8 +391,26 @@ export function AIAssistantChatViewport({
                       ))}
                     </div>
                   )}
-                  <div className="text-[8px] text-slate-400 dark:text-slate-500 font-semibold select-none pt-0.5">
-                    {formatMessageTime(msg.created_at)}
+                  <div className="flex items-center gap-1.5 pt-1 select-none">
+                    <span className="text-[8px] text-slate-400 dark:text-slate-500 font-semibold">
+                      {formatMessageTime(msg.created_at)}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(msg.id, displayText || "")}
+                      className="p-0.5 rounded hover:bg-slate-200/50 dark:hover:bg-[#2c3338]/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer flex items-center justify-center"
+                      title="Sao chép tin nhắn"
+                    >
+                      {copiedId === msg.id ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

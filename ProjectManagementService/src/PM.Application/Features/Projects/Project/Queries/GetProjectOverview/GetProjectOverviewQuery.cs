@@ -28,6 +28,7 @@ public class ProjectOverviewDto
     public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
     public Guid? TeamId { get; set; }
+    public string? TeamName { get; set; }
     public Guid CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsPublic { get; set; }
@@ -86,6 +87,7 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
         var project = await _dbContext.Projects
             .AsNoTracking()
+            .Include(p => p.Team)
             .FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
 
         if (project == null) return null;
@@ -254,6 +256,7 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
             StartDate = project.StartDate,
             DueDate = project.DueDate,
             TeamId = project.TeamId,
+            TeamName = project.Team?.Name,
             CreatedByUserId = project.CreatedByUserId,
             CreatedAt = project.CreatedAt,
             IsPublic = project.IsPublic,

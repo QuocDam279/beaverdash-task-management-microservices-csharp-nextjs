@@ -42,6 +42,16 @@ public class DeleteSubTaskCommandHandler : IRequestHandler<DeleteSubTaskCommand,
         if (requestingMember == null)
             throw new UnauthorizedAccessException("Bạn không có quyền xóa SubTask này.");
 
+        bool isLeader = requestingMember.Role == "leader" || requestingMember.Role == "Owner";
+        bool isTaskCreator = subTask.Task!.CreatedByUserId == currentUserId;
+        bool hasAssignedSubTask = await _dbContext.SubTasks
+            .AnyAsync(st => st.TaskId == subTask.TaskId && st.AssigneeUserId == currentUserId && st.DeletedAt == null, cancellationToken);
+
+        if (!isLeader && !isTaskCreator && !hasAssignedSubTask)
+        {
+            throw new UnauthorizedAccessException("Bạn không có quyền thao tác trên công việc này vì chưa được giao bất kỳ nhiệm vụ nào.");
+        }
+
         subTask.DeletedAt = DateTime.UtcNow;
 
         subTask.AddDomainEvent(new PM.Domain.Events.SubTaskDeletedEvent(

@@ -132,12 +132,68 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
   // Compute the effective pageSize based on viewMode
   const effectivePageSize = viewMode === "calendar" ? CALENDAR_PAGE_SIZE : pageSize;
 
-  const fetchTasks = React.useCallback(async (page?: number) => {
+  // Keep track of the last queried combination to prevent duplicate calls / infinite loops
+  const lastFetchedRef = React.useRef({
+    page: -1,
+    debouncedSearchQuery: "",
+    selectedProject: "",
+    selectedStatus: "",
+    selectedPriority: "",
+    selectedSprintFilter: "",
+    selectedDueDateFilter: "",
+    sortBy: "",
+    effectivePageSize: 0
+  });
+
+  const fetchTasks = React.useCallback(async (page?: number, force?: boolean) => {
     try {
+      const filtersChanged = 
+        lastFetchedRef.current.debouncedSearchQuery !== debouncedSearchQuery ||
+        lastFetchedRef.current.selectedProject !== selectedProject ||
+        lastFetchedRef.current.selectedStatus !== selectedStatus ||
+        lastFetchedRef.current.selectedPriority !== selectedPriority ||
+        lastFetchedRef.current.selectedSprintFilter !== selectedSprintFilter ||
+        lastFetchedRef.current.selectedDueDateFilter !== selectedDueDateFilter ||
+        lastFetchedRef.current.sortBy !== sortBy ||
+        lastFetchedRef.current.effectivePageSize !== effectivePageSize;
+
+      let targetPage = page ?? currentPage;
+      if (filtersChanged && page === undefined) {
+        targetPage = 1;
+      }
+
+      // Skip duplicate fetches unless forced (e.g. on retry or explicit updates)
+      if (
+        !force &&
+        !filtersChanged &&
+        lastFetchedRef.current.page === targetPage &&
+        lastFetchedRef.current.debouncedSearchQuery === debouncedSearchQuery &&
+        lastFetchedRef.current.selectedProject === selectedProject &&
+        lastFetchedRef.current.selectedStatus === selectedStatus &&
+        lastFetchedRef.current.selectedPriority === selectedPriority &&
+        lastFetchedRef.current.selectedSprintFilter === selectedSprintFilter &&
+        lastFetchedRef.current.selectedDueDateFilter === selectedDueDateFilter &&
+        lastFetchedRef.current.sortBy === sortBy &&
+        lastFetchedRef.current.effectivePageSize === effectivePageSize
+      ) {
+        return;
+      }
+
+      // Update the ref
+      lastFetchedRef.current = {
+        page: targetPage,
+        debouncedSearchQuery,
+        selectedProject,
+        selectedStatus,
+        selectedPriority,
+        selectedSprintFilter,
+        selectedDueDateFilter,
+        sortBy,
+        effectivePageSize
+      };
+
       setIsLoading(true);
       setError(null);
-
-      const targetPage = page ?? currentPage;
 
       const params = new URLSearchParams();
       params.set("pageNumber", String(targetPage));
@@ -172,7 +228,12 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
         setTasks(items);
         setTotalCount(data.totalCount || 0);
         setTotalPages(data.totalPages || 0);
-        setCurrentPage(data.pageNumber || 1);
+
+        if (data.pageNumber && data.pageNumber !== currentPage) {
+          setCurrentPage(data.pageNumber);
+        } else if (filtersChanged && currentPage !== 1) {
+          setCurrentPage(1);
+        }
 
         // Set backend stats
         setBackendStats({
@@ -223,11 +284,6 @@ export function useMyTasksPage(currentUser: User | null | undefined) {
 
   // Re-fetch when any filter/sort/page changes
   React.useEffect(() => { fetchTasks(); }, [fetchTasks]);
-
-  // Reset to page 1 when filters or sort or search change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedProject, selectedStatus, selectedPriority, selectedSprintFilter, selectedDueDateFilter, sortBy, effectivePageSize]);
 
   // Since backend handles filtering/sorting, tasks from API are already filtered and sorted
   const filteredTasks = tasks;

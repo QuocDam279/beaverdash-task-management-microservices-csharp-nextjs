@@ -33,6 +33,7 @@ public class GetTaskDetailsQueryHandler : IRequestHandler<GetTaskDetailsQuery, T
                 BoardColumnId = t.BoardColumnId,
                 ProjectId = t.BoardColumn != null ? t.BoardColumn.ProjectId : Guid.Empty,
                 ProjectName = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.Name : string.Empty,
+                CreatedByUserId = t.CreatedByUserId,
                 Title = t.Title,
                 Description = t.Description,
                 Priority = t.Priority != null ? t.Priority.ToString() : null,

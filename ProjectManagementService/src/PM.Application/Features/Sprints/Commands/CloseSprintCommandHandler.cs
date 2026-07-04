@@ -49,12 +49,12 @@ public class CloseSprintCommandHandler : IRequestHandler<CloseSprintCommand, boo
             throw new UnauthorizedAccessException("Bạn không có quyền quản lý Sprint của Project này.");
         }
 
-        var isMember = await _dbContext.TeamMembers.AnyAsync(
+        var member = await _dbContext.TeamMembers.FirstOrDefaultAsync(
             tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, 
             cancellationToken);
 
-        if (!isMember)
-            throw new UnauthorizedAccessException("Bạn không có quyền quản lý Sprint của Project này.");
+        if (member == null || (member.Role != "leader" && member.Role != "Owner"))
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền quản lý Sprint của Project này.");
 
         // Phân loại Task: hoàn thành vs chưa hoàn thành
         var completedTasks = sprint.TaskItems.Where(t => t.BoardColumn != null && t.BoardColumn.IsDone).ToList();

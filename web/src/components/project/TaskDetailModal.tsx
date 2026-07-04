@@ -42,6 +42,9 @@ export function TaskDetailModal({
 
   const currentMember = assignees.find((m) => m.id === currentUser?.id);
   const isLeader = currentMember?.role === "leader" || currentMember?.role === "Owner" || assignees.length <= 1;
+  const isCreator = task.createdByUserId === currentUser?.id || (task as any).CreatedByUserId === currentUser?.id;
+  const canEditOrDelete = isLeader || isCreator;
+  const isTaskReadOnly = readOnly || !canEditOrDelete;
   const canManageSubtasks = true;
 
   const subtasks = task.subTasks || [];
@@ -136,8 +139,9 @@ export function TaskDetailModal({
         priority: subtask.priority,
       });
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to toggle subtask:", err);
+      alert(err.message || "Không thể thay đổi trạng thái nhiệm vụ.", "Thất bại", "danger");
     }
   };
 
@@ -153,8 +157,9 @@ export function TaskDetailModal({
         priority: subtask.priority,
       });
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update subtask title:", err);
+      alert(err.message || "Không thể cập nhật tên nhiệm vụ.", "Thất bại", "danger");
     }
   };
 
@@ -170,8 +175,9 @@ export function TaskDetailModal({
         priority: subtask.priority,
       });
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update subtask assignee:", err);
+      alert(err.message || "Không thể thay đổi người thực hiện.", "Thất bại", "danger");
     }
   };
 
@@ -187,8 +193,9 @@ export function TaskDetailModal({
         priority: subtask.priority,
       });
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update subtask due date:", err);
+      alert(err.message || "Không thể thay đổi hạn chót nhiệm vụ.", "Thất bại", "danger");
     }
   };
 
@@ -200,8 +207,9 @@ export function TaskDetailModal({
         priority: null,
       });
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to add subtask:", err);
+      alert(err.message || "Không thể thêm nhiệm vụ con.", "Thất bại", "danger");
     }
   };
 
@@ -209,8 +217,9 @@ export function TaskDetailModal({
     try {
       await api.delete(`/subtasks/${subTaskId}`);
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to delete subtask:", err);
+      alert(err.message || "Không thể xóa nhiệm vụ con.", "Thất bại", "danger");
     }
   };
 
@@ -229,8 +238,9 @@ export function TaskDetailModal({
         }
       }
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to add subtask comment:", err);
+      alert(err.message || "Không thể thêm bình luận.", "Thất bại", "danger");
     }
   };
 
@@ -238,8 +248,9 @@ export function TaskDetailModal({
     try {
       await api.delete(`/subtasks/${subTaskId}/comments/${commentId}`);
       await reloadTask();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to delete comment:", err);
+      alert(err.message || "Không thể xóa bình luận.", "Thất bại", "danger");
     }
   };
 
@@ -274,7 +285,7 @@ export function TaskDetailModal({
       >
         <TaskDetailHeader 
           onClose={onClose} 
-          onDelete={readOnly ? undefined : handleDeleteTask} 
+          onDelete={(!readOnly && canEditOrDelete) ? handleDeleteTask : undefined} 
           projectId={task.projectId}
           projectName={task.projectName}
           shareToken={shareToken}
@@ -284,15 +295,15 @@ export function TaskDetailModal({
             <div className="flex-shrink-0">
               <TaskDetailTitle
                 title={task.title}
-                onUpdateTitle={(title) => !readOnly && handleUpdateDetails({ title })}
-                readOnly={readOnly}
+                onUpdateTitle={(title) => !isTaskReadOnly && handleUpdateDetails({ title })}
+                readOnly={isTaskReadOnly}
               />
             </div>
             <div className="flex-shrink-0">
               <TaskDetailDescription
                 description={task.description}
-                onUpdateDescription={(description) => !readOnly && handleUpdateDetails({ description: description || "" })}
-                readOnly={readOnly}
+                onUpdateDescription={(description) => !isTaskReadOnly && handleUpdateDetails({ description: description || "" })}
+                readOnly={isTaskReadOnly}
               />
             </div>
             <TaskSubtasks
@@ -311,17 +322,18 @@ export function TaskDetailModal({
               isPersonalProject={task.teamId === null || !task.teamId}
               activeSubtaskId={activeSubtaskId}
               onSelectSubtask={setActiveSubtaskId}
+              parentCreatedByUserId={task.createdByUserId || (task as any).CreatedByUserId}
             />
           </div>
           <TaskSidebarProperties
             task={task}
             columns={columns}
             onStatusChange={handleStatusChange}
-            onAssigneeChange={(assigneeId) => !readOnly && handleUpdateDetails({ assigneeUserId: assigneeId || "00000000-0000-0000-0000-000000000000" })}
-            onPriorityChange={(priority) => !readOnly && handleUpdateDetails({ priority })}
-            onDateChange={(field, value) => !readOnly && handleUpdateDetails({ [field]: value ? new Date(value).toISOString() : null })}
+            onAssigneeChange={(assigneeId) => !isTaskReadOnly && handleUpdateDetails({ assigneeUserId: assigneeId || "00000000-0000-0000-0000-000000000000" })}
+            onPriorityChange={(priority) => !isTaskReadOnly && handleUpdateDetails({ priority })}
+            onDateChange={(field, value) => !isTaskReadOnly && handleUpdateDetails({ [field]: value ? new Date(value).toISOString() : null })}
             assignees={assignees}
-            readOnly={readOnly}
+            readOnly={isTaskReadOnly}
           />
         </div>
 

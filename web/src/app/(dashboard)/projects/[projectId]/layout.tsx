@@ -200,10 +200,17 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
           <div>
             {/* Breadcrumb / Project Type */}
             <div className="flex items-center gap-1.5 text-xs text-[#505258] dark:text-[#8c9bab] font-semibold mb-1 uppercase tracking-wider">
-              <span>Dự án</span>
+              {project.teamId && (
+                <Link 
+                  href={`/teams/${project.teamId}`}
+                  className="hover:text-[#1868db] dark:hover:text-[#579dff] hover:underline transition-colors"
+                >
+                  {project.teamName}
+                </Link>
+              )}
               <span className="text-slate-300">/</span>
               <span className="text-[#1868db] dark:text-[#579dff]">
-                {project.teamId ? "Dự án nhóm" : "Dự án cá nhân"}
+                Dự án
               </span>
             </div>
             {/* Project Title */}
@@ -370,7 +377,7 @@ export default function ProjectLayout({ children, params }: LayoutProps) {
       <div className="flex-1 min-h-0 w-full flex overflow-hidden bg-[#f4f5f7] dark:bg-[#161a1d] relative">
         {/* Persistent AI Assistant chat workspace, hidden when not in assistant route to retain its internal state and session load */}
         <div className={`flex-1 min-h-0 w-full ${pathname.endsWith("/assistant") ? "flex" : "hidden"}`}>
-          <AIAssistantContainer projectId={projectId} />
+          <AIAssistantContainer projectId={projectId} isLeader={isLeaderOrOwner} />
         </div>
 
         {/* Regular routing views (Board, Calendar, Gantt, Overview, List), hidden when in assistant route */}

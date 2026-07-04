@@ -198,7 +198,7 @@ export default function CalendarView({
   const monthLabel = `${monthNames[currentDate.getMonth()]} năm ${currentDate.getFullYear()}`;
 
   return (
-    <div className="space-y-6 flex-1 flex flex-col min-h-0 bg-white dark:bg-[#1d2125]">
+    <div className="space-y-6 w-full bg-white dark:bg-[#1d2125]">
       <CalendarToolbar
         monthLabel={monthLabel}
         viewMode={viewMode}

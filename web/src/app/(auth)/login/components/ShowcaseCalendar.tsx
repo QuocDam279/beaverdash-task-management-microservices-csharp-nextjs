@@ -29,17 +29,17 @@ export function ShowcaseCalendar() {
               <span className="text-slate-400 text-[8px] font-bold">{dayNum}</span>
               {dayNum === 4 && (
                 <div className="w-full text-[7.5px] bg-blue-50 text-blue-600 border border-blue-100 font-bold p-0.5 rounded truncate leading-normal text-center animate-fade-slide-up">
-                  UI Login
+                  Giao diện
                 </div>
               )}
               {dayNum === 9 && (
                 <div className="w-full text-[7.5px] bg-amber-50 text-amber-700 border border-amber-100 font-bold p-0.5 rounded truncate leading-normal text-center animate-fade-slide-up">
-                  Hoạt họa
+                  Hiệu ứng
                 </div>
               )}
               {dayNum === 12 && (
                 <div className="w-full text-[7.5px] bg-purple-50 text-purple-700 border border-purple-100 font-bold p-0.5 rounded truncate leading-normal text-center animate-fade-slide-up">
-                  Auth API
+                  Hệ thống
                 </div>
               )}
             </div>

@@ -86,7 +86,7 @@ export default function ProjectCalendarPage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-6 h-full flex flex-col bg-white dark:bg-[#1d2125]">
+    <div className="p-6 w-full bg-white dark:bg-[#1d2125]">
       <CalendarView
         tasks={tasks}
         setTasks={setTasks}

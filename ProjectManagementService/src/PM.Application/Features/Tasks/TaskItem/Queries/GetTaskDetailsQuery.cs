@@ -10,6 +10,7 @@ public class TaskDetailsDto
     public Guid BoardColumnId { get; set; }
     public Guid ProjectId { get; set; }
     public string ProjectName { get; set; } = null!;
+    public Guid CreatedByUserId { get; set; }
     public Guid? TeamId { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
