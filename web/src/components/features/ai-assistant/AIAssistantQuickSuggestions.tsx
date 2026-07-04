@@ -6,8 +6,7 @@ import { downloadProjectTemplate } from "@/lib/templateGenerator";
 interface SuggestionItem {
   label: string;
   prompt?: string;
-  href?: string;
-  download?: string;
+  isDownload?: boolean;
   icon: React.ReactNode;
 }
 
@@ -71,8 +70,7 @@ export function AIAssistantQuickSuggestions({
     },
     {
       label: "Tải file mẫu kế hoạch",
-      href: "/templates/project_plan_template.docx",
-      download: "Mau_Ke_Hoach_Du_An_Nhom_BeaverDash.docx",
+      isDownload: true,
       icon: (
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -142,7 +140,7 @@ export function AIAssistantQuickSuggestions({
           const baseStyle =
             "inline-flex items-center gap-1.5 px-2.5 py-1.25 rounded-lg border text-[11px] font-bold transition-all shrink-0 cursor-pointer no-underline select-none";
 
-          if (item.href) {
+          if (item.isDownload) {
             // It's a template download button
             return (
               <a

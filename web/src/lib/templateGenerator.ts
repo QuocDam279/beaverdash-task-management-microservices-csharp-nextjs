@@ -16,12 +16,24 @@ import { api } from "./api";
 
 // Helper functions for docx building
 function heading(text: string, level = HeadingLevel.HEADING_1) {
-  return new Paragraph({ text, heading: level, spacing: { before: 300, after: 100 } });
+  return new Paragraph({
+    children: [
+      new TextRun({
+        text,
+        bold: true,
+        size: level === HeadingLevel.HEADING_1 ? 28 : 26,
+        font: "Times New Roman",
+        color: level === HeadingLevel.HEADING_1 ? "1F4E79" : "1868DB",
+      }),
+    ],
+    heading: level,
+    spacing: { before: 300, after: 100 },
+  });
 }
 
 function instruction(text: string) {
   return new Paragraph({
-    children: [new TextRun({ text, italics: true, color: "888888", size: 20, font: "Arial" })],
+    children: [new TextRun({ text, italics: true, color: "888888", size: 22, font: "Times New Roman" })],
     spacing: { after: 80 },
   });
 }
@@ -29,9 +41,10 @@ function instruction(text: string) {
 function metaLine(label: string, value: string) {
   return new Paragraph({
     children: [
-      new TextRun({ text: label, bold: true, size: 22, font: "Arial" }),
-      new TextRun({ text: value, size: 22, font: "Arial" }),
+      new TextRun({ text: label, bold: true, size: 26, font: "Times New Roman" }),
+      new TextRun({ text: value, size: 26, font: "Times New Roman" }),
     ],
+    alignment: AlignmentType.JUSTIFY,
     spacing: { after: 60, before: 40 },
   });
 }
@@ -39,9 +52,9 @@ function metaLine(label: string, value: string) {
 function bullet(text: string, textBold = "") {
   const children = [];
   if (textBold) {
-    children.push(new TextRun({ text: textBold, bold: true, size: 22, font: "Arial" }));
+    children.push(new TextRun({ text: textBold, bold: true, size: 26, font: "Times New Roman" }));
   }
-  children.push(new TextRun({ text, size: 22, font: "Arial" }));
+  children.push(new TextRun({ text, size: 26, font: "Times New Roman" }));
   return new Paragraph({
     children,
     bullet: { level: 0 },
@@ -56,7 +69,7 @@ function emptyLine() {
 function createHeaderCell(text: string, widthPct: number) {
   return new TableCell({
     children: [new Paragraph({
-      children: [new TextRun({ text, bold: true, size: 20, font: "Arial", color: "FFFFFF" })],
+      children: [new TextRun({ text, bold: true, size: 26, font: "Times New Roman", color: "FFFFFF" })],
       alignment: AlignmentType.CENTER,
     })],
     shading: { type: ShadingType.SOLID, color: "1868DB" },
@@ -79,7 +92,7 @@ function createHeaderCell(text: string, widthPct: number) {
 function createCell(text: string, widthPct: number, isPlaceholder = false) {
   return new TableCell({
     children: [new Paragraph({
-      children: [new TextRun({ text, size: 20, font: "Arial", color: isPlaceholder ? "888888" : "000000", italics: isPlaceholder })],
+      children: [new TextRun({ text, size: 26, font: "Times New Roman", color: isPlaceholder ? "888888" : "000000", italics: isPlaceholder })],
     })],
     width: { size: widthPct, type: WidthType.PERCENTAGE },
     margins: {
@@ -185,7 +198,7 @@ export async function downloadProjectTemplate(projectId: string) {
         wbsChildren.push(
           new Paragraph({
             children: [
-              new TextRun({ text: `Sprint ${sprintName}: (Từ ${dates.start} đến ${dates.end})`, bold: true, size: 22, font: "Arial", color: "1868DB" })
+              new TextRun({ text: `Sprint ${sprintName}: (Từ ${dates.start} đến ${dates.end})`, bold: true, size: 26, font: "Times New Roman", color: "1868DB" })
             ],
             spacing: { before: 120, after: 60 }
           })
@@ -196,7 +209,7 @@ export async function downloadProjectTemplate(projectId: string) {
           wbsChildren.push(
             new Paragraph({
               children: [
-                new TextRun({ text: `Công việc ${sprintIdx + 1}.${taskIdx + 1}: ${task.title}`, bold: true, size: 20, font: "Arial" })
+                new TextRun({ text: `Công việc ${sprintIdx + 1}.${taskIdx + 1}: ${task.title}`, bold: true, size: 26, font: "Times New Roman" })
               ],
               spacing: { before: 80, after: 40 }
             })
@@ -221,7 +234,7 @@ export async function downloadProjectTemplate(projectId: string) {
       wbsChildren.push(
         new Paragraph({
           children: [
-            new TextRun({ text: "Sprint 1: [Nhập tên Sprint, VD: Khởi động & Khảo sát] (Từ [DD/MM/YYYY] đến [DD/MM/YYYY])", bold: true, size: 22, font: "Arial", color: "1868DB" })
+            new TextRun({ text: "Sprint 1: [Nhập tên Sprint, VD: Khởi động & Khảo sát] (Từ [DD/MM/YYYY] đến [DD/MM/YYYY])", bold: true, size: 26, font: "Times New Roman", color: "1868DB" })
           ],
           spacing: { before: 120, after: 60 }
         })
@@ -229,7 +242,7 @@ export async function downloadProjectTemplate(projectId: string) {
       wbsChildren.push(
         new Paragraph({
           children: [
-            new TextRun({ text: "Công việc 1.1: [Nhập tên công việc chính, VD: Khảo sát yêu cầu khách hàng]", bold: true, size: 20, font: "Arial" })
+            new TextRun({ text: "Công việc 1.1: [Nhập tên công việc chính, VD: Khảo sát yêu cầu khách hàng]", bold: true, size: 26, font: "Times New Roman" })
           ],
           spacing: { before: 80, after: 40 }
         })
@@ -240,7 +253,7 @@ export async function downloadProjectTemplate(projectId: string) {
       wbsChildren.push(
         new Paragraph({
           children: [
-            new TextRun({ text: "Sprint 2: [Nhập tên Sprint, VD: Thiết kế & Xây dựng API] (Từ [DD/MM/YYYY] đến [DD/MM/YYYY])", bold: true, size: 22, font: "Arial", color: "1868DB" })
+            new TextRun({ text: "Sprint 2: [Nhập tên Sprint, VD: Thiết kế & Xây dựng API] (Từ [DD/MM/YYYY] đến [DD/MM/YYYY])", bold: true, size: 26, font: "Times New Roman", color: "1868DB" })
           ],
           spacing: { before: 120, after: 60 }
         })
@@ -248,7 +261,7 @@ export async function downloadProjectTemplate(projectId: string) {
       wbsChildren.push(
         new Paragraph({
           children: [
-            new TextRun({ text: "Công việc 2.1: [Nhập tên công việc chính, VD: Thiết kế giao diện Figma]", bold: true, size: 20, font: "Arial" })
+            new TextRun({ text: "Công việc 2.1: [Nhập tên công việc chính, VD: Thiết kế giao diện Figma]", bold: true, size: 26, font: "Times New Roman" })
           ],
           spacing: { before: 80, after: 40 }
         })
@@ -261,14 +274,14 @@ export async function downloadProjectTemplate(projectId: string) {
       // Title
       new Paragraph({
         children: [
-          new TextRun({ text: `KẾ HOẠCH DỰ ÁN ${projectName.toUpperCase()}`, bold: true, size: 28, font: "Arial", color: "1F4E79" }),
+          new TextRun({ text: `KẾ HOẠCH DỰ ÁN ${projectName.toUpperCase()}`, bold: true, size: 28, font: "Times New Roman", color: "1F4E79" }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { after: 120 },
       }),
       new Paragraph({
         children: [
-          new TextRun({ text: "Tài liệu lập kế hoạch chi tiết cho dự án và phân rã công việc WBS.", italics: true, size: 18, font: "Arial", color: "666666" }),
+          new TextRun({ text: "Tài liệu lập kế hoạch chi tiết cho dự án và phân rã công việc WBS.", italics: true, size: 18, font: "Times New Roman", color: "666666" }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { after: 300 },
@@ -312,17 +325,17 @@ export async function downloadProjectTemplate(projectId: string) {
       // Divider and Instruction
       new Paragraph({
         children: [
-          new TextRun({ text: "────────────────────────────────────────────────────────────", color: "D9D9D9", size: 18 }),
+          new TextRun({ text: "────────────────────────────────────────────────────────────", color: "D9D9D9", size: 18, font: "Times New Roman" }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { before: 200, after: 60 },
       }),
       new Paragraph({
         children: [
-          new TextRun({ text: "Hướng dẫn từ BeaverDash: ", bold: true, size: 20, font: "Arial", color: "1F4E79" }),
-          new TextRun({ text: "Điền đầy đủ thông tin -> mở trợ lý ảo AI BeaverDash -> đính kèm file này -> gõ yêu cầu ", size: 20, font: "Arial", color: "666666" }),
-          new TextRun({ text: "\"Hãy lập kế hoạch dự án dựa trên tài liệu đính kèm\"", bold: true, italics: true, size: 20, font: "Arial", color: "1F4E79" }),
-          new TextRun({ text: ". Hệ thống AI sẽ tự động phân tích cấu trúc WBS để lập kế hoạch và phân công nhiệm vụ tự động.", size: 20, font: "Arial", color: "666666" }),
+          new TextRun({ text: "Hướng dẫn từ BeaverDash: ", bold: true, size: 26, font: "Times New Roman", color: "1F4E79" }),
+          new TextRun({ text: "Điền đầy đủ thông tin -> mở trợ lý ảo AI BeaverDash -> đính kèm file này -> gõ yêu cầu ", size: 26, font: "Times New Roman", color: "666666" }),
+          new TextRun({ text: "\"Hãy lập kế hoạch dự án dựa trên tài liệu đính kèm\"", bold: true, italics: true, size: 26, font: "Times New Roman", color: "1F4E79" }),
+          new TextRun({ text: ". Hệ thống AI sẽ tự động phân tích cấu trúc WBS để lập kế hoạch và phân công nhiệm vụ tự động.", size: 26, font: "Times New Roman", color: "666666" }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { after: 100 },
@@ -332,7 +345,7 @@ export async function downloadProjectTemplate(projectId: string) {
     const documentInstance = new Document({
       styles: {
         default: {
-          document: { run: { font: "Arial", size: 22 } },
+          document: { run: { font: "Times New Roman", size: 26 } },
         },
       },
       sections: [
