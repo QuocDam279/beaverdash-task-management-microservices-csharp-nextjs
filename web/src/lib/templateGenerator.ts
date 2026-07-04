@@ -44,7 +44,7 @@ function metaLine(label: string, value: string) {
       new TextRun({ text: label, bold: true, size: 26, font: "Times New Roman" }),
       new TextRun({ text: value, size: 26, font: "Times New Roman" }),
     ],
-    alignment: AlignmentType.JUSTIFY,
+    alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 60, before: 40 },
   });
 }
