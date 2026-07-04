@@ -40,6 +40,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
         var user = await _userRepository.GetByGoogleIdOrEmailAsync(payload.GoogleId, payload.Email, cancellationToken);
 
         bool isNewUser = false;
+        bool isModified = false;
 
         if (user == null)
         {
@@ -59,19 +60,18 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
         }
         else
         {
-            // Update details if changed
-            bool isModified = false;
-            if (user.GoogleId != payload.GoogleId)
+            // Update details if changed (avoid overwriting existing DisplayName and Avatar with Google default values)
+            if (string.IsNullOrEmpty(user.GoogleId) || user.GoogleId != payload.GoogleId)
             {
                 user.GoogleId = payload.GoogleId;
                 isModified = true;
             }
-            if (user.DisplayName != payload.DisplayName)
+            if (string.IsNullOrEmpty(user.DisplayName))
             {
                 user.DisplayName = payload.DisplayName;
                 isModified = true;
             }
-            if (user.Avatar != payload.Avatar)
+            if (string.IsNullOrEmpty(user.Avatar) && !string.IsNullOrEmpty(payload.Avatar))
             {
                 user.Avatar = payload.Avatar;
                 isModified = true;
@@ -85,7 +85,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
 
         await _userRepository.SaveChangesAsync(cancellationToken);
 
-        // Publish UserCreatedEvent to RabbitMQ via MassTransit if it's a new user
+        // Publish events to RabbitMQ via MassTransit to sync with other services
         if (isNewUser)
         {
             var userCreatedEvent = new UserCreatedEvent
@@ -97,6 +97,18 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Goo
             };
 
             await _publishEndpoint.Publish(userCreatedEvent, cancellationToken);
+        }
+        else if (isModified)
+        {
+            var userUpdatedEvent = new UserUpdatedEvent
+            {
+                Id = user.Id,
+                Email = user.Email,
+                DisplayName = user.DisplayName,
+                Avatar = user.Avatar
+            };
+
+            await _publishEndpoint.Publish(userUpdatedEvent, cancellationToken);
         }
 
         var localToken = _jwtTokenGenerator.GenerateToken(user);

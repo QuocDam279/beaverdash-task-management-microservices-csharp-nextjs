@@ -25,7 +25,7 @@ class AIAssistantService:
 
         "═══ B. PROPOSAL & CONFIRMATION WORKFLOW ═══\n"
         "4. For general chat or text requests, NEVER call any creation tools immediately. You must first PROPOSE the changes as text (including all required fields per sections C and D) in Vietnamese and wait for the user's explicit confirmation (e.g., 'Đồng ý', 'Ok', 'Tạo đi', 'Xác nhận').\n"
-        "   EXCEPTION FOR FILE UPLOADS: If a file/document attachment is present in the prompt (Tài liệu đính kèm), you MUST skip the proposal and confirmation step completely. Go ahead and immediately call the appropriate creation tools (create_sprint, create_task, create_subtask) to create everything described in the file. Do not output any proposal text or ask for confirmation. Stay completely SILENT during tool execution, and output a final summary in Vietnamese only after all tool calls are finished.\n"
+        "   EXCEPTION FOR FILE UPLOADS: If a file/document attachment is present in the prompt (Tài liệu đính kèm), you MUST skip the proposal and confirmation step completely. However, you MUST first call the read tools (`get_project_details` and `get_project_sprints`) to fetch current project dates, existing Sprints, and project members (with their User IDs, roles, and workloads). Then, call the appropriate creation tools (create_sprint, create_task, create_subtask) to create everything described in the file. You MUST analyze the names, roles, or skills of the members mentioned in the attached file, and map each nhiệm vụ (subtask) logically to the corresponding project member using the User IDs fetched from `get_project_details`. Do not default all tasks/subtasks to the current user unless they are the only member or the file explicitly requests it. Do not output any proposal text or ask for confirmation. Stay completely SILENT during tool execution, and output a final summary in Vietnamese only after all tool calls are finished.\n"
         "5. If the user requests modifications to the proposal, update and re-list the new proposal for their confirmation.\n"
         "6. During tool execution after confirmation, stay SILENT — do not output any text or explanatory messages. Execute all tools sequentially. Only provide a final summary in Vietnamese after ALL tool calls are complete.\n"
         "7. EXECUTION ORDER after confirmation:\n"
@@ -210,7 +210,10 @@ class AIAssistantService:
                             f"Nội dung tài liệu:\n{att.get('content')}\n"
                             f"---\n"
                             f"Yêu cầu: {data.get('text')}\n\n"
-                            f"IMPORTANT: Since a document is attached, skip the proposal/confirmation workflow and directly execute the creation tools (create_sprint, create_task, create_subtask) to create all items described in this document immediately. Stay silent during execution and provide a final summary when complete."
+                            f"IMPORTANT: Since a document is attached, you MUST first call `get_project_details` and `get_project_sprints` to retrieve current project dates, existing sprints, and project members. "
+                            f"Then, skip the proposal/confirmation workflow and execute the creation tools (create_sprint, create_task, create_subtask) to create all items described in this document. "
+                            f"You MUST analyze the names, roles, or skills of the members mentioned in the attached file, and map each nhiệm vụ (subtask) logically to the most appropriate project member using the User IDs fetched from `get_project_details`. Do not default all tasks/subtasks to the current user. "
+                            f"Stay silent during execution and provide a final summary in Vietnamese when complete."
                         )
                 except Exception:
                     pass

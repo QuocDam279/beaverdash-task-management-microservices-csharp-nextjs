@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
-from sqlalchemy.future import select
 from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import insert
 
 from app.core.database import AsyncSessionLocal
 from app.models.user import User
@@ -36,28 +36,27 @@ async def handle_user_created_or_updated(message_data: dict) -> None:
 
     async with AsyncSessionLocal() as db:
         try:
-            query = select(User).where(User.id == user_id)
-            result = await db.execute(query)
-            db_user = result.scalar_one_or_none()
-
-            if db_user:
-                db_user.email = email
-                db_user.display_name = display_name
-                # Avoid resetting avatar if not provided in updates
-                if avatar is not None:
-                    db_user.avatar = avatar
-                logger.info(f"Successfully updated user {user_id} locally.")
-            else:
-                db_user = User(
-                    id=user_id,
-                    email=email,
-                    display_name=display_name,
-                    avatar=avatar
-                )
-                db.add(db_user)
-                logger.info(f"Successfully registered new user {user_id} locally.")
+            stmt = insert(User).values(
+                id=user_id,
+                email=email,
+                display_name=display_name,
+                avatar=avatar
+            )
             
+            update_dict = {
+                "email": email,
+                "display_name": display_name
+            }
+            if avatar is not None:
+                update_dict["avatar"] = avatar
+                
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_=update_dict
+            )
+            await db.execute(stmt)
             await db.commit()
+            logger.info(f"Successfully registered or updated user {user_id} locally.")
         except Exception as ex:
             await db.rollback()
             logger.exception(f"Error handling database transaction for user {user_id}")
@@ -67,87 +66,103 @@ async def handle_project_created_or_updated(body: dict) -> None:
     """Xử lý event ProjectCreated/ProjectUpdated từ RabbitMQ."""
     message = body.get("message", body)
     
-    project_id = message.get("projectId")
-    name = message.get("name")
-    description = message.get("description")
-    status = message.get("status")
+    project_id_str = message.get("projectId") or message.get("ProjectId")
+    name = message.get("name") or message.get("Name")
+    description = message.get("description") or message.get("Description")
+    status = message.get("status") or message.get("Status")
 
-    if not project_id or not name:
+    if not project_id_str or not name:
         logger.warning(f"Received project event with missing fields: {body}")
         return
 
-    async with AsyncSessionLocal() as db:
-        query = select(Project).where(Project.id == project_id)
-        result = await db.execute(query)
-        db_project = result.scalar_one_or_none()
+    try:
+        project_id = UUID(str(project_id_str))
+    except ValueError:
+        logger.error(f"Invalid project UUID in event: {project_id_str}")
+        return
 
-        if db_project:
-            db_project.name = name
-            db_project.description = description
-            db_project.status = status
-            logger.info(f"Updated project {project_id} from RabbitMQ event.")
-        else:
-            db_project = Project(
+    async with AsyncSessionLocal() as db:
+        try:
+            stmt = insert(Project).values(
                 id=project_id,
                 name=name,
                 description=description,
                 status=status
             )
-            db.add(db_project)
-            logger.info(f"Created project {project_id} from RabbitMQ event.")
-
-        await db.commit()
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_={
+                    "name": name,
+                    "description": description,
+                    "status": status
+                }
+            )
+            await db.execute(stmt)
+            await db.commit()
+            logger.info(f"Successfully created or updated project {project_id} from RabbitMQ event.")
+        except Exception as ex:
+            await db.rollback()
+            logger.exception(f"Error handling project created/updated event for project {project_id}")
 
 
 async def handle_project_members_synced(body: dict) -> None:
     """Xử lý event ProjectMembersSynced từ RabbitMQ."""
     message = body.get("message", body)
     
-    project_id = message.get("projectId")
-    member_user_ids = message.get("memberUserIds", [])
+    project_id_str = message.get("projectId") or message.get("ProjectId")
+    member_user_ids_str = message.get("memberUserIds") or message.get("MemberUserIds") or []
 
-    if not project_id:
+    if not project_id_str:
         logger.warning(f"Received members synced event with missing projectId: {body}")
         return
 
+    try:
+        project_id = UUID(str(project_id_str))
+    except ValueError:
+        logger.error(f"Invalid project UUID in members synced event: {project_id_str}")
+        return
+
     async with AsyncSessionLocal() as db:
-        # 1. Ensure project exists
-        proj_query = select(Project).where(Project.id == project_id)
-        proj_result = await db.execute(proj_query)
-        if not proj_result.scalar_one_or_none():
-            placeholder_proj = Project(
+        try:
+            # 1. Ensure project exists using ON CONFLICT DO NOTHING
+            proj_stmt = insert(Project).values(
                 id=project_id,
                 name="Dự án đang đồng bộ...",
                 description="Đang đồng bộ thông tin...",
                 status="NotStarted"
-            )
-            db.add(placeholder_proj)
-            await db.commit()
-            logger.info(f"Created placeholder project {project_id} to satisfy constraint.")
+            ).on_conflict_do_nothing(index_elements=["id"])
+            await db.execute(proj_stmt)
+            await db.flush()
 
-        # 2. Clear old members of this project
-        del_stmt = delete(ProjectMember).where(ProjectMember.project_id == project_id)
-        await db.execute(del_stmt)
-        await db.commit()
+            # 2. Clear old members of this project
+            del_stmt = delete(ProjectMember).where(ProjectMember.project_id == project_id)
+            await db.execute(del_stmt)
+            await db.flush()
 
-        # 3. Add new members
-        for u_id in member_user_ids:
-            # Check if user exists locally
-            user_query = select(User).where(User.id == u_id)
-            user_res = await db.execute(user_query)
-            if not user_res.scalar_one_or_none():
-                placeholder_user = User(
+            # 3. Add new members
+            for u_id_str in member_user_ids_str:
+                try:
+                    u_id = UUID(str(u_id_str))
+                except ValueError:
+                    logger.error(f"Invalid user UUID in members synced event: {u_id_str}")
+                    continue
+
+                # Ensure user exists using ON CONFLICT DO NOTHING
+                user_stmt = insert(User).values(
                     id=u_id,
                     email=f"pending_sync_{u_id}@beaverdash.com",
                     display_name="Thành viên đang đồng bộ...",
                     avatar=None
-                )
-                db.add(placeholder_user)
-                await db.commit()
-                logger.info(f"Created placeholder user {u_id} to satisfy membership constraint.")
+                ).on_conflict_do_nothing(index_elements=["id"])
+                await db.execute(user_stmt)
+                await db.flush()
 
-            member = ProjectMember(project_id=project_id, user_id=u_id)
-            db.add(member)
+                member = ProjectMember(project_id=project_id, user_id=u_id)
+                db.add(member)
 
-        await db.commit()
-        logger.info(f"Synced {len(member_user_ids)} members for project {project_id} from RabbitMQ event.")
+            await db.commit()
+            logger.info(f"Successfully synced {len(member_user_ids_str)} members for project {project_id}.")
+        except Exception as ex:
+            await db.rollback()
+            logger.exception(f"Error handling project members synced event for project {project_id}")
+

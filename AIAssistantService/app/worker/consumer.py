@@ -31,11 +31,26 @@ class RabbitMQConsumer:
             except asyncio.CancelledError:
                 pass
         
-        if self.channel:
-            await self.channel.close()
-        if self.connection:
-            await self.connection.close()
+        await self._close_safe()
         logger.info("RabbitMQ connections closed successfully.")
+
+    async def _close_safe(self) -> None:
+        """
+        Safely closes channels and connections to prevent leaks.
+        """
+        if self.channel:
+            try:
+                await self.channel.close()
+            except Exception:
+                pass
+            self.channel = None
+        if self.connection:
+            try:
+                await self.connection.close()
+            except Exception:
+                pass
+            self.connection = None
+
 
     async def _consume_loop(self) -> None:
         """
@@ -45,6 +60,7 @@ class RabbitMQConsumer:
         
         while True:
             try:
+                await self._close_safe()
                 logger.info(f"Connecting to RabbitMQ at {settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}...")
                 self.connection = await aio_pika.connect_robust(rabbitmq_url)
                 self.channel = await self.connection.channel()
@@ -157,12 +173,21 @@ class RabbitMQConsumer:
 
                 logger.info("RabbitMQ Consumer started listening on queues successfully.")
                 
-                # Keep loop alive while connection is open
-                while not self.connection.is_closed:
+                # Keep loop alive while connection and channel are open and not closed
+                while self.connection and not self.connection.is_closed and self.channel and not self.channel.is_closed:
                     await asyncio.sleep(5)
+                
+                if self.connection and self.connection.is_closed:
+                    logger.warning("RabbitMQ connection was closed. Triggering reconnection...")
+                elif self.channel and self.channel.is_closed:
+                    logger.warning("RabbitMQ channel was closed. Triggering reconnection...")
                     
             except asyncio.CancelledError:
+                logger.info("RabbitMQ consumer task cancelled.")
                 break
             except Exception as e:
                 logger.error(f"RabbitMQ Connection failed or lost: {e}. Reconnecting in 10 seconds...")
                 await asyncio.sleep(10)
+        
+        # Final cleanup on exit
+        await self._close_safe()
