@@ -20,6 +20,15 @@ public class MemberWorkloadDto
     public int WorkloadPercentage { get; set; }
 }
 
+public class ColumnStatusDto
+{
+    public Guid ColumnId { get; set; }
+    public string ColumnName { get; set; } = null!;
+    public int TasksCount { get; set; }
+    public int Position { get; set; }
+    public bool IsDone { get; set; }
+}
+
 public class ProjectOverviewDto
 {
     public Guid Id { get; set; }
@@ -66,6 +75,9 @@ public class ProjectOverviewDto
 
     // Workload list
     public List<MemberWorkloadDto> MemberWorkloads { get; set; } = new();
+
+    // Column stats list
+    public List<ColumnStatusDto> ColumnStatusStats { get; set; } = new();
 }
 
 public record GetProjectOverviewQuery(Guid ProjectId) : IRequest<ProjectOverviewDto?>;
@@ -248,6 +260,18 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
         memberWorkloads = memberWorkloads.OrderByDescending(w => w.AssignedTasksCount).ToList();
 
+        var columnStatusStats = columns
+            .OrderBy(c => c.Position)
+            .Select(c => new ColumnStatusDto
+            {
+                ColumnId = c.Id,
+                ColumnName = c.Name,
+                TasksCount = tasks.Count(t => t.BoardColumnId == c.Id),
+                Position = c.Position,
+                IsDone = c.IsDone
+            })
+            .ToList();
+
         return new ProjectOverviewDto
         {
             Id = project.Id,
@@ -289,7 +313,8 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
             ExtendedSubTasksMediumCount = extMed,
             ExtendedSubTasksLowCount = extLow,
 
-            MemberWorkloads = memberWorkloads
+            MemberWorkloads = memberWorkloads,
+            ColumnStatusStats = columnStatusStats
         };
     }
 }

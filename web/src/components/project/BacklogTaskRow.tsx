@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { BacklogTaskDto } from "@/types/api";
+import type { BacklogTaskDto, SprintDto } from "@/types/api";
 import { toUtcLocalDate } from "@/lib/utils";
 
 interface BacklogTaskRowProps {
@@ -11,6 +11,8 @@ interface BacklogTaskRowProps {
   sprintStartDate?: string | null;
   sprintEndDate?: string | null;
   showStatus?: boolean;
+  sprints?: SprintDto[];
+  onMoveToSprint?: (sprintId: string) => void;
 }
 
 const renderPriorityBadge = (priority: string | null) => {
@@ -90,8 +92,11 @@ export function BacklogTaskRow({
   canDrag = true,
   sprintStartDate,
   sprintEndDate,
-  showStatus = true
+  showStatus = true,
+  sprints,
+  onMoveToSprint
 }: BacklogTaskRowProps) {
+  const [menuOpen, setMenuOpen] = React.useState(false);
   const { subTasksCount, completedSubTasksCount } = task;
 
   const sStart = toUtcLocalDate(sprintStartDate);
@@ -116,9 +121,9 @@ export function BacklogTaskRow({
         e.dataTransfer.setData("text/plain", task.id);
         e.dataTransfer.setData("taskId", task.id);
       }}
-      className={`group flex items-center justify-between p-2.5 bg-white dark:bg-[#22272b] hover:bg-slate-50 dark:hover:bg-[#2c3338] border-b border-slate-100 dark:border-[#2c3338] transition-colors cursor-pointer select-none ${
+      className={`group flex items-center justify-between p-2.5 bg-white dark:bg-[#22272b] hover:bg-slate-50 dark:hover:bg-[#2c3338] border-b border-slate-100 dark:border-[#2c3338] transition-colors cursor-pointer select-none first:rounded-t-[7px] ${
         canDrag ? "active:cursor-grabbing" : ""
-      }`}
+      } ${menuOpen ? "relative z-30" : ""}`}
     >
       {/* Left side: Drag handle, title, column name */}
       <div className="flex items-center gap-2 min-w-0 flex-1 mr-4">
@@ -151,6 +156,52 @@ export function BacklogTaskRow({
 
       {/* Right side: Priority, due date, subtasks progress */}
       <div className="flex items-center gap-3 shrink-0">
+        {/* Quick move to sprint dropdown */}
+        {onMoveToSprint && sprints && sprints.filter(s => s.status !== "Closed").length > 0 && (
+          <div className="relative md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-[#1d2125] hover:bg-[#1868db] dark:hover:bg-[#579dff] border border-slate-250 dark:border-[#353e47] rounded bg-white dark:bg-[#22272b] cursor-pointer transition-colors shadow-sm"
+              title="Đưa vào Sprint"
+            >
+              <span>+ Sprint</span>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 bottom-full mb-1 w-44 max-h-48 overflow-y-auto bg-white dark:bg-[#1c2024] border border-slate-250 dark:border-[#353e47] rounded shadow-lg py-1 z-50 animate-in fade-in slide-in-from-bottom-1 duration-100 scrollbar-thin">
+                  <div className="sticky top-0 bg-white dark:bg-[#1c2024] px-2.5 py-1 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-[#2c3338] mb-1 z-10">
+                    Chọn Sprint
+                  </div>
+                  {sprints
+                    .filter((s) => s.status !== "Closed")
+                    .map((sprint) => (
+                      <button
+                        key={sprint.id}
+                        onClick={() => {
+                          onMoveToSprint(sprint.id);
+                          setMenuOpen(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 text-[11px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2c3338] hover:text-[#1868db] dark:hover:text-[#579dff] transition-colors flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="truncate font-semibold">{sprint.name}</span>
+                        {sprint.status === "Active" && (
+                          <span className="text-[7px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1 py-0.5 rounded font-extrabold uppercase scale-90">
+                            Active
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Date Mismatch Warning */}
         {hasMismatch && (
           <span 

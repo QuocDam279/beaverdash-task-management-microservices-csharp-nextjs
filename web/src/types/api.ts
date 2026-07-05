@@ -22,8 +22,17 @@ export interface MemberWorkload {
   workloadPercentage: number;
 }
 
+export interface ColumnStatusDto {
+  columnId: string;
+  columnName: string;
+  tasksCount: number;
+  position: number;
+  isDone: boolean;
+}
+
 /** DTO project overview từ Backend */
 export interface ProjectOverviewDto {
+  columnStatusStats?: ColumnStatusDto[];
   id: string;
   name: string;
   description: string | null;

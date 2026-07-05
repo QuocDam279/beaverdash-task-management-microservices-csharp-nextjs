@@ -93,6 +93,7 @@ export default function SharedProjectOverviewPage({ params }: PageProps) {
           todoSubTasksCount={data.todoSubTasksCount}
           inProgressSubTasksCount={data.inProgressSubTasksCount}
           doneSubTasksCount={data.doneSubTasksCount}
+          columnStatusStats={data.columnStatusStats}
         />
 
         {/* Box 2: Timeline - Lịch sử hoạt động */}

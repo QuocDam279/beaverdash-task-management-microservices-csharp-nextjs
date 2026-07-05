@@ -73,6 +73,67 @@ export default function BacklogPage({ params }: PageProps) {
     }
   }, [editStartDate, editDuration]);
 
+  // Auto-scroll window when dragging tasks near screen boundaries
+  React.useEffect(() => {
+    let scrollInterval: NodeJS.Timeout | null = null;
+    let scrollSpeed = 0; // positive for down, negative for up
+
+    const handleDragOver = (e: DragEvent) => {
+      const scrollContainer = document.querySelector('.custom-chat-scrollbar') as HTMLElement;
+      if (!scrollContainer) return;
+
+      const rect = scrollContainer.getBoundingClientRect();
+      const threshold = 80; // pixels from top/bottom boundaries to start scrolling
+      const relativeY = e.clientY - rect.top;
+
+      if (relativeY < threshold && relativeY > 0) {
+        // Scroll Up: Speed increases as drag gets closer to the top border
+        const pct = (threshold - relativeY) / threshold;
+        scrollSpeed = -Math.max(2, pct * 15);
+        
+        if (!scrollInterval) {
+          scrollInterval = setInterval(() => {
+            scrollContainer.scrollTop += scrollSpeed;
+          }, 15);
+        }
+      } else if (relativeY > rect.height - threshold && relativeY < rect.height) {
+        // Scroll Down: Speed increases as drag gets closer to the bottom border
+        const pct = (relativeY - (rect.height - threshold)) / threshold;
+        scrollSpeed = Math.max(2, pct * 15);
+        
+        if (!scrollInterval) {
+          scrollInterval = setInterval(() => {
+            scrollContainer.scrollTop += scrollSpeed;
+          }, 15);
+        }
+      } else {
+        // Outside the scroll zones
+        if (scrollInterval) {
+          clearInterval(scrollInterval);
+          scrollInterval = null;
+        }
+      }
+    };
+
+    const handleDragEnd = () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+      }
+    };
+
+    window.addEventListener("dragover", handleDragOver);
+    window.addEventListener("dragend", handleDragEnd);
+    window.addEventListener("drop", handleDragEnd);
+
+    return () => {
+      window.removeEventListener("dragover", handleDragOver);
+      window.removeEventListener("dragend", handleDragEnd);
+      window.removeEventListener("drop", handleDragEnd);
+      if (scrollInterval) clearInterval(scrollInterval);
+    };
+  }, []);
+
   if (b.isLoading) {
     return (
       <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125]">
@@ -206,14 +267,14 @@ export default function BacklogPage({ params }: PageProps) {
               b.handleMoveTasks([taskId], null); // sprintId = null moves to backlog
             }
           }}
-          className={`rounded-lg border overflow-hidden transition-all duration-200 ${
+          className={`rounded-lg border overflow-visible relative z-10 transition-all duration-200 ${
             isDragOverBacklog
               ? "border-blue-500 bg-blue-50/10 dark:bg-blue-950/5 ring-2 ring-blue-500/10"
               : "border-slate-200 dark:border-[#2c3338] bg-white dark:bg-[#1d2125]"
           }`}
         >
           {/* List of Tasks */}
-          <div className="divide-y divide-slate-100 dark:divide-[#2c3338] min-h-[100px] flex flex-col">
+          <div className="divide-y divide-slate-100 dark:divide-[#2c3338] min-h-[100px] flex flex-col rounded-lg">
             {b.backlogData?.backlogTasks && b.backlogData.backlogTasks.length > 0 ? (
               b.backlogData.backlogTasks.map((task) => (
                 <BacklogTaskRow
@@ -221,16 +282,18 @@ export default function BacklogPage({ params }: PageProps) {
                   task={task}
                   onTaskClick={handleTaskClick}
                   showStatus={false}
+                  sprints={b.backlogData?.sprints}
+                  onMoveToSprint={(sprintId) => b.handleMoveTasks([task.id], sprintId)}
                 />
               ))
             ) : (
-              <div className="py-12 text-center text-xs text-slate-400 dark:text-slate-500 italic select-none">
+              <div className="py-12 text-center text-xs text-slate-400 dark:text-slate-500 italic select-none rounded-t-[7px]">
                 Không có công việc nào trong Backlog. Kéo các công việc ở đây vào các Sprint ở trên để chuẩn bị bắt đầu làm việc.
               </div>
             )}
 
             {/* Create task action bar at bottom of Backlog */}
-            <div className="p-3 bg-slate-50/30 dark:bg-[#1d2125]/20 flex justify-start border-t border-slate-100 dark:border-[#2c3338]">
+            <div className="p-3 bg-slate-50/30 dark:bg-[#1d2125]/20 flex justify-start border-t border-slate-100 dark:border-[#2c3338] rounded-b-[7px]">
               <button
                 onClick={() => setCreateTaskSprintId(null)} // null means backlog
                 className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-[#1868db] dark:hover:text-[#579dff] cursor-pointer transition-colors px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-[#22272b] rounded"
@@ -254,7 +317,7 @@ export default function BacklogPage({ params }: PageProps) {
         return (
           <TaskDetailModal
             isOpen={!!selectedTask}
-            onClose={() => { setSelectedTask(null); b.fetchBacklogData(); }}
+            onClose={() => { setSelectedTask(null); b.fetchBacklogData(true); }}
             task={selectedTask}
             columns={b.columns as any}
             onUpdateTask={(updated) => setSelectedTask(updated)}
@@ -271,7 +334,7 @@ export default function BacklogPage({ params }: PageProps) {
           onClose={() => setCreateTaskSprintId(undefined)}
           columns={b.columns}
           assignees={b.assignees}
-          onTaskCreated={b.fetchBacklogData}
+          onTaskCreated={() => b.fetchBacklogData(true)}
           projectStartDate={b.projectStartDate}
           projectDueDate={b.projectDueDate}
           sprintId={createTaskSprintId} // pass sprintId (could be null for backlog)

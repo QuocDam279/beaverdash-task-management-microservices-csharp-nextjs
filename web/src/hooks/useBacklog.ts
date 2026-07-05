@@ -20,10 +20,13 @@ export function useBacklog(projectId: string) {
   const [isLeaderOrOwner, setIsLeaderOrOwner] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const hasLoadedRef = React.useRef(false);
 
-  const fetchBacklogData = React.useCallback(async () => {
+  const fetchBacklogData = React.useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent && !hasLoadedRef.current) {
+        setIsLoading(true);
+      }
       setError(null);
 
       // Fetch backlog, overview, and board in parallel
@@ -35,6 +38,7 @@ export function useBacklog(projectId: string) {
 
       if (backlog) {
         setBacklogData(backlog);
+        hasLoadedRef.current = true;
       }
 
       if (overview) {

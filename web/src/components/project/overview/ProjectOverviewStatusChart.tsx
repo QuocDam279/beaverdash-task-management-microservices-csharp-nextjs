@@ -3,13 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
+import type { ColumnStatusDto } from "@/types/api";
 
 interface ProjectOverviewStatusChartProps {
   projectId: string;
   shareToken?: string;
-  todoSubTasksCount: number;
-  inProgressSubTasksCount: number;
-  doneSubTasksCount: number;
+  todoSubTasksCount?: number;
+  inProgressSubTasksCount?: number;
+  doneSubTasksCount?: number;
+  columnStatusStats?: ColumnStatusDto[];
 }
 
 function useIsDark() {
@@ -43,17 +45,37 @@ export function ProjectOverviewStatusChart({
   todoSubTasksCount = 0,
   inProgressSubTasksCount = 0,
   doneSubTasksCount = 0,
+  columnStatusStats
 }: ProjectOverviewStatusChartProps) {
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
   const isDark = useIsDark();
 
-  const totalCount = todoSubTasksCount + inProgressSubTasksCount + doneSubTasksCount;
+  const middleColors = ["#3b82f6", "#6366f1", "#a855f7", "#f59e0b", "#06b6d4", "#ec4899"];
 
-  const statusItems = [
-    { name: "Chưa thực hiện", count: todoSubTasksCount, color: "#94a3b8" },
-    { name: "Đang thực hiện", count: inProgressSubTasksCount, color: "#3b82f6" },
-    { name: "Đã hoàn thành", count: doneSubTasksCount, color: "#10b981" },
-  ];
+  const statusItems = columnStatusStats && columnStatusStats.length > 0
+    ? columnStatusStats.map((col, idx) => {
+        let color = "#3b82f6";
+        if (col.isDone) {
+          color = "#10b981"; // Done is always green
+        } else if (idx === 0) {
+          color = "#94a3b8"; // Todo is always slate/gray
+        } else {
+          const colorIdx = (idx - 1) % middleColors.length;
+          color = middleColors[colorIdx];
+        }
+        return {
+          name: col.columnName,
+          count: col.tasksCount,
+          color: color
+        };
+      })
+    : [
+        { name: "Chưa thực hiện", count: todoSubTasksCount, color: "#94a3b8" },
+        { name: "Đang thực hiện", count: inProgressSubTasksCount, color: "#3b82f6" },
+        { name: "Đã hoàn thành", count: doneSubTasksCount, color: "#10b981" },
+      ];
+
+  const totalCount = statusItems.reduce((sum, item) => sum + item.count, 0);
 
   const getBoardUrl = (query: string = "") => {
     return shareToken

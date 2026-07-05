@@ -43,12 +43,28 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
 
         var doneColumnIds = columns.Where(c => c.IsDone).Select(c => c.Id).ToList();
 
-        // Fetch all tasks in these columns (excluding deleted)
-        var tasks = await _dbContext.TaskItems
+        // Fetch the active sprint of the project
+        var activeSprint = await _dbContext.Sprints
             .AsNoTracking()
-            .Include(t => t.SubTasks)
-            .Where(t => t.BoardColumn != null && t.BoardColumn.ProjectId == project.Id && t.DeletedAt == null)
-            .ToListAsync(cancellationToken);
+            .FirstOrDefaultAsync(s => s.ProjectId == project.Id && s.Status == SprintStatus.Active, cancellationToken);
+
+        List<PM.Domain.Entities.TaskItem> tasks;
+        if (activeSprint != null)
+        {
+            // Fetch tasks belonging to the active sprint
+            tasks = await _dbContext.TaskItems
+                .AsNoTracking()
+                .Include(t => t.SubTasks)
+                .Where(t => t.BoardColumn != null && 
+                             t.BoardColumn.ProjectId == project.Id && 
+                             t.DeletedAt == null &&
+                             t.SprintId == activeSprint.Id)
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            tasks = new List<PM.Domain.Entities.TaskItem>();
+        }
 
         var now = DateTime.UtcNow;
         var sevenDaysAgo = now.AddDays(-7);
@@ -161,6 +177,18 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
 
         memberWorkloads = memberWorkloads.OrderByDescending(w => w.AssignedTasksCount).ToList();
 
+        var columnStatusStats = columns
+            .OrderBy(c => c.Position)
+            .Select(c => new ColumnStatusDto
+            {
+                ColumnId = c.Id,
+                ColumnName = c.Name,
+                TasksCount = tasks.Count(t => t.BoardColumnId == c.Id),
+                Position = c.Position,
+                IsDone = c.IsDone
+            })
+            .ToList();
+
         return new ProjectOverviewDto
         {
             Id = project.Id,
@@ -201,7 +229,8 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
             ExtendedSubTasksMediumCount = extMed,
             ExtendedSubTasksLowCount = extLow,
 
-            MemberWorkloads = memberWorkloads
+            MemberWorkloads = memberWorkloads,
+            ColumnStatusStats = columnStatusStats
         };
     }
 }

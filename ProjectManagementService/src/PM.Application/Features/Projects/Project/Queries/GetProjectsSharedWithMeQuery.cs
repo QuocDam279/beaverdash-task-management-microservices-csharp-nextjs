@@ -54,26 +54,41 @@ public class GetProjectsSharedWithMeQueryHandler : IRequestHandler<GetProjectsSh
         var userEmail = currentUser.Email.Trim().ToLower();
 
         // Query shared projects where the share is active and project has link sharing enabled (IsPublic is true)
-        var sharedProjects = await _dbContext.ProjectShares
+        var sharedProjectsQuery = await _dbContext.ProjectShares
             .AsNoTracking()
             .Include(ps => ps.Project)
                 .ThenInclude(p => p!.CreatedByUser)
             .Where(ps => ps.RecipientEmail == userEmail && ps.Project != null && ps.Project.IsPublic && !string.IsNullOrEmpty(ps.Project.ShareToken))
             .OrderByDescending(ps => ps.CreatedAt)
-            .Select(ps => new SharedProjectDto
+            .Select(ps => new
             {
                 Id = ps.Project!.Id,
                 Name = ps.Project.Name,
                 Description = ps.Project.Description,
-                Progress = ps.Project.Progress,
                 StartDate = ps.Project.StartDate,
                 DueDate = ps.Project.DueDate,
                 ShareToken = ps.Project.ShareToken!,
                 OwnerName = ps.Project.CreatedByUser != null ? ps.Project.CreatedByUser.DisplayName : "Người dùng Beaverdash",
                 OwnerAvatar = ps.Project.CreatedByUser != null ? ps.Project.CreatedByUser.Avatar : null,
-                SharedAt = ps.CreatedAt
+                SharedAt = ps.CreatedAt,
+                TotalTasksCount = _dbContext.TaskItems.Count(t => t.BoardColumn != null && t.BoardColumn.ProjectId == ps.Project.Id && t.DeletedAt == null),
+                DoneTasksCount = _dbContext.TaskItems.Count(t => t.BoardColumn != null && t.BoardColumn.ProjectId == ps.Project.Id && t.DeletedAt == null && t.BoardColumn.IsDone)
             })
             .ToListAsync(cancellationToken);
+
+        var sharedProjects = sharedProjectsQuery.Select(ps => new SharedProjectDto
+        {
+            Id = ps.Id,
+            Name = ps.Name,
+            Description = ps.Description,
+            Progress = ps.TotalTasksCount > 0 ? (int)Math.Round((double)ps.DoneTasksCount / ps.TotalTasksCount * 100) : 0,
+            StartDate = ps.StartDate,
+            DueDate = ps.DueDate,
+            ShareToken = ps.ShareToken,
+            OwnerName = ps.OwnerName,
+            OwnerAvatar = ps.OwnerAvatar,
+            SharedAt = ps.SharedAt
+        }).ToList();
 
         return sharedProjects;
     }
