@@ -24,7 +24,7 @@ export function HeroSection() {
 
         {/* H1 Main Title */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#2b221a] leading-[1.15]">
-          Quản lý công việc thông minh, <br />
+          Quản lý dự án thông minh, <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-700 via-amber-600 to-[#78350f]">
             tối ưu hiệu suất với Trợ lý AI
           </span>
@@ -32,7 +32,7 @@ export function HeroSection() {
 
         {/* Description paragraph */}
         <p className="text-xs sm:text-sm text-stone-500 max-w-xl mx-auto leading-relaxed">
-          Không gian làm việc thời gian thực tích hợp bảng Kanban, sơ đồ Gantt trực quan và Trợ lý trí tuệ nhân tạo lập kế hoạch tự động cho đội ngũ của bạn.
+          Không gian làm việc thời gian thực tích hợp bảng Kanban, sơ đồ Gantt trực quan và Trợ lý trí tuệ nhân tạo công việc tự động cho đội ngũ của bạn.
         </p>
       </div>
 

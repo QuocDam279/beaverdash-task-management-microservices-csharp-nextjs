@@ -141,9 +141,6 @@ export function TopHeader({ currentUser }: TopHeaderProps) {
                         <p className="text-xs font-bold text-slate-700 leading-normal truncate">
                           {result.title}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                          {result.subtitle}
-                        </p>
                       </div>
                     </div>
                   );
