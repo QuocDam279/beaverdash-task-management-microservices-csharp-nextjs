@@ -26,6 +26,7 @@ export interface ColumnStatusDto {
   columnId: string;
   columnName: string;
   tasksCount: number;
+  subTasksCount: number;
   position: number;
   isDone: boolean;
 }
@@ -97,6 +98,9 @@ export interface SprintLookupDto {
   id: string;
   name: string;
   status: string;
+  goal?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface BoardColumnDto {

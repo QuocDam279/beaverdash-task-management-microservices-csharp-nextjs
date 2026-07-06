@@ -122,6 +122,18 @@ class AIAssistantTools:
         except (ValueError, AttributeError):
             return None
 
+    def _format_local_date(self, dt_str: str) -> str:
+        """Parse ISO 8601 UTC datetime string and convert it to UTC+7 timezone-aware formatted date (YYYY-MM-DD)."""
+        if not dt_str:
+            return "Không xác định"
+        dt = self._parse_datetime(dt_str)
+        if not dt:
+            # Fallback if parsing fails
+            return dt_str[:10] if len(dt_str) >= 10 else dt_str
+        # Convert UTC to UTC+7
+        dt_local = dt + timedelta(hours=7)
+        return dt_local.strftime("%Y-%m-%d")
+
     # ── Tool methods (exposed to Gemini) ───────────────────────────────
 
     async def create_task(
@@ -288,14 +300,8 @@ class AIAssistantTools:
             data = response.json()
             name = data.get("name")
             description = data.get("description") or "Không có mô tả"
-            start_date = data.get("startDate") or "Không xác định"
-            due_date = data.get("dueDate") or "Không xác định"
-
-            # Format dates
-            if start_date != "Không xác định" and len(start_date) > 10:
-                start_date = start_date[:10]
-            if due_date != "Không xác định" and len(due_date) > 10:
-                due_date = due_date[:10]
+            start_date = self._format_local_date(data.get("startDate")) if data.get("startDate") else "Không xác định"
+            due_date = self._format_local_date(data.get("dueDate")) if data.get("dueDate") else "Không xác định"
 
             # Extract metrics (7 days)
             new_tasks = data.get("newTasksCount", 0)
@@ -397,7 +403,14 @@ class AIAssistantTools:
                 else:
                     status_vi = status_raw
 
-                res_lines.append(f"- Tên Sprint: '{s.get('name')}' | ID: {s.get('id')} | Trạng thái: {status_vi}")
+                goal = s.get("goal") or "Không có"
+                start_str = self._format_local_date(s.get("startDate")) if s.get("startDate") else "Không xác định"
+                end_str = self._format_local_date(s.get("endDate")) if s.get("endDate") else "Không xác định"
+
+                res_lines.append(
+                    f"- Tên Sprint: '{s.get('name')}' | ID: {s.get('id')} | Trạng thái: {status_vi} | "
+                    f"Mục tiêu: {goal} | Bắt đầu: {start_str} | Kết thúc: {end_str}"
+                )
 
             return "\n".join(res_lines)
         except Exception as ex:
@@ -490,8 +503,9 @@ class AIAssistantTools:
             if not tasks:
                 return "Dự án hiện tại chưa có công việc nào."
 
-            now = datetime.now(timezone.utc)
-            today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+            # Calculate today and upcoming end in local (UTC+7) timezone
+            now_local = datetime.now(timezone.utc) + timedelta(hours=7)
+            today_local = now_local.date()
 
             # Parse dynamic upcoming days from due_date_filter (e.g., 'upcoming3', 'upcoming14')
             upcoming_days = 7  # default
@@ -500,7 +514,7 @@ class AIAssistantTools:
                     upcoming_days = int(due_date_filter.replace("upcoming", ""))
                 except ValueError:
                     upcoming_days = 7  # fallback if no number provided
-            upcoming_end = today_start + timedelta(days=upcoming_days)
+            upcoming_end_local = today_local + timedelta(days=upcoming_days)
 
             filtered_tasks = []
             for t in tasks:
@@ -526,9 +540,10 @@ class AIAssistantTools:
                         st_due = self._parse_datetime(st.get("dueDate"))
                         if not st_due:
                             continue
-                        if due_date_filter == "overdue" and st_due >= today_start:
+                        st_due_local = (st_due + timedelta(hours=7)).date()
+                        if due_date_filter == "overdue" and st_due_local >= today_local:
                             continue
-                        elif due_date_filter.startswith("upcoming") and not (today_start <= st_due <= upcoming_end):
+                        elif due_date_filter.startswith("upcoming") and not (today_local <= st_due_local <= upcoming_end_local):
                             continue
 
                     subtasks_matched.append(st)
@@ -549,9 +564,10 @@ class AIAssistantTools:
                     if due_date_filter:
                         t_due = self._parse_datetime(t.get("dueDate"))
                         if t_due:
-                            if due_date_filter == "overdue" and t_due >= today_start:
+                            t_due_local = (t_due + timedelta(hours=7)).date()
+                            if due_date_filter == "overdue" and t_due_local >= today_local:
                                 parent_matches = False
-                            elif due_date_filter.startswith("upcoming") and not (today_start <= t_due <= upcoming_end):
+                            elif due_date_filter.startswith("upcoming") and not (today_local <= t_due_local <= upcoming_end_local):
                                 parent_matches = False
                         else:
                             if not subtasks_matched:
@@ -567,9 +583,7 @@ class AIAssistantTools:
 
             res_lines = ["Danh sách công việc và nhiệm vụ trong dự án (Đã lọc):"]
             for t in filtered_tasks:
-                due_date_str = t.get("dueDate") or "Không có hạn"
-                if due_date_str != "Không có hạn":
-                    due_date_str = due_date_str[:10]
+                due_date_str = self._format_local_date(t.get("dueDate")) if t.get("dueDate") else "Không có hạn"
 
                 res_lines.append(
                     f"\n[Công việc] '{t.get('title')}'\n"
@@ -583,9 +597,7 @@ class AIAssistantTools:
                 if t.get("subTasks"):
                     res_lines.append("  - Danh sách nhiệm vụ:")
                     for st in t.get("subTasks"):
-                        st_due = st.get("dueDate") or "Không có hạn"
-                        if st_due != "Không có hạn":
-                            st_due = st_due[:10]
+                        st_due = self._format_local_date(st.get("dueDate")) if st.get("dueDate") else "Không có hạn"
                         st_status = "Đã hoàn thành" if st.get("isCompleted") else "Chưa hoàn thành"
                         st_assignee = st.get("assigneeName") or "Chưa gán"
                         res_lines.append(

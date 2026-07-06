@@ -99,18 +99,28 @@ export function BacklogTaskRow({
   const [menuOpen, setMenuOpen] = React.useState(false);
   const { subTasksCount, completedSubTasksCount } = task;
 
-  const sStart = toUtcLocalDate(sprintStartDate);
-  const sEnd = toUtcLocalDate(sprintEndDate);
-  const tStart = toUtcLocalDate(task.startDate);
-  const tDue = toUtcLocalDate(task.dueDate);
+  // Convert sprint dates and task dates using local timezone-aware parsing to match display
+  const sStart = sprintStartDate ? new Date(sprintStartDate) : null;
+  const sEnd = sprintEndDate ? new Date(sprintEndDate) : null;
+  const tStart = task.startDate ? new Date(task.startDate) : null;
+  const tDue = task.dueDate ? new Date(task.dueDate) : null;
 
   let hasMismatch = false;
-  if (sStart && tStart && tStart.getTime() < sStart.getTime()) {
-    hasMismatch = true;
+  if (sStart && tStart) {
+    const sStartDateOnly = new Date(sStart.getFullYear(), sStart.getMonth(), sStart.getDate());
+    const tStartDateOnly = new Date(tStart.getFullYear(), tStart.getMonth(), tStart.getDate());
+    if (tStartDateOnly.getTime() < sStartDateOnly.getTime()) {
+      hasMismatch = true;
+    }
   }
-  if (sEnd && tDue && tDue.getTime() > sEnd.getTime()) {
-    hasMismatch = true;
+  if (sEnd && tDue) {
+    const sEndDateOnly = new Date(sEnd.getFullYear(), sEnd.getMonth(), sEnd.getDate());
+    const tDueDateOnly = new Date(tDue.getFullYear(), tDue.getMonth(), tDue.getDate());
+    if (tDueDateOnly.getTime() > sEndDateOnly.getTime()) {
+      hasMismatch = true;
+    }
   }
+
 
   return (
     <div

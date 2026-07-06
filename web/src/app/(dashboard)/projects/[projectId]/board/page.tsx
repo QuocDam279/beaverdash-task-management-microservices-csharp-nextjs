@@ -173,12 +173,13 @@ export default function BoardPage({ params }: PageProps) {
                 projectStartDate={b.projectStartDate}
                 projectDueDate={b.projectDueDate}
                 readOnly={isSprintClosed}
+                isLeaderOrOwner={b.isLeaderOrOwner}
               />
             </div>
           ))}
 
           {/* Add Column Card */}
-          {!isSprintClosed && (
+          {!isSprintClosed && b.isLeaderOrOwner && (
             <div className="w-80 shrink-0 flex flex-col select-none">
               {b.isAddingColumn ? (
                 <div className="bg-[#f4f5f7] dark:bg-[#22272b] rounded-lg p-4 border border-slate-200 dark:border-[#353e47] shadow-xs space-y-3">

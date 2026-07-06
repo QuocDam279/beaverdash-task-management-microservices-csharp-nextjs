@@ -26,6 +26,7 @@ interface BoardColumnViewProps {
   isPersonalProject?: boolean;
   projectStartDate?: string | null;
   projectDueDate?: string | null;
+  isLeaderOrOwner?: boolean;
 }
 
 export function BoardColumnView({
@@ -47,6 +48,7 @@ export function BoardColumnView({
   isPersonalProject = false,
   projectStartDate = null,
   projectDueDate = null,
+  isLeaderOrOwner = false,
 }: BoardColumnViewProps) {
   const { user: currentUser } = useAuth();
   const { alert } = useAlertConfirm();
@@ -142,18 +144,20 @@ export function BoardColumnView({
       }`}
     >
       <div 
-        draggable={!readOnly}
+        draggable={!readOnly && isLeaderOrOwner}
         onDragStart={(e) => {
-          if (readOnly) return;
+          if (readOnly || !isLeaderOrOwner) return;
           e.dataTransfer.setData("columnid", column.id);
           e.dataTransfer.effectAllowed = "move";
         }}
-        className={`flex items-center justify-between mb-3 px-2 py-1.5 rounded-md transition-all border cursor-grab active:cursor-grabbing ${
+        className={`flex items-center justify-between mb-3 px-2 py-1.5 rounded-md transition-all border ${
+          (!readOnly && isLeaderOrOwner) ? "cursor-grab active:cursor-grabbing" : ""
+        } ${
           isWipExceeded 
             ? "bg-red-50/80 dark:bg-red-950/20 border-red-200/80 dark:border-red-900/40 text-red-700 dark:text-red-400" 
             : "bg-transparent border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700 text-[#505258] dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-[#1d2125]"
         }`}
-        title="Kéo thả tiêu đề cột để thay đổi vị trí"
+        title={(!readOnly && isLeaderOrOwner) ? "Kéo thả tiêu đề cột để thay đổi vị trí" : undefined}
       >
         <div className="flex items-center gap-1.5 min-w-0">
           {column.isDone && (
@@ -188,7 +192,7 @@ export function BoardColumnView({
           )}
 
           {/* 3-dots context menu */}
-          {!readOnly && (
+          {!readOnly && isLeaderOrOwner && (
             <div className="relative flex items-center">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}

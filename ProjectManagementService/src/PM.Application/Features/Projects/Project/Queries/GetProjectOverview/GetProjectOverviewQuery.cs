@@ -25,6 +25,7 @@ public class ColumnStatusDto
     public Guid ColumnId { get; set; }
     public string ColumnName { get; set; } = null!;
     public int TasksCount { get; set; }
+    public int SubTasksCount { get; set; }
     public int Position { get; set; }
     public bool IsDone { get; set; }
 }
@@ -267,6 +268,7 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
                 ColumnId = c.Id,
                 ColumnName = c.Name,
                 TasksCount = tasks.Count(t => t.BoardColumnId == c.Id),
+                SubTasksCount = tasks.Where(t => t.BoardColumnId == c.Id).SelectMany(t => t.SubTasks).Count(st => st.DeletedAt == null),
                 Position = c.Position,
                 IsDone = c.IsDone
             })

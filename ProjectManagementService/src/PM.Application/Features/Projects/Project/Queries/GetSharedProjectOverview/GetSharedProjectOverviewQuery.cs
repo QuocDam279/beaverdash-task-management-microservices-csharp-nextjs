@@ -184,6 +184,7 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
                 ColumnId = c.Id,
                 ColumnName = c.Name,
                 TasksCount = tasks.Count(t => t.BoardColumnId == c.Id),
+                SubTasksCount = tasks.Where(t => t.BoardColumnId == c.Id).SelectMany(t => t.SubTasks).Count(st => st.DeletedAt == null),
                 Position = c.Position,
                 IsDone = c.IsDone
             })

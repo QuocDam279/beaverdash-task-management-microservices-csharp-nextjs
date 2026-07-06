@@ -65,7 +65,7 @@ export function ProjectOverviewStatusChart({
         }
         return {
           name: col.columnName,
-          count: col.tasksCount,
+          count: col.subTasksCount ?? 0,
           color: color
         };
       })
@@ -76,6 +76,8 @@ export function ProjectOverviewStatusChart({
       ];
 
   const totalCount = statusItems.reduce((sum, item) => sum + item.count, 0);
+  const displayCount = hoveredIndex !== null ? statusItems[hoveredIndex].count : totalCount;
+  const displayLabel = hoveredIndex !== null ? statusItems[hoveredIndex].name : "nhiệm vụ";
 
   const getBoardUrl = (query: string = "") => {
     return shareToken
@@ -107,7 +109,7 @@ export function ProjectOverviewStatusChart({
   return (
     <Card className="bg-white border border-slate-200/60 rounded-xl shadow-[0_2px_12px_rgba(11,20,38,0.04)] flex flex-col w-full transition-all duration-300 hover:shadow-[0_4px_20px_rgba(11,20,38,0.08)]">
       <CardHeader className="p-5 pb-4 border-b border-slate-100 dark:border-[#2c3338] flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-800 dark:text-[#deebff] tracking-tight">Trạng thái công việc</h3>
+        <h3 className="text-sm font-bold text-slate-800 dark:text-[#deebff] tracking-tight">Trạng thái nhiệm vụ</h3>
         <span className="text-[11px] font-medium text-slate-400 dark:text-[#8c9bab] bg-slate-50 dark:bg-[#161a1d] px-2.5 py-1 rounded-md border border-slate-100 dark:border-[#2c3338]">
           Tổng quan
         </span>
@@ -123,12 +125,12 @@ export function ProjectOverviewStatusChart({
             style={conicGradientStyle}
             className="h-44 w-44 rounded-full flex items-center justify-center relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] select-none transition-all duration-500 ease-out transform group-hover:scale-[1.02]"
           >
-            <div className="h-[124px] w-[124px] rounded-full bg-white dark:bg-[#22272b] flex flex-col items-center justify-center text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] select-none gap-0.5">
+            <div className="h-[124px] w-[124px] rounded-full bg-white dark:bg-[#22272b] flex flex-col items-center justify-center text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] select-none gap-0.5 px-3">
               <span className="text-3xl font-black text-slate-800 dark:text-[#deebff] tracking-tighter transition-transform duration-300 group-hover:scale-110 leading-none">
-                {totalCount}
+                {displayCount}
               </span>
-              <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-[#8c9bab] tracking-wider leading-none mt-1">
-                nhiệm vụ
+              <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-[#8c9bab] tracking-wider leading-none mt-1 truncate max-w-full" title={displayLabel}>
+                {displayLabel}
               </span>
             </div>
           </div>

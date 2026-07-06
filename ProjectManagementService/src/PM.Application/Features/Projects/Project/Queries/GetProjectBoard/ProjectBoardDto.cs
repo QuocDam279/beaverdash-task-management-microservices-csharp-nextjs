@@ -20,4 +20,7 @@ public class SprintLookupDto
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
     public string Status { get; set; } = null!;
+    public string? Goal { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }

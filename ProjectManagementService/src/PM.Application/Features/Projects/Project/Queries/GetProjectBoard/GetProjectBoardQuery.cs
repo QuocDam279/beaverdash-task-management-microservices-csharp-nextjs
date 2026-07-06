@@ -91,7 +91,10 @@ public class GetProjectBoardQueryHandler : IRequestHandler<GetProjectBoardQuery,
             {
                 Id = s.Id,
                 Name = s.Name,
-                Status = s.Status.ToString()
+                Status = s.Status.ToString(),
+                Goal = s.Goal,
+                StartDate = s.StartDate,
+                EndDate = s.EndDate
             })
             .ToListAsync(cancellationToken);
 

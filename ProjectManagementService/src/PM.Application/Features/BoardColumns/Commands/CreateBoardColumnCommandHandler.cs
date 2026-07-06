@@ -34,9 +34,9 @@ public class CreateBoardColumnCommandHandler : IRequestHandler<CreateBoardColumn
             throw new UnauthorizedAccessException("Bạn không có quyền thêm cột vào Project này.");
         }
 
-        var isMember = await _dbContext.TeamMembers.AnyAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
-        if (!isMember)
-            throw new UnauthorizedAccessException("Bạn không có quyền thêm cột vào Project này.");
+        var member = await _dbContext.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
+        if (member == null || (member.Role != "leader" && member.Role != "Owner"))
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền thêm cột vào Project này.");
 
         var boardColumn = new BoardColumn
         {
