@@ -41,7 +41,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/45 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#22272b] rounded-lg border border-slate-200 dark:border-[#353e47] shadow-2xl w-full max-w-lg animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col h-[520px]">
+      <div className="bg-white dark:bg-[#22272b] rounded-lg border border-slate-200 dark:border-[#353e47] shadow-2xl w-full max-w-lg animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col h-[560px]">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-[#2c3338] flex justify-between items-center bg-slate-50/50 dark:bg-[#1d2125]/50 shrink-0">
           <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           )}
 
           {activeTab === "guide" && (
-            <div className="space-y-3 animate-in fade-in duration-200">
+            <div className="space-y-3 animate-in fade-in duration-200 pb-2">
               <div className="mb-4">
                 <h3 className="text-xs font-bold text-[#292a2e] dark:text-[#deebff] uppercase tracking-wide mb-1">
                   Cách sử dụng Beaverdash
@@ -256,18 +256,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
 
               {/* Accordion container */}
-              <div className="border border-slate-200 dark:border-[#353e47] rounded-md divide-y divide-slate-100 dark:divide-[#2c3338] overflow-hidden bg-white dark:bg-[#22272b]">
-                {/* 1. Kanban Board */}
-                <div>
+              <div className="space-y-3">
+                {/* 1. Bảng công việc */}
+                <div className="border border-slate-200 dark:border-[#353e47] rounded-lg overflow-hidden bg-white dark:bg-[#22272b] transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600">
                   <button
                     onClick={() => toggleSection("board")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#2c3338] transition-colors text-left cursor-pointer"
+                    className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/50 transition-colors text-left cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <svg className="w-4 h-4 text-[#1868db] dark:text-[#579dff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                      </svg>
-                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Bảng công việc (Kanban Board)</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-[#1868db] dark:text-[#579dff] shrink-0">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Bảng công việc</span>
                     </div>
                     <svg
                       className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${openSection === "board" ? "transform rotate-90" : ""}`}
@@ -280,28 +282,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </svg>
                   </button>
                   {openSection === "board" && (
-                    <div className="px-4 pb-4 pt-1 bg-slate-50/50 dark:bg-[#1d2125]/50 text-xs text-[#505258] dark:text-slate-300 space-y-2 leading-relaxed">
+                    <div className="px-4 pb-4 pt-2.5 bg-slate-50/30 dark:bg-[#1d2125]/30 border-t border-slate-100 dark:border-[#2c3338] text-xs text-[#505258] dark:text-slate-300 space-y-2.5 leading-relaxed">
                       <p>
-                        • <strong>Kéo thả thông minh:</strong> Beaverdash hỗ trợ kéo thả trực tiếp các thẻ công việc (Tasks) giữa các cột trạng thái để cập nhật tiến độ công việc ngay lập tức.
+                        • <strong>Kéo thả tiện lợi:</strong> Hệ thống cho phép bạn chuyển đổi vị trí các công việc giữa các cột trạng thái bằng cách nhấp giữ và di chuyển chuột. Tiến độ công việc sẽ được lưu trữ và cập nhật ngay lập tức.
                       </p>
                       <p>
-                        • <strong>Giới hạn WIP Limit:</strong> Mỗi cột có thể cài đặt <i>Giới hạn công việc đang thực hiện (WIP Limit)</i>. Khi số lượng thẻ vượt giới hạn, cột sẽ chuyển sang cảnh báo đỏ để giúp đội ngũ nhận diện điểm nghẽn cổ chai nhanh chóng.
+                        • <strong>Quản lý số lượng công việc:</strong> Bạn có thể đặt số lượng tối đa công việc được phép xử lý đồng thời trong mỗi cột. Nếu số lượng công việc vượt quá mức quy định, cột đó sẽ đổi màu cảnh báo giúp bạn dễ dàng phát hiện khối lượng công việc đang bị quá tải để có biện pháp xử lý kịp thời.
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* 2. Due Date Rules */}
-                <div>
+                {/* 2. Quy tắc thời hạn */}
+                <div className="border border-slate-200 dark:border-[#353e47] rounded-lg overflow-hidden bg-white dark:bg-[#22272b] transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600">
                   <button
                     onClick={() => toggleSection("dates")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#2c3338] transition-colors text-left cursor-pointer"
+                    className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/50 transition-colors text-left cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Quy tắc Thời hạn & Lịch trình</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-500 dark:text-emerald-400 shrink-0">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Thời hạn công việc</span>
                     </div>
                     <svg
                       className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${openSection === "dates" ? "transform rotate-90" : ""}`}
@@ -314,28 +318,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </svg>
                   </button>
                   {openSection === "dates" && (
-                    <div className="px-4 pb-4 pt-1 bg-slate-50/50 dark:bg-[#1d2125]/50 text-xs text-[#505258] dark:text-slate-300 space-y-2 leading-relaxed">
+                    <div className="px-4 pb-4 pt-2.5 bg-slate-50/30 dark:bg-[#1d2125]/30 border-t border-slate-100 dark:border-[#2c3338] text-xs text-[#505258] dark:text-slate-300 space-y-2.5 leading-relaxed">
                       <p>
-                        • <strong>Ràng buộc thời gian Dự án & Công việc:</strong> Hạn hoàn thành của Công việc cha (Task) không bao giờ được phép vượt quá hạn hoàn thành của Dự án chứa nó.
+                        • <strong>Liên kết thời gian:</strong> Hạn hoàn thành của mỗi công việc luôn phải nằm trong khoảng thời gian hoạt động của dự án. Hệ thống tự động ngăn chặn việc đặt hạn chót của công việc muộn hơn hạn chót của dự án.
                       </p>
                       <p>
-                        • <strong>Nhiệm vụ (SubTask):</strong> Toàn bộ thời gian chạy (Ngày bắt đầu & Hạn chót) của các Nhiệm vụ phải nằm gọn trong khoảng thời gian chạy của Công việc cha. Hệ thống sẽ kiểm tra và nhắc nhở nếu thời hạn nhiệm vụ vượt quá phạm vi này.
+                        • <strong>Quản lý nhiệm vụ phụ:</strong> Thời gian bắt đầu và kết thúc của các nhiệm vụ nhỏ bên trong công việc cũng phải tuân thủ khung thời gian của công việc chính. Khi có sự thay đổi thời gian không hợp lệ, hệ thống sẽ đưa ra thông báo cảnh báo trực tiếp để bạn điều chỉnh lại.
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* 3. AI Assistant */}
-                <div>
+                {/* 3. Trợ lý ảo */}
+                <div className="border border-slate-200 dark:border-[#353e47] rounded-lg overflow-hidden bg-white dark:bg-[#22272b] transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600">
                   <button
                     onClick={() => toggleSection("ai")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#2c3338] transition-colors text-left cursor-pointer"
+                    className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/50 transition-colors text-left cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <svg className="w-4 h-4 text-purple-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                      </svg>
-                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Trợ lý AI Thông minh (Beaver AI)</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center text-purple-500 dark:text-purple-400 shrink-0">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Trợ lý trí tuệ nhân tạo</span>
                     </div>
                     <svg
                       className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${openSection === "ai" ? "transform rotate-90" : ""}`}
@@ -348,28 +354,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </svg>
                   </button>
                   {openSection === "ai" && (
-                    <div className="px-4 pb-4 pt-1 bg-slate-50/50 dark:bg-[#1d2125]/50 text-xs text-[#505258] dark:text-slate-300 space-y-2 leading-relaxed">
+                    <div className="px-4 pb-4 pt-2.5 bg-slate-50/30 dark:bg-[#1d2125]/30 border-t border-slate-100 dark:border-[#2c3338] text-xs text-[#505258] dark:text-slate-300 space-y-2.5 leading-relaxed">
                       <p>
-                        • <strong>Chat ra lệnh trực tiếp:</strong> Bạn có thể mở biểu tượng AI ở góc dưới bên phải màn hình hoặc truy cập Tab AI trong dự án để trò chuyện trực tiếp với Beaver AI.
+                        • <strong>Trò chuyện trực tiếp:</strong> Bạn có thể truy cập mục trò chuyện với trợ lý ảo tại thẻ riêng trong phần chi tiết dự án để trao đổi trực tiếp.
                       </p>
                       <p>
-                        • <strong>Tự động hóa tác vụ:</strong> Chỉ cần gõ lệnh như <i>"Tạo một task thiết kế logo hạn là ngày mai"</i> hoặc <i>"Cập nhật tiến độ dự án Website"</i>, Beaver AI sẽ tự động phân tích và tạo/cập nhật dữ liệu trên hệ thống cho bạn mà không cần thao tác click thủ công.
+                        • <strong>Tự động tạo công việc:</strong> Thay vì phải tự thao tác bằng tay, bạn chỉ cần nhắn yêu cầu tạo công việc mới, trợ lý ảo sẽ tự động nhận diện thông tin và tạo công việc trên hệ thống cho bạn.
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* 4. Real-time notifications */}
-                <div>
+                {/* 4. Cập nhật tức thì */}
+                <div className="border border-slate-200 dark:border-[#353e47] rounded-lg overflow-hidden bg-white dark:bg-[#22272b] transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600">
                   <button
                     onClick={() => toggleSection("realtime")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#2c3338] transition-colors text-left cursor-pointer"
+                    className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#2c3338]/50 transition-colors text-left cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                      </svg>
-                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Đồng bộ & Thông báo Real-time</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500 dark:text-amber-400 shrink-0">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-bold text-[#292a2e] dark:text-[#deebff]">Cập nhật tức thì</span>
                     </div>
                     <svg
                       className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${openSection === "realtime" ? "transform rotate-90" : ""}`}
@@ -382,12 +390,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </svg>
                   </button>
                   {openSection === "realtime" && (
-                    <div className="px-4 pb-4 pt-1 bg-slate-50/50 dark:bg-[#1d2125]/50 text-xs text-[#505258] dark:text-slate-300 space-y-2 leading-relaxed">
+                    <div className="px-4 pb-4 pt-2.5 bg-slate-50/30 dark:bg-[#1d2125]/30 border-t border-slate-100 dark:border-[#2c3338] text-xs text-[#505258] dark:text-slate-300 space-y-2.5 leading-relaxed">
                       <p>
-                        • <strong>SignalR Hub:</strong> Hệ thống sử dụng kết nối SignalR để liên tục lắng nghe và đồng bộ dữ liệu thời gian thực.
+                        • <strong>Kết nối liên tục:</strong> Hệ thống tự động đồng bộ hóa các thay đổi mới nhất từ mọi thành viên trong dự án mà bạn không cần tải lại trang.
                       </p>
                       <p>
-                        • <strong>Luôn cập nhật:</strong> Khi bất kỳ ai trong nhóm bình luận trong công việc của bạn, thay đổi vị trí cột trên Kanban, hoặc giao việc (assign) cho bạn, bạn sẽ nhận được thông báo đỏ ở góc trên lập tức mà không cần F5 tải lại trang.
+                        • <strong>Nhận thông báo tức thời:</strong> Khi đồng nghiệp gửi bình luận mới, di chuyển vị trí công việc, hoặc phân công công việc mới cho bạn, hệ thống sẽ gửi thông báo trực tiếp đến bạn ngay lập tức.
                       </p>
                     </div>
                   )}
