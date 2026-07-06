@@ -31,7 +31,7 @@ public class SubTaskCreatedNotificationHandler : INotificationHandler<SubTaskCre
             UserId = notification.AssigneeUserId.Value,
             ActorUserId = notification.UserId,
             Type = "subtask_assigned",
-            Content = $"Bạn vừa được giao công việc con '{notification.SubTaskTitle}' thuộc công việc '{notification.TaskTitle}'.",
+            Content = $"Bạn vừa được giao nhiệm vụ '{notification.SubTaskTitle}' thuộc công việc '{notification.TaskTitle}'.",
             ActionUrl = $"/projects/{notification.ProjectId}/board?taskId={notification.TaskId}",
             IsRead = false,
             IsSentViaEmail = false,

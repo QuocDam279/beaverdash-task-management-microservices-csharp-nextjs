@@ -40,7 +40,7 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
             UserId = notification.AssigneeUserId.Value,
             ActorUserId = notification.UserId,
             Type = "subtask_comment",
-            Content = $"{actorDisplayName} vừa bình luận trên công việc con '{notification.SubTaskTitle}' được giao cho bạn.",
+            Content = $"{actorDisplayName} vừa bình luận trên nhiệm vụ '{notification.SubTaskTitle}' được giao cho bạn.",
             ActionUrl = actionUrl,
             IsRead = false,
             IsSentViaEmail = false,

@@ -123,13 +123,13 @@ public class DeadlineReminderBackgroundService : BackgroundService
             if (daysRemaining == 3 || daysRemaining == 2 || daysRemaining == 1)
             {
                 notifType = "subtask_deadline_reminder";
-                content = $"Nhiệm vụ con '{st.Title}' thuộc công việc '{st.Task?.Title}' sắp đến hạn trong {daysRemaining} ngày.";
+                content = $"Nhiệm vụ '{st.Title}' thuộc công việc '{st.Task?.Title}' sắp đến hạn trong {daysRemaining} ngày.";
                 trackingVal = daysRemaining;
             }
             else if (daysRemaining == -1) // Overdue by 1 day
             {
                 notifType = "subtask_overdue";
-                content = $"Cảnh báo: Nhiệm vụ con '{st.Title}' thuộc công việc '{st.Task?.Title}' đã quá hạn hoàn thành 1 ngày.";
+                content = $"Cảnh báo: Nhiệm vụ '{st.Title}' thuộc công việc '{st.Task?.Title}' đã quá hạn hoàn thành 1 ngày.";
                 trackingVal = -1;
             }
 

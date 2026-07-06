@@ -75,13 +75,13 @@ public class SignalRNotificationService : INotificationService
                 var subject = type switch
                 {
                     "chat_mention" => "Bạn được nhắc đến trong cuộc trò chuyện - Beaverdash",
-                    "subtask_assigned" => "Bạn được giao một công việc con mới - Beaverdash",
-                    "subtask_comment" => "Có bình luận mới trên công việc con của bạn - Beaverdash",
+                    "subtask_assigned" => "Bạn được giao một nhiệm vụ mới - Beaverdash",
+                    "subtask_comment" => "Có bình luận mới trên nhiệm vụ của bạn - Beaverdash",
                     "team_invited" => "Bạn được mời vào nhóm mới - Beaverdash",
                     "sprint_started" => "Sprint mới đã bắt đầu - Beaverdash",
                     "sprint_closed" => "Sprint đã hoàn thành/đóng - Beaverdash",
                     "sprint_ending_reminder" => "Nhắc nhở: Sprint sắp kết thúc - Beaverdash",
-                    "subtask_completed" => "Nhiệm vụ con đã hoàn thành - Beaverdash",
+                    "subtask_completed" => "Nhiệm vụ đã hoàn thành - Beaverdash",
                     "task_completed" => "Công việc đã hoàn thành - Beaverdash",
                     "team_member_removed" => "Bạn đã bị xóa khỏi nhóm - Beaverdash",
                     "team_role_changed" => "Thay đổi vai trò trong nhóm - Beaverdash",
@@ -97,7 +97,7 @@ public class SignalRNotificationService : INotificationService
                 var typeLabel = type switch
                 {
                     "chat_mention" => "Nhắc đến",
-                    "subtask_assigned" => "Giao công việc",
+                    "subtask_assigned" => "Giao nhiệm vụ",
                     "subtask_comment" => "Bình luận mới",
                     "team_invited" => "Mời tham gia nhóm",
                     "sprint_started" => "Sprint bắt đầu",

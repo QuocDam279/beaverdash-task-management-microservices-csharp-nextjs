@@ -39,7 +39,7 @@ public class SubTaskCompletedNotificationHandler : INotificationHandler<SubTaskC
             UserId = notification.TaskCreatorUserId,
             ActorUserId = notification.CompletedByUserId,
             Type = "subtask_completed",
-            Content = $"{actorDisplayName} đã hoàn thành công việc con '{notification.SubTaskTitle}' thuộc công việc '{notification.TaskTitle}' do bạn tạo.",
+            Content = $"{actorDisplayName} đã hoàn thành nhiệm vụ '{notification.SubTaskTitle}' thuộc công việc '{notification.TaskTitle}' do bạn tạo.",
             ActionUrl = $"/projects/{notification.ProjectId}/board?taskId={notification.TaskId}",
             IsRead = false,
             IsSentViaEmail = false,
