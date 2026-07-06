@@ -104,7 +104,13 @@ export function TaskSidebarProperties({
             value={localStartDate}
             min={task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined}
             max={localDueDate ? localDueDate : (task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined)}
-            onChange={(e) => setLocalStartDate(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setLocalStartDate(val);
+              if (val === "" || val.length === 10) {
+                onDateChange("startDate", val);
+              }
+            }}
             onBlur={handleStartDateBlur}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -127,7 +133,13 @@ export function TaskSidebarProperties({
             value={localDueDate}
             min={localStartDate ? localStartDate : (task.projectStartDate ? formatDateForInput(task.projectStartDate) : undefined)}
             max={task.projectDueDate ? formatDateForInput(task.projectDueDate) : undefined}
-            onChange={(e) => setLocalDueDate(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setLocalDueDate(val);
+              if (val === "" || val.length === 10) {
+                onDateChange("dueDate", val);
+              }
+            }}
             onBlur={handleDueDateBlur}
             onKeyDown={(e) => {
               if (e.key === "Enter") {

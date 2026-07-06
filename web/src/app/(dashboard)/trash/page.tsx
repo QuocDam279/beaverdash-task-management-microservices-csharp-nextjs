@@ -37,6 +37,22 @@ export default function TrashPage() {
     handleEmptyTrash,
   } = useTrashTasks();
 
+  const selectedTasks = React.useMemo(() => {
+    return filteredTasks.filter((t) => selectedIds.includes(t.id));
+  }, [filteredTasks, selectedIds]);
+
+  const showBatchRestore = React.useMemo(() => {
+    return selectedTasks.length > 0 && selectedTasks.every((t) => t.canRestore !== false);
+  }, [selectedTasks]);
+
+  const showBatchPermanentDelete = React.useMemo(() => {
+    return selectedTasks.length > 0 && selectedTasks.every((t) => t.canPermanentDelete);
+  }, [selectedTasks]);
+
+  const canEmptyTrash = React.useMemo(() => {
+    return filteredTasks.some((t) => t.canPermanentDelete);
+  }, [filteredTasks]);
+
   if (isLoading) {
     return (
       <div className="min-h-full flex items-center justify-center p-8 bg-white dark:bg-[#1d2125] select-none">
@@ -73,7 +89,7 @@ export default function TrashPage() {
         </div>
 
         {/* Empty Trash Button */}
-        {filteredTasks.length > 0 && (
+        {canEmptyTrash && (
           <button
             onClick={handleEmptyTrash}
             className="px-3.5 py-1.5 text-xs font-bold text-slate-500 dark:text-[#a5adba] hover:text-red-600 dark:hover:text-[#f87171] bg-white dark:bg-[#1d2125] hover:bg-red-50 dark:hover:bg-red-950/20 border border-slate-200 dark:border-[#353e47] hover:border-red-200 dark:hover:border-red-900 rounded transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
@@ -118,6 +134,8 @@ export default function TrashPage() {
             selectedCount={selectedIds.length}
             onBatchRestore={handleBatchRestore}
             onBatchPermanentDelete={handleBatchPermanentDelete}
+            showBatchRestore={showBatchRestore}
+            showBatchPermanentDelete={showBatchPermanentDelete}
           />
 
           <TrashTable

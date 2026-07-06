@@ -25,8 +25,9 @@ export function TrashTable({
   onRestore,
   onPermanentDelete,
 }: TrashTableProps) {
-  const isAllSelected = tasks.length > 0 && selectedIds.length === tasks.length;
-  const isSomeSelected = selectedIds.length > 0 && selectedIds.length < tasks.length;
+  const selectableTasks = tasks.filter((t) => t.canRestore || t.canPermanentDelete);
+  const isAllSelected = selectableTasks.length > 0 && selectedIds.length === selectableTasks.length;
+  const isSomeSelected = selectedIds.length > 0 && selectedIds.length < selectableTasks.length;
 
   const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSelectAll(e.target.checked);
@@ -57,7 +58,7 @@ export function TrashTable({
               <th className="px-6 py-3.5">Tiêu đề công việc</th>
               <th className="px-6 py-3.5">Cột trạng thái</th>
               <th className="px-6 py-3.5">Thời gian xóa</th>
-              <th className="px-6 py-3.5 w-44">Thao tác</th>
+              <th className="pl-8 pr-6 py-3.5 w-44">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-[#2c3338] text-xs font-semibold text-[#292a2e] dark:text-[#deebff]">
@@ -83,8 +84,10 @@ export function TrashTable({
                     <input
                       type="checkbox"
                       checked={isChecked}
+                      disabled={!task.canRestore && !task.canPermanentDelete}
                       onChange={() => onSelectRow(task.id)}
-                      className="h-3.5 w-3.5 rounded border-slate-350 dark:border-[#454f59] text-[#1868db] dark:text-[#579dff] focus:ring-[#1868db] dark:focus:ring-[#579dff] cursor-pointer"
+                      className="h-3.5 w-3.5 rounded border-slate-350 dark:border-[#454f59] text-[#1868db] dark:text-[#579dff] focus:ring-[#1868db] dark:focus:ring-[#579dff] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      title={(!task.canRestore && !task.canPermanentDelete) ? "Bạn không có quyền thao tác trên công việc này" : undefined}
                     />
                   </td>
 
@@ -127,7 +130,7 @@ export function TrashTable({
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2.5">
                       {/* Khôi phục */}
-                      {task.canRestore !== false && (
+                      {task.canRestore !== false ? (
                         <button
                           onClick={() => onRestore(task.id)}
                           className="text-slate-500 dark:text-[#a5adba] hover:text-[#1868db] dark:hover:text-[#579dff] hover:bg-slate-100/80 dark:hover:bg-[#2c3338]/60 px-2 py-1 rounded transition-colors cursor-pointer text-xs font-bold flex items-center gap-1 border border-transparent hover:border-slate-200 dark:hover:border-[#353e47]"
@@ -140,10 +143,22 @@ export function TrashTable({
                           </svg>
                           Khôi phục
                         </button>
+                      ) : (
+                        <span
+                          className="text-slate-300 dark:text-[#3b444c] px-2 py-1 text-xs font-bold flex items-center gap-1 cursor-not-allowed select-none"
+                          title="Chỉ người xóa công việc này hoặc trưởng nhóm mới có quyền khôi phục"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-40">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                          </svg>
+                          Khôi phục
+                        </span>
                       )}
 
                       {/* Xóa vĩnh viễn */}
-                      {task.canPermanentDelete && (
+                      {task.canPermanentDelete ? (
                         <button
                           onClick={() => onPermanentDelete(task.id)}
                           className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all duration-150 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-[#f87171] hover:bg-red-50 dark:hover:bg-red-950/20 p-1.5 rounded border border-transparent hover:border-red-200 dark:hover:border-red-900 cursor-pointer"
@@ -154,6 +169,16 @@ export function TrashTable({
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                           </svg>
                         </button>
+                      ) : (
+                        <span
+                          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all duration-150 text-slate-200 dark:text-[#2c3338] p-1.5 cursor-not-allowed select-none"
+                          title="Chỉ trưởng nhóm mới có quyền xóa vĩnh viễn công việc"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </span>
                       )}
                     </div>
                   </td>

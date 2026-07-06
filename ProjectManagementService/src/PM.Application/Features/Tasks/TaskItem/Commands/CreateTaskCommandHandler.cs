@@ -48,12 +48,12 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             .AnyAsync(t => t.Title.ToLower() == request.Title.ToLower() && t.BoardColumn!.ProjectId == column.ProjectId, cancellationToken);
 
         if (isDuplicateName)
-            throw new InvalidOperationException($"A task with the name '{request.Title}' already exists in this project.");
+            throw new InvalidOperationException($"Một công việc với tên '{request.Title}' đã tồn tại trong dự án này.");
 
         // Validate dates
         if (request.StartDate.HasValue && request.DueDate.HasValue && request.StartDate.Value > request.DueDate.Value)
         {
-            throw new InvalidOperationException("Ngày bắt đầu không được lớn hơn ngày hạn hoàn thành của Task.");
+            throw new InvalidOperationException("Ngày bắt đầu không được lớn hơn ngày hạn hoàn thành của công việc.");
         }
 
         if (column.Project != null)
@@ -62,11 +62,11 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             {
                 if (request.StartDate.HasValue && request.StartDate.Value.Date < column.Project.StartDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Ngày bắt đầu của Task không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Ngày bắt đầu của công việc không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
                 }
                 if (request.DueDate.HasValue && request.DueDate.Value.Date < column.Project.StartDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Hạn hoàn thành của Task không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Hạn hoàn thành của công việc không được nhỏ hơn ngày bắt đầu của dự án ({column.Project.StartDate.Value:yyyy-MM-dd}).");
                 }
             }
 
@@ -74,11 +74,11 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             {
                 if (request.StartDate.HasValue && request.StartDate.Value.Date > column.Project.DueDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Ngày bắt đầu của Task không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Ngày bắt đầu của công việc không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
                 }
                 if (request.DueDate.HasValue && request.DueDate.Value.Date > column.Project.DueDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Hạn hoàn thành của Task không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Hạn hoàn thành của công việc không được lớn hơn hạn hoàn thành của dự án ({column.Project.DueDate.Value:yyyy-MM-dd}).");
                 }
             }
         }

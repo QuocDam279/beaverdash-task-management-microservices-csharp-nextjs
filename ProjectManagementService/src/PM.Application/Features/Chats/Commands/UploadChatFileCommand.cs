@@ -89,9 +89,9 @@ public class UploadChatFileCommandHandler : IRequestHandler<UploadChatFileComman
         if (request.File == null || request.File.Length == 0)
             throw new ArgumentException("Tệp tải lên không hợp lệ.");
 
-        // Limit maximum 10MB for chat uploads
-        if (request.File.Length > 10 * 1024 * 1024)
-            throw new ArgumentException("Kích thước tệp vượt quá giới hạn cho phép (tối đa 10MB).");
+        // Limit maximum 25MB for chat uploads
+        if (request.File.Length > 25 * 1024 * 1024)
+            throw new ArgumentException("Kích thước tệp vượt quá giới hạn cho phép (tối đa 25MB).");
 
         // 2. Save physical file
         string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");

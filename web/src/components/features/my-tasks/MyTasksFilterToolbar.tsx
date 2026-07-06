@@ -203,7 +203,7 @@ export function MyTasksFilterToolbar({
                   <span>Trạng thái</span>
                   <div className="flex items-center gap-1 text-slate-400 font-normal">
                     <span className="text-[10px]">
-                      {selectedStatus === "all" ? "Tất cả" : selectedStatus === "completed" ? "Đã xong" : "Chưa xong"}
+                      {selectedStatus === "all" ? "Tất cả" : selectedStatus === "completed" ? "Đã hoàn thành" : "Chưa hoàn thành"}
                     </span>
                     <span className="text-[9px]">▶</span>
                   </div>

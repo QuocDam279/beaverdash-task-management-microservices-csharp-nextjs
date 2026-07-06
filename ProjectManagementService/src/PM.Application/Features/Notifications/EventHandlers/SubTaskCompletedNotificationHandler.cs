@@ -40,7 +40,12 @@ public class SubTaskCompletedNotificationHandler : INotificationHandler<SubTaskC
             ActorUserId = notification.CompletedByUserId,
             Type = "subtask_completed",
             Content = $"{actorDisplayName} đã hoàn thành nhiệm vụ '{notification.SubTaskTitle}' thuộc công việc '{notification.TaskTitle}' do bạn tạo.",
-            ActionUrl = $"/projects/{notification.ProjectId}/board?taskId={notification.TaskId}",
+            ActionUrl = await NotificationUrlHelper.GetTaskUrlAsync(
+                _dbContext,
+                notification.ProjectId,
+                notification.TaskId,
+                notification.TaskCreatorUserId,
+                cancellationToken),
             IsRead = false,
             IsSentViaEmail = false,
             CreatedAt = DateTime.UtcNow

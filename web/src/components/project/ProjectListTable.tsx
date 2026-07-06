@@ -65,14 +65,38 @@ export function ProjectListTable({
 
   const renderStatusBadge = (columnId: string, columnName?: string) => {
     const name = columnName || getStatusName(columnId);
+    const col = columns.find((c) => c.id === columnId);
+    const idx = col ? columns.indexOf(col) : -1;
+
     let badgeClass = "bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-450 border-slate-200 dark:border-[#353e47]";
-    if (name === "Đã hoàn thành" || (name.includes("Hoàn thành") && !name.includes("Chưa")) || name.toLowerCase().includes("done")) {
-      badgeClass = "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40 font-bold";
-    } else if (name === "Chưa hoàn thành" || name.includes("Chưa")) {
-      badgeClass = "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-250 dark:border-amber-900/40 font-bold";
-    } else if (name.includes("Đang") || name.toLowerCase().includes("progress")) {
-      badgeClass = "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-[#579dff] border-blue-200 dark:border-blue-900/40 font-bold";
+
+    if (col) {
+      if (col.isDone) {
+        badgeClass = "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40 font-bold";
+      } else if (idx === 0) {
+        badgeClass = "bg-slate-100 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#353e47] font-bold";
+      } else {
+        const middleColorsClasses = [
+          "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-[#579dff] border-blue-200 dark:border-blue-900/40 font-bold",
+          "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/40 font-bold",
+          "bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-900/40 font-bold",
+          "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-250 dark:border-amber-900/40 font-bold",
+          "bg-cyan-50 dark:bg-cyan-950/20 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-900/40 font-bold",
+          "bg-pink-50 dark:bg-pink-950/20 text-pink-700 dark:text-pink-400 border-pink-200 dark:border-pink-900/40 font-bold",
+        ];
+        const colorIdx = (idx - 1) % middleColorsClasses.length;
+        badgeClass = middleColorsClasses[colorIdx];
+      }
+    } else {
+      if (name === "Đã hoàn thành" || (name.includes("Hoàn thành") && !name.includes("Chưa")) || name.toLowerCase().includes("done")) {
+        badgeClass = "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40 font-bold";
+      } else if (name === "Chưa hoàn thành" || name.includes("Chưa")) {
+        badgeClass = "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-250 dark:border-amber-900/40 font-bold";
+      } else if (name.includes("Đang") || name.toLowerCase().includes("progress")) {
+        badgeClass = "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-[#579dff] border-blue-200 dark:border-blue-900/40 font-bold";
+      }
     }
+
     return (
       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] uppercase border tracking-wider font-semibold ${badgeClass}`}>
         {name}

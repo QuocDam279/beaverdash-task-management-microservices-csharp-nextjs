@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { toUtcLocalDate } from "@/lib/utils";
 
 export interface BoardToolbarProps {
   searchQuery: string;
@@ -78,7 +79,8 @@ export function BoardToolbar({
 
   const getSprintDaysLeft = (endDateStr: string | null) => {
     if (!endDateStr) return null;
-    const endDate = new Date(endDateStr);
+    const endDate = toUtcLocalDate(endDateStr);
+    if (!endDate) return null;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const target = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());

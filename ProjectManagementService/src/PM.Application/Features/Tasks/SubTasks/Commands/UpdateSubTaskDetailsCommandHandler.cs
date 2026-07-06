@@ -117,10 +117,10 @@ public class UpdateSubTaskDetailsCommandHandler : IRequestHandler<UpdateSubTaskD
         if (request.DueDate.HasValue)
         {
             if (subTask.Task.DueDate.HasValue && request.DueDate.Value.Date > subTask.Task.DueDate.Value.Date)
-                throw new InvalidOperationException("Hạn hoàn thành của SubTask không được vượt quá hạn hoàn thành của Task cha.");
+                throw new InvalidOperationException("Hạn hoàn thành của nhiệm vụ không được vượt quá hạn hoàn thành của công việc.");
 
             if (subTask.Task.StartDate.HasValue && request.DueDate.Value.Date < subTask.Task.StartDate.Value.Date)
-                throw new InvalidOperationException("Hạn hoàn thành của SubTask không được nhỏ hơn ngày bắt đầu của Task cha.");
+                throw new InvalidOperationException("Hạn hoàn thành của nhiệm vụ không được nhỏ hơn ngày bắt đầu của công việc.");
         }
 
         // Track changes

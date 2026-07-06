@@ -74,10 +74,12 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
         var completedTasks = tasks.Where(t => doneColumnIds.Contains(t.BoardColumnId) && (t.CompletedAt ?? t.UpdatedAt) >= sevenDaysAgo).ToList();
         var newTasks = tasks.Where(t => t.CreatedAt >= sevenDaysAgo).ToList();
         var upcomingDueTasks = tasks.Where(t => !doneColumnIds.Contains(t.BoardColumnId) && t.DueDate != null && t.DueDate >= now && t.DueDate <= sevenDaysFromNow).ToList();
+        var overdueTasks = tasks.Where(t => !doneColumnIds.Contains(t.BoardColumnId) && t.DueDate != null && t.DueDate < now).ToList();
 
         int completedCount = completedTasks.Count;
         int newCount = newTasks.Count;
         int upcomingDueCount = upcomingDueTasks.Count;
+        int overdueCount = overdueTasks.Count;
 
         int completedTasksSubTasksTotal = completedTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
         int completedTasksSubTasksDone = completedTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
@@ -87,6 +89,9 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
 
         int upcomingDueTasksSubTasksTotal = upcomingDueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
         int upcomingDueTasksSubTasksDone = upcomingDueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
+
+        int overdueTasksSubTasksTotal = overdueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
+        int overdueTasksSubTasksDone = overdueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
 
         // Subtask Status Counts & Priority Breakdown inside Parent Priorities
         int todoSubTasksCount = 0;
@@ -206,6 +211,7 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
             CompletedTasksCount = completedCount,
             NewTasksCount = newCount,
             UpcomingDueTasksCount = upcomingDueCount,
+            OverdueTasksCount = overdueCount,
 
             CompletedTasksSubTasksTotal = completedTasksSubTasksTotal,
             CompletedTasksSubTasksDone = completedTasksSubTasksDone,
@@ -213,6 +219,8 @@ public class GetSharedProjectOverviewQueryHandler : IRequestHandler<GetSharedPro
             NewTasksSubTasksDone = newTasksSubTasksDone,
             UpcomingDueTasksSubTasksTotal = upcomingDueTasksSubTasksTotal,
             UpcomingDueTasksSubTasksDone = upcomingDueTasksSubTasksDone,
+            OverdueTasksSubTasksTotal = overdueTasksSubTasksTotal,
+            OverdueTasksSubTasksDone = overdueTasksSubTasksDone,
 
             TodoSubTasksCount = todoSubTasksCount,
             InProgressSubTasksCount = inProgressSubTasksCount,

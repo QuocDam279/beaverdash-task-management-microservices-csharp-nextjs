@@ -176,7 +176,16 @@ export function TaskSubtaskDrawerProperties({
               value={localDueDate}
               min={taskStartDate ? taskStartDate.substring(0, 10) : undefined}
               max={taskDueDate ? taskDueDate.substring(0, 10) : undefined}
-              onChange={(e) => setLocalDueDate(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLocalDueDate(val);
+                if (val === "" || val.length === 10) {
+                  const normalizedProp = subtask.dueDate ? subtask.dueDate.substring(0, 10) : "";
+                  if (val !== normalizedProp) {
+                    onSubtaskDueDateChange(subtask.id, val || null);
+                  }
+                }
+              }}
               onBlur={() => {
                 const normalizedProp = subtask.dueDate ? subtask.dueDate.substring(0, 10) : "";
                 if (localDueDate !== normalizedProp) {

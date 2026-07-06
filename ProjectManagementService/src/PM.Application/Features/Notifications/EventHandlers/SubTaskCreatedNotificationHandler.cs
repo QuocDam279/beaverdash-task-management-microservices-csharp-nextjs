@@ -32,7 +32,12 @@ public class SubTaskCreatedNotificationHandler : INotificationHandler<SubTaskCre
             ActorUserId = notification.UserId,
             Type = "subtask_assigned",
             Content = $"Bạn vừa được giao nhiệm vụ '{notification.SubTaskTitle}' thuộc công việc '{notification.TaskTitle}'.",
-            ActionUrl = $"/projects/{notification.ProjectId}/board?taskId={notification.TaskId}",
+            ActionUrl = await NotificationUrlHelper.GetTaskUrlAsync(
+                _dbContext,
+                notification.ProjectId,
+                notification.TaskId,
+                notification.AssigneeUserId.Value,
+                cancellationToken),
             IsRead = false,
             IsSentViaEmail = false,
             CreatedAt = DateTime.UtcNow

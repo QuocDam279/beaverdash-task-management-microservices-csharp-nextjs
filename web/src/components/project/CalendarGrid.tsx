@@ -54,11 +54,11 @@ export function CalendarGrid({
     if (!dateStr) return "Không có hạn chót";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${hours}:${minutes} ngày ${day}/${month}/${date.getFullYear()}`;
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    return `${hours}:${minutes} ngày ${day}/${month}/${date.getUTCFullYear()}`;
   };
 
   const getPriorityInfo = (priority: string | null) => {
@@ -242,7 +242,7 @@ export function CalendarGrid({
                       ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40" 
                       : "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/40"
                   }`}>
-                    {isCompleted ? "Đã xong" : "Chưa xong"}
+                    {isCompleted ? "Đã hoàn thành" : "Chưa hoàn thành"}
                   </span>
                 );
               })()}

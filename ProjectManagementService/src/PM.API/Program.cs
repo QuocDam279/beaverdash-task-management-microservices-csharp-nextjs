@@ -6,6 +6,16 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure maximum request body size limit to 100MB
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
+});
+
 // Load file .env từ thư mục gốc của repo
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
 if (File.Exists(envPath)) DotNetEnv.Env.Load(envPath);

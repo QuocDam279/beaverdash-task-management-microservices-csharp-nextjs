@@ -46,10 +46,11 @@ public class PermanentDeleteTaskCommandHandler : IRequestHandler<PermanentDelete
             .FirstOrDefaultAsync(tm => tm.TeamId == task.BoardColumn.Project.TeamId.Value && tm.UserId == currentUserId, cancellationToken);
 
         bool isLeader = requestingMember != null && (requestingMember.Role == "leader" || requestingMember.Role == "Owner");
+        bool isCreatorAndDeleter = task.CreatedByUserId == currentUserId && task.DeletedByUserId == currentUserId;
 
-        if (!isLeader)
+        if (!isLeader && !isCreatorAndDeleter)
         {
-            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm mới có quyền xóa vĩnh viễn công việc.");
+            throw new UnauthorizedAccessException("Chỉ có trưởng nhóm hoặc người tạo kiêm người xóa công việc này mới có quyền xóa vĩnh viễn.");
         }
 
         task.AddDomainEvent(new PM.Domain.Events.TaskPermanentlyDeletedEvent(

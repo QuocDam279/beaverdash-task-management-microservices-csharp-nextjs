@@ -69,6 +69,13 @@ public class TaskCompletedNotificationHandler : INotificationHandler<TaskMovedEv
         // 4. Send notifications
         foreach (var recipientId in recipients)
         {
+            string actionUrl = await NotificationUrlHelper.GetTaskUrlAsync(
+                _dbContext,
+                notification.ProjectId,
+                notification.TaskId,
+                recipientId,
+                cancellationToken);
+
             var notif = new Notification
             {
                 Id = Guid.CreateVersion7(),
@@ -76,7 +83,7 @@ public class TaskCompletedNotificationHandler : INotificationHandler<TaskMovedEv
                 ActorUserId = notification.UserId,
                 Type = "task_completed",
                 Content = $"{actorDisplayName} đã hoàn thành công việc '{notification.TaskTitle}' liên quan đến bạn.",
-                ActionUrl = $"/projects/{notification.ProjectId}/board?taskId={notification.TaskId}",
+                ActionUrl = actionUrl,
                 IsRead = false,
                 IsSentViaEmail = false,
                 CreatedAt = DateTime.UtcNow

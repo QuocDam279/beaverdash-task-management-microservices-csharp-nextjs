@@ -285,7 +285,9 @@ export function MyTasksStatsPanel({ tasks, onTaskClick, stats }: MyTasksStatsPan
                 badgeBg = "bg-amber-100 text-amber-800 border-amber-200";
                 badgeText = "Hôm nay";
                 const date = new Date(item.dueDate || "");
-                rightText = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                rightText = !isNaN(date.getTime())
+                  ? `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`
+                  : "";
                 rightColor = "text-amber-700 font-bold text-[10px]";
               } else if (currentTab === "upcoming") {
                 cardBg = "bg-blue-50 border-blue-100 hover:bg-blue-100/50 hover:border-blue-200";

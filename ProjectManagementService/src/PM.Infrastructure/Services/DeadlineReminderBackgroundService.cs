@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PM.Application.Contracts;
+using PM.Application.Features.Notifications.EventHandlers;
 using PM.Domain.Entities;
 using PM.Domain.Enums;
 using PM.Infrastructure.Data;
@@ -148,7 +149,14 @@ public class DeadlineReminderBackgroundService : BackgroundService
                         ActorUserId = systemUserId,
                         Type = notifType,
                         Content = content,
-                        ActionUrl = st.Task != null ? $"/projects/{st.Task.BoardColumn?.ProjectId}/board?taskId={st.Task.Id}" : "/",
+                        ActionUrl = st.Task != null && st.Task.BoardColumn != null
+                            ? await NotificationUrlHelper.GetTaskUrlAsync(
+                                dbContext,
+                                st.Task.BoardColumn.ProjectId,
+                                st.Task.Id,
+                                userId,
+                                stoppingToken)
+                            : "/",
                         IsRead = false,
                         IsSentViaEmail = false,
                         CreatedAt = DateTime.UtcNow
@@ -246,7 +254,14 @@ public class DeadlineReminderBackgroundService : BackgroundService
                         ActorUserId = systemUserId,
                         Type = notifType,
                         Content = content,
-                        ActionUrl = $"/projects/{t.BoardColumn?.ProjectId}/board?taskId={t.Id}",
+                        ActionUrl = t.BoardColumn != null
+                            ? await NotificationUrlHelper.GetTaskUrlAsync(
+                                dbContext,
+                                t.BoardColumn.ProjectId,
+                                t.Id,
+                                userId,
+                                stoppingToken)
+                            : "/",
                         IsRead = false,
                         IsSentViaEmail = false,
                         CreatedAt = DateTime.UtcNow

@@ -96,7 +96,11 @@ export function useTrashTasks() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(filteredTasks.map((t) => t.id));
+      setSelectedIds(
+        filteredTasks
+          .filter((t) => t.canRestore || t.canPermanentDelete)
+          .map((t) => t.id)
+      );
     } else {
       setSelectedIds([]);
     }

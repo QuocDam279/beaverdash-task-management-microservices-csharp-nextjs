@@ -40,7 +40,7 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
             .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
         if (task == null)
-            throw new InvalidOperationException("Task not found.");
+            throw new InvalidOperationException("Công việc không tồn tại.");
 
         var currentUserId = _currentUserService.UserId ?? throw new UnauthorizedAccessException("Bạn chưa đăng nhập.");
 
@@ -75,7 +75,7 @@ public class MoveTaskCommandHandler : IRequestHandler<MoveTaskCommand, bool>
                 .FirstOrDefaultAsync(c => c.Id == newColumnId, cancellationToken);
 
             if (newColumn == null)
-                throw new InvalidOperationException("Target column not found.");
+                throw new InvalidOperationException("Không tìm thấy cột Kanban đích.");
 
             if (newColumn.IsDone)
             {

@@ -48,6 +48,7 @@ public class ProjectOverviewDto
     public int CompletedTasksCount { get; set; }
     public int NewTasksCount { get; set; }
     public int UpcomingDueTasksCount { get; set; }
+    public int OverdueTasksCount { get; set; }
 
     public int CompletedTasksSubTasksTotal { get; set; }
     public int CompletedTasksSubTasksDone { get; set; }
@@ -55,6 +56,8 @@ public class ProjectOverviewDto
     public int NewTasksSubTasksDone { get; set; }
     public int UpcomingDueTasksSubTasksTotal { get; set; }
     public int UpcomingDueTasksSubTasksDone { get; set; }
+    public int OverdueTasksSubTasksTotal { get; set; }
+    public int OverdueTasksSubTasksDone { get; set; }
 
     // Subtask Status Counts
     public int TodoSubTasksCount { get; set; }
@@ -158,10 +161,12 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
         var completedTasks = tasks.Where(t => doneColumnIds.Contains(t.BoardColumnId) && (t.CompletedAt ?? t.UpdatedAt) >= sevenDaysAgo).ToList();
         var newTasks = tasks.Where(t => t.CreatedAt >= sevenDaysAgo).ToList();
         var upcomingDueTasks = tasks.Where(t => !doneColumnIds.Contains(t.BoardColumnId) && t.DueDate != null && t.DueDate >= now && t.DueDate <= sevenDaysFromNow).ToList();
+        var overdueTasks = tasks.Where(t => !doneColumnIds.Contains(t.BoardColumnId) && t.DueDate != null && t.DueDate < now).ToList();
 
         int completedCount = completedTasks.Count;
         int newCount = newTasks.Count;
         int upcomingDueCount = upcomingDueTasks.Count;
+        int overdueCount = overdueTasks.Count;
 
         int completedTasksSubTasksTotal = completedTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
         int completedTasksSubTasksDone = completedTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
@@ -171,6 +176,9 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
 
         int upcomingDueTasksSubTasksTotal = upcomingDueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
         int upcomingDueTasksSubTasksDone = upcomingDueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
+
+        int overdueTasksSubTasksTotal = overdueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null);
+        int overdueTasksSubTasksDone = overdueTasks.SelectMany(t => t.SubTasks).Count(s => s.DeletedAt == null && s.IsCompleted);
 
         // Subtask Status Counts & Priority Breakdown inside Parent Priorities
         int todoSubTasksCount = 0;
@@ -291,6 +299,7 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
             CompletedTasksCount = completedCount,
             NewTasksCount = newCount,
             UpcomingDueTasksCount = upcomingDueCount,
+            OverdueTasksCount = overdueCount,
 
             CompletedTasksSubTasksTotal = completedTasksSubTasksTotal,
             CompletedTasksSubTasksDone = completedTasksSubTasksDone,
@@ -298,6 +307,8 @@ public class GetProjectOverviewQueryHandler : IRequestHandler<GetProjectOverview
             NewTasksSubTasksDone = newTasksSubTasksDone,
             UpcomingDueTasksSubTasksTotal = upcomingDueTasksSubTasksTotal,
             UpcomingDueTasksSubTasksDone = upcomingDueTasksSubTasksDone,
+            OverdueTasksSubTasksTotal = overdueTasksSubTasksTotal,
+            OverdueTasksSubTasksDone = overdueTasksSubTasksDone,
 
             TodoSubTasksCount = todoSubTasksCount,
             InProgressSubTasksCount = inProgressSubTasksCount,

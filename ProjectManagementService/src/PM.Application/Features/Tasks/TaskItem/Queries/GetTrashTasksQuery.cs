@@ -71,7 +71,8 @@ public class GetTrashTasksQueryHandler : IRequestHandler<GetTrashTasksQuery, Lis
                 ProjectName = t.BoardColumn != null && t.BoardColumn.Project != null ? t.BoardColumn.Project.Name : "Không rõ",
                 ColumnName = t.BoardColumn != null ? t.BoardColumn.Name : "Không rõ",
                 IsCompleted = t.CompletedAt.HasValue || (t.BoardColumn != null && t.BoardColumn.IsDone),
-                CanPermanentDelete = t.BoardColumn != null && t.BoardColumn.Project != null && t.BoardColumn.Project.TeamId.HasValue && leaderTeamIds.Contains(t.BoardColumn.Project.TeamId.Value),
+                CanPermanentDelete = (t.BoardColumn != null && t.BoardColumn.Project != null && t.BoardColumn.Project.TeamId.HasValue && leaderTeamIds.Contains(t.BoardColumn.Project.TeamId.Value))
+                                     || (t.CreatedByUserId == currentUserId && t.DeletedByUserId == currentUserId),
                 CanRestore = (t.BoardColumn != null && t.BoardColumn.Project != null && t.BoardColumn.Project.TeamId.HasValue && leaderTeamIds.Contains(t.BoardColumn.Project.TeamId.Value))
                              || _dbContext.ActivityLogs
                                     .Where(al => al.EntityType == "task" && al.EntityId == t.Id && al.ActionType == "deleted")

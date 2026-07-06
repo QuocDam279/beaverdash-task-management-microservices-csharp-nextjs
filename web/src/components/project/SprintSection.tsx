@@ -4,6 +4,8 @@ import * as React from "react";
 import type { SprintDto } from "@/types/api";
 import { BacklogTaskRow } from "./BacklogTaskRow";
 
+import { toUtcLocalDate } from "@/lib/utils";
+
 interface SprintSectionProps {
   sprint: SprintDto;
   onStartSprint: (sprintId: string) => void;
@@ -19,8 +21,10 @@ interface SprintSectionProps {
 const formatDateRange = (start: string | null, end: string | null) => {
   if (!start && !end) return "Chưa đặt thời gian";
   const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-  const startDateStr = start ? new Date(start).toLocaleDateString("vi-VN", options) : "Bắt đầu";
-  const endDateStr = end ? new Date(end).toLocaleDateString("vi-VN", options) : "Kết thúc";
+  const startDate = toUtcLocalDate(start);
+  const endDate = toUtcLocalDate(end);
+  const startDateStr = startDate ? startDate.toLocaleDateString("vi-VN", options) : "Bắt đầu";
+  const endDateStr = endDate ? endDate.toLocaleDateString("vi-VN", options) : "Kết thúc";
   return `${startDateStr} - ${endDateStr}`;
 };
 

@@ -188,7 +188,7 @@ export function ProjectDocumentsView({
                 Kéo thả tệp tin vào đây hoặc <span className="text-[#1868db] dark:text-[#579dff] group-hover:underline">Nhấn để duyệt</span>
               </p>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                Hỗ trợ tệp đính kèm văn bản, bảng tính, hình ảnh, tài liệu nén PDF, ZIP... lên đến 50MB.
+                Hỗ trợ tệp đính kèm văn bản, bảng tính, hình ảnh, tài liệu nén PDF, ZIP... lên đến 100MB.
               </p>
             </>
           )}

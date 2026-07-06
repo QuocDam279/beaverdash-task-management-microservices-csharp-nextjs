@@ -157,14 +157,14 @@ export default function ProjectOverviewPage({ params }: PageProps) {
       <ProjectOverviewStats
         projectId={projectId}
         completedCount={data.completedTasksCount}
-        createdCount={data.newTasksCount}
         upcomingDueCount={data.upcomingDueTasksCount}
+        overdueCount={data.overdueTasksCount}
         completedSubTasksTotal={data.completedTasksSubTasksTotal}
         completedSubTasksDone={data.completedTasksSubTasksDone}
-        newSubTasksTotal={data.newTasksSubTasksTotal}
-        newSubTasksDone={data.newTasksSubTasksDone}
         upcomingDueSubTasksTotal={data.upcomingDueTasksSubTasksTotal}
         upcomingDueSubTasksDone={data.upcomingDueTasksSubTasksDone}
+        overdueSubTasksTotal={data.overdueTasksSubTasksTotal}
+        overdueSubTasksDone={data.overdueTasksSubTasksDone}
       />
 
       {/* 2. GRID 2X2 CHARTS SECTION */}

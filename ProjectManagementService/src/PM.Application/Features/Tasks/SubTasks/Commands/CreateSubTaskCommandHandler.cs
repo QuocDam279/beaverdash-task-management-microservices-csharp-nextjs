@@ -72,16 +72,16 @@ public class CreateSubTaskCommandHandler : IRequestHandler<CreateSubTaskCommand,
             .AnyAsync(s => s.Title.ToLower() == request.Title.ToLower() && s.TaskId == request.TaskId && s.DeletedAt == null, cancellationToken);
 
         if (isDuplicateSubtaskName)
-            throw new InvalidOperationException($"A subtask with the name '{request.Title}' already exists under this parent task.");
+            throw new InvalidOperationException($"Một nhiệm vụ con với tên '{request.Title}' đã tồn tại trong công việc này.");
 
         // Validate deadline
         if (request.DueDate.HasValue)
         {
             if (task.DueDate.HasValue && request.DueDate.Value.Date > task.DueDate.Value.Date)
-                throw new InvalidOperationException("Hạn hoàn thành của SubTask không được vượt quá hạn hoàn thành của Task cha.");
+                throw new InvalidOperationException("Hạn hoàn thành của nhiệm vụ không được vượt quá hạn hoàn thành của công việc.");
 
             if (task.StartDate.HasValue && request.DueDate.Value.Date < task.StartDate.Value.Date)
-                throw new InvalidOperationException("Hạn hoàn thành của SubTask không được nhỏ hơn ngày bắt đầu của Task cha.");
+                throw new InvalidOperationException("Hạn hoàn thành của nhiệm vụ không được nhỏ hơn ngày bắt đầu của công việc.");
         }
 
         int sortOrder = request.SortOrder ?? 0;

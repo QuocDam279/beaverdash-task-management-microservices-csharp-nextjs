@@ -54,9 +54,9 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
         if (request.File == null || request.File.Length == 0)
             throw new ArgumentException("Tệp tải lên không hợp lệ hoặc bị trống.");
 
-        // Giới hạn tối đa 50MB (50 * 1024 * 1024 bytes)
-        if (request.File.Length > 50 * 1024 * 1024)
-            throw new ArgumentException("Kích thước tệp vượt quá giới hạn cho phép (tối đa 50MB).");
+        // Giới hạn tối đa 100MB (100 * 1024 * 1024 bytes)
+        if (request.File.Length > 100 * 1024 * 1024)
+            throw new ArgumentException("Kích thước tệp vượt quá giới hạn cho phép (tối đa 100MB).");
 
         // 3. Xử lý lưu tệp vật lý
         string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");

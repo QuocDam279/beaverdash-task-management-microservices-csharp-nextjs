@@ -32,7 +32,12 @@ public class CommentAddedNotificationHandler : INotificationHandler<CommentAdded
         var actorDisplayName = !string.IsNullOrWhiteSpace(actorUser?.DisplayName) ? actorUser.DisplayName : "Một đồng nghiệp";
         var actorAvatar = actorUser?.Avatar;
 
-        string actionUrl = $"/projects/{notification.ProjectId}/board?taskId={notification.TaskId}";
+        string actionUrl = await NotificationUrlHelper.GetTaskUrlAsync(
+            _dbContext,
+            notification.ProjectId,
+            notification.TaskId,
+            notification.AssigneeUserId.Value,
+            cancellationToken);
 
         var subTaskAssigneeNotif = new Notification
         {

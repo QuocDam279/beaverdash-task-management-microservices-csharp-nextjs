@@ -100,10 +100,10 @@ export function BacklogTaskRow({
   const { subTasksCount, completedSubTasksCount } = task;
 
   // Convert sprint dates and task dates using local timezone-aware parsing to match display
-  const sStart = sprintStartDate ? new Date(sprintStartDate) : null;
-  const sEnd = sprintEndDate ? new Date(sprintEndDate) : null;
-  const tStart = task.startDate ? new Date(task.startDate) : null;
-  const tDue = task.dueDate ? new Date(task.dueDate) : null;
+  const sStart = toUtcLocalDate(sprintStartDate);
+  const sEnd = toUtcLocalDate(sprintEndDate);
+  const tStart = toUtcLocalDate(task.startDate);
+  const tDue = toUtcLocalDate(task.dueDate);
 
   let hasMismatch = false;
   if (sStart && tStart) {

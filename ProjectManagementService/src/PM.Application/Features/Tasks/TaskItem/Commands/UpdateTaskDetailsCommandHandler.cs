@@ -72,7 +72,7 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
 
         if (newStartDate.HasValue && newDueDate.HasValue && newStartDate.Value > newDueDate.Value)
         {
-            throw new InvalidOperationException("Ngày bắt đầu không được lớn hơn ngày hạn hoàn thành của Task.");
+            throw new InvalidOperationException("Ngày bắt đầu không được lớn hơn ngày hạn hoàn thành của công việc.");
         }
 
         if (project != null)
@@ -81,11 +81,11 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
             {
                 if (newStartDate.HasValue && newStartDate.Value.Date < project.StartDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Ngày bắt đầu của Task không được nhỏ hơn ngày bắt đầu của dự án ({project.StartDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Ngày bắt đầu của công việc không được nhỏ hơn ngày bắt đầu của dự án ({project.StartDate.Value:yyyy-MM-dd}).");
                 }
                 if (newDueDate.HasValue && newDueDate.Value.Date < project.StartDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Hạn hoàn thành của Task không được nhỏ hơn ngày bắt đầu của dự án ({project.StartDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Hạn hoàn thành của công việc không được nhỏ hơn ngày bắt đầu của dự án ({project.StartDate.Value:yyyy-MM-dd}).");
                 }
             }
 
@@ -93,11 +93,11 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
             {
                 if (newStartDate.HasValue && newStartDate.Value.Date > project.DueDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Ngày bắt đầu của Task không được lớn hơn hạn hoàn thành của dự án ({project.DueDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Ngày bắt đầu của công việc không được lớn hơn hạn hoàn thành của dự án ({project.DueDate.Value:yyyy-MM-dd}).");
                 }
                 if (newDueDate.HasValue && newDueDate.Value.Date > project.DueDate.Value.Date)
                 {
-                    throw new InvalidOperationException($"Hạn hoàn thành của Task không được lớn hơn hạn hoàn thành của dự án ({project.DueDate.Value:yyyy-MM-dd}).");
+                    throw new InvalidOperationException($"Hạn hoàn thành của công việc không được lớn hơn hạn hoàn thành của dự án ({project.DueDate.Value:yyyy-MM-dd}).");
                 }
             }
         }
@@ -111,8 +111,8 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
                 .OrderBy(d => d)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (minSubTaskDueDate.HasValue && request.StartDate.Value > minSubTaskDueDate.Value)
-                throw new InvalidOperationException($"Ngày bắt đầu của Task không được lớn hơn hạn hoàn thành nhỏ nhất của các SubTask ({minSubTaskDueDate.Value:yyyy-MM-dd}).");
+            if (minSubTaskDueDate.HasValue && request.StartDate.Value.Date > minSubTaskDueDate.Value.Date)
+                throw new InvalidOperationException($"Ngày bắt đầu của công việc không được lớn hơn hạn hoàn thành nhỏ nhất của các nhiệm vụ ({minSubTaskDueDate.Value:yyyy-MM-dd}).");
         }
 
         if (request.DueDate.HasValue)
@@ -123,8 +123,8 @@ public class UpdateTaskDetailsCommandHandler : IRequestHandler<UpdateTaskDetails
                 .OrderByDescending(d => d)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (maxSubTaskDueDate.HasValue && request.DueDate.Value < maxSubTaskDueDate.Value)
-                throw new InvalidOperationException($"Hạn hoàn thành của Task không được nhỏ hơn hạn hoàn thành lớn nhất của các SubTask ({maxSubTaskDueDate.Value:yyyy-MM-dd}).");
+            if (maxSubTaskDueDate.HasValue && request.DueDate.Value.Date < maxSubTaskDueDate.Value.Date)
+                throw new InvalidOperationException($"Hạn hoàn thành của công việc không được nhỏ hơn hạn hoàn thành lớn nhất của các nhiệm vụ ({maxSubTaskDueDate.Value:yyyy-MM-dd}).");
         }
 
         // Assign values if valid
