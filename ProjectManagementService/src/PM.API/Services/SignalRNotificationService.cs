@@ -11,12 +11,12 @@ namespace PM.API.Services;
 public class SignalRNotificationService : INotificationService
 {
     private readonly IHubContext<NotificationHub> _hubContext;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public SignalRNotificationService(IHubContext<NotificationHub> hubContext, IServiceProvider serviceProvider)
+    public SignalRNotificationService(IHubContext<NotificationHub> hubContext, IServiceScopeFactory scopeFactory)
     {
         _hubContext = hubContext;
-        _serviceProvider = serviceProvider;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task SendNotificationToUserAsync(string userId, object notificationData)
@@ -29,7 +29,7 @@ public class SignalRNotificationService : INotificationService
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<IPMDbContext>();
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
