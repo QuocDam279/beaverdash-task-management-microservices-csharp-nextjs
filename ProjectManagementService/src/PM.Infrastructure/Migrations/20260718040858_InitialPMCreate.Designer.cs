@@ -12,14 +12,15 @@ using PM.Infrastructure.Data;
 namespace PM.Infrastructure.Migrations
 {
     [DbContext(typeof(PMDbContext))]
-    [Migration("20260520040132_UpdateTaskAndAddSubTask")]
-    partial class UpdateTaskAndAddSubTask
+    [Migration("20260718040858_InitialPMCreate")]
+    partial class InitialPMCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("pm")
                 .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -66,11 +67,13 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("activity_log", (string)null);
+                    b.HasIndex("ProjectId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_activity_log_project_id_created_at");
+
+                    b.ToTable("activity_log", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Attachment", b =>
@@ -110,7 +113,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("CommentId");
 
-                    b.ToTable("attachments", (string)null);
+                    b.ToTable("attachments", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.BoardColumn", b =>
@@ -123,6 +126,12 @@ namespace PM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<bool>("IsDone")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_done");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -147,9 +156,69 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId", "Position")
+                        .HasDatabaseName("ix_board_columns_project_id_position");
 
-                    b.ToTable("board_columns", (string)null);
+                    b.ToTable("board_columns", "pm");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("file_name");
+
+                    b.Property<long?>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size");
+
+                    b.Property<string>("FileType")
+                        .HasColumnType("text")
+                        .HasColumnName("file_type");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("file_url");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sender_id");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("ProjectId", "CreatedAt");
+
+                    b.HasIndex("TeamId", "CreatedAt");
+
+                    b.ToTable("chat_messages", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
@@ -186,7 +255,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("comments", (string)null);
+                    b.ToTable("comments", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Notification", b =>
@@ -240,9 +309,98 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("ActorUserId");
 
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_notifications_user_id_created_at");
+
+                    b.ToTable("notifications", "pm");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.NotificationTracking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("DaysRemainingOrOverdue")
+                        .HasColumnType("integer")
+                        .HasColumnName("days_remaining_or_overdue");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("entity_type");
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("notification_type");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
                     b.HasIndex("UserId");
 
-                    b.ToTable("notifications", (string)null);
+                    b.HasIndex("EntityId", "NotificationType", "DaysRemainingOrOverdue", "UserId")
+                        .HasDatabaseName("ix_notification_trackings_lookup");
+
+                    b.ToTable("notification_trackings", "pm");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_on_utc");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_on_utc");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("retry_count");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedOnUtc")
+                        .HasDatabaseName("ix_outbox_messages_unprocessed")
+                        .HasFilter("processed_on_utc IS NULL");
+
+                    b.ToTable("outbox_messages", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Project", b =>
@@ -279,6 +437,12 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("varchar")
                         .HasColumnName("name");
 
+                    b.Property<int>("Progress")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("progress");
+
                     b.Property<string>("ShareToken")
                         .HasColumnType("varchar")
                         .HasColumnName("share_token");
@@ -286,10 +450,6 @@ namespace PM.Infrastructure.Migrations
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("varchar")
-                        .HasColumnName("status");
 
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uuid")
@@ -308,7 +468,142 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("projects", (string)null);
+                    b.ToTable("projects", "pm");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.ProjectDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("file_name");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size_bytes");
+
+                    b.Property<string>("FileType")
+                        .HasColumnType("varchar")
+                        .HasColumnName("file_type");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("file_url");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("project_documents", "pm");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.ProjectShare", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("recipient_email");
+
+                    b.Property<Guid>("SharedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shared_by_user_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientEmail");
+
+                    b.HasIndex("SharedByUserId");
+
+                    b.HasIndex("ProjectId", "RecipientEmail")
+                        .IsUnique();
+
+                    b.ToTable("project_shares", "pm");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Status")
+                        .HasDatabaseName("ix_sprints_project_id_status");
+
+                    b.ToTable("sprints", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
@@ -340,13 +635,13 @@ namespace PM.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_completed");
 
+                    b.Property<string>("Priority")
+                        .HasColumnType("varchar")
+                        .HasColumnName("priority");
+
                     b.Property<int?>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sort_order");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start_date");
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid")
@@ -367,7 +662,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("sub_tasks", (string)null);
+                    b.ToTable("sub_tasks", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
@@ -376,14 +671,6 @@ namespace PM.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<DateTime?>("AssignedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("assigned_at");
-
-                    b.Property<Guid?>("AssigneeUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("assignee_user_id");
 
                     b.Property<Guid>("BoardColumnId")
                         .HasColumnType("uuid")
@@ -405,6 +692,10 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
@@ -421,6 +712,10 @@ namespace PM.Infrastructure.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("sort_order");
 
+                    b.Property<Guid?>("SprintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sprint_id");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
@@ -436,13 +731,15 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssigneeUserId");
-
-                    b.HasIndex("BoardColumnId");
-
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("tasks", (string)null);
+                    b.HasIndex("SprintId")
+                        .HasDatabaseName("ix_tasks_sprint_id");
+
+                    b.HasIndex("BoardColumnId", "SortOrder")
+                        .HasDatabaseName("ix_tasks_board_column_id_sort_order");
+
+                    b.ToTable("tasks", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Team", b =>
@@ -477,7 +774,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("OwnerUserId");
 
-                    b.ToTable("teams", (string)null);
+                    b.ToTable("teams", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.TeamMember", b =>
@@ -505,7 +802,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("team_members", (string)null);
+                    b.ToTable("team_members", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.User", b =>
@@ -534,7 +831,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.ActivityLog", b =>
@@ -578,6 +875,31 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("PM.Domain.Entities.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PM.Domain.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("PM.Domain.Entities.SubTask", "SubTask")
@@ -616,6 +938,17 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PM.Domain.Entities.NotificationTracking", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PM.Domain.Entities.Project", b =>
                 {
                     b.HasOne("PM.Domain.Entities.User", "CreatedByUser")
@@ -632,6 +965,55 @@ namespace PM.Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.ProjectDocument", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany("ProjectDocuments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PM.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("UploadedByUser");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.ProjectShare", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PM.Domain.Entities.User", "SharedByUser")
+                        .WithMany()
+                        .HasForeignKey("SharedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("SharedByUser");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
+                {
+                    b.HasOne("PM.Domain.Entities.Project", "Project")
+                        .WithMany("Sprints")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
@@ -654,11 +1036,6 @@ namespace PM.Infrastructure.Migrations
 
             modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
                 {
-                    b.HasOne("PM.Domain.Entities.User", "AssigneeUser")
-                        .WithMany()
-                        .HasForeignKey("AssigneeUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("PM.Domain.Entities.BoardColumn", "BoardColumn")
                         .WithMany("TaskItems")
                         .HasForeignKey("BoardColumnId")
@@ -671,11 +1048,16 @@ namespace PM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AssigneeUser");
+                    b.HasOne("PM.Domain.Entities.Sprint", "Sprint")
+                        .WithMany("TaskItems")
+                        .HasForeignKey("SprintId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("BoardColumn");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Sprint");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Team", b =>
@@ -721,6 +1103,15 @@ namespace PM.Infrastructure.Migrations
             modelBuilder.Entity("PM.Domain.Entities.Project", b =>
                 {
                     b.Navigation("BoardColumns");
+
+                    b.Navigation("ProjectDocuments");
+
+                    b.Navigation("Sprints");
+                });
+
+            modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
+                {
+                    b.Navigation("TaskItems");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>

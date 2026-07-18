@@ -17,6 +17,7 @@ namespace PM.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("pm")
                 .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -69,7 +70,7 @@ namespace PM.Infrastructure.Migrations
                         .IsDescending(false, true)
                         .HasDatabaseName("ix_activity_log_project_id_created_at");
 
-                    b.ToTable("activity_log", (string)null);
+                    b.ToTable("activity_log", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Attachment", b =>
@@ -109,7 +110,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("CommentId");
 
-                    b.ToTable("attachments", (string)null);
+                    b.ToTable("attachments", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.BoardColumn", b =>
@@ -155,7 +156,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("ProjectId", "Position")
                         .HasDatabaseName("ix_board_columns_project_id_position");
 
-                    b.ToTable("board_columns", (string)null);
+                    b.ToTable("board_columns", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.ChatMessage", b =>
@@ -214,7 +215,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("TeamId", "CreatedAt");
 
-                    b.ToTable("chat_messages", (string)null);
+                    b.ToTable("chat_messages", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Comment", b =>
@@ -251,7 +252,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("comments", (string)null);
+                    b.ToTable("comments", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Notification", b =>
@@ -309,7 +310,7 @@ namespace PM.Infrastructure.Migrations
                         .IsDescending(false, true)
                         .HasDatabaseName("ix_notifications_user_id_created_at");
 
-                    b.ToTable("notifications", (string)null);
+                    b.ToTable("notifications", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.NotificationTracking", b =>
@@ -352,7 +353,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("EntityId", "NotificationType", "DaysRemainingOrOverdue", "UserId")
                         .HasDatabaseName("ix_notification_trackings_lookup");
 
-                    b.ToTable("notification_trackings", (string)null);
+                    b.ToTable("notification_trackings", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.OutboxMessage", b =>
@@ -396,7 +397,7 @@ namespace PM.Infrastructure.Migrations
                         .HasDatabaseName("ix_outbox_messages_unprocessed")
                         .HasFilter("processed_on_utc IS NULL");
 
-                    b.ToTable("outbox_messages", (string)null);
+                    b.ToTable("outbox_messages", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Project", b =>
@@ -464,7 +465,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("projects", (string)null);
+                    b.ToTable("projects", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.ProjectDocument", b =>
@@ -510,7 +511,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("project_documents", (string)null);
+                    b.ToTable("project_documents", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.ProjectShare", b =>
@@ -550,7 +551,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("ProjectId", "RecipientEmail")
                         .IsUnique();
 
-                    b.ToTable("project_shares", (string)null);
+                    b.ToTable("project_shares", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Sprint", b =>
@@ -599,7 +600,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("ProjectId", "Status")
                         .HasDatabaseName("ix_sprints_project_id_status");
 
-                    b.ToTable("sprints", (string)null);
+                    b.ToTable("sprints", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.SubTask", b =>
@@ -658,7 +659,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("sub_tasks", (string)null);
+                    b.ToTable("sub_tasks", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.TaskItem", b =>
@@ -735,7 +736,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("BoardColumnId", "SortOrder")
                         .HasDatabaseName("ix_tasks_board_column_id_sort_order");
 
-                    b.ToTable("tasks", (string)null);
+                    b.ToTable("tasks", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.Team", b =>
@@ -770,7 +771,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("OwnerUserId");
 
-                    b.ToTable("teams", (string)null);
+                    b.ToTable("teams", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.TeamMember", b =>
@@ -798,7 +799,7 @@ namespace PM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("team_members", (string)null);
+                    b.ToTable("team_members", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.User", b =>
@@ -827,7 +828,7 @@ namespace PM.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users", "pm");
                 });
 
             modelBuilder.Entity("PM.Domain.Entities.ActivityLog", b =>

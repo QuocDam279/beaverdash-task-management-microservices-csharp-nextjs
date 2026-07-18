@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Identity.Infrastructure.Migrations
+namespace Identity.API.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialIdentityCreate : Migration
@@ -11,8 +11,12 @@ namespace Identity.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "identity");
+
             migrationBuilder.CreateTable(
                 name: "users",
+                schema: "identity",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -30,12 +34,14 @@ namespace Identity.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_users_email",
+                schema: "identity",
                 table: "users",
                 column: "email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_users_google_id",
+                schema: "identity",
                 table: "users",
                 column: "google_id",
                 unique: true);
@@ -45,7 +51,8 @@ namespace Identity.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "users");
+                name: "users",
+                schema: "identity");
         }
     }
 }
