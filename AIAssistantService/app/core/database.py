@@ -1,4 +1,5 @@
 from typing import AsyncGenerator
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
@@ -19,7 +20,8 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # Declarative base class for models
-Base = declarative_base()
+metadata = MetaData(schema="ai_assistant")
+Base = declarative_base(metadata=metadata)
 
 # Dependency to get async DB session
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -44,4 +46,4 @@ async def init_db() -> None:
     
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(sa.text("ALTER TABLE ai_chat_messages ADD COLUMN IF NOT EXISTS thought_signature VARCHAR;"))
+        await conn.execute(sa.text("ALTER TABLE ai_assistant.ai_chat_messages ADD COLUMN IF NOT EXISTS thought_signature VARCHAR;"))
