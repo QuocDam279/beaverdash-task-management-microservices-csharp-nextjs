@@ -45,5 +45,6 @@ async def init_db() -> None:
     import sqlalchemy as sa
     
     async with engine.begin() as conn:
+        await conn.execute(sa.text("CREATE SCHEMA IF NOT EXISTS ai_assistant;"))
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(sa.text("ALTER TABLE ai_assistant.ai_chat_messages ADD COLUMN IF NOT EXISTS thought_signature VARCHAR;"))
