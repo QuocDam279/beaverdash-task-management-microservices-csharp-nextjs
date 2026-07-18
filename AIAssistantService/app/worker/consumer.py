@@ -56,12 +56,22 @@ class RabbitMQConsumer:
         """
         Robust connection loop that automatically attempts reconnection on failures.
         """
-        rabbitmq_url = f"amqp://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}/"
+        import os
+        rabbitmq_url = os.environ.get("CLOUDAMQP_URL") or f"amqp://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}/"
+        
+        log_host = settings.RABBITMQ_HOST
+        if os.environ.get("CLOUDAMQP_URL"):
+            try:
+                from urllib.parse import urlparse
+                parsed_url = urlparse(rabbitmq_url)
+                log_host = parsed_url.hostname or "CloudAMQP"
+            except Exception:
+                log_host = "CloudAMQP"
         
         while True:
             try:
                 await self._close_safe()
-                logger.info(f"Connecting to RabbitMQ at {settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}...")
+                logger.info(f"Connecting to RabbitMQ at {log_host}...")
                 self.connection = await aio_pika.connect_robust(rabbitmq_url)
                 self.channel = await self.connection.channel()
                 

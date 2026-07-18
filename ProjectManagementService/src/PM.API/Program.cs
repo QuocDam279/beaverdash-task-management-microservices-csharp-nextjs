@@ -33,11 +33,19 @@ builder.Services.AddMassTransit(x =>
     
     x.UsingRabbitMq((context, cfg) =>
     {
-        var rabbitMqHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
-        cfg.Host(rabbitMqHost, "/", h => {
-            h.Username(Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? "guest");
-            h.Password(Environment.GetEnvironmentVariable("RABBITMQ_PASS") ?? "guest");
-        });
+        var cloudAmqpUrl = Environment.GetEnvironmentVariable("CLOUDAMQP_URL");
+        if (!string.IsNullOrEmpty(cloudAmqpUrl))
+        {
+            cfg.Host(new Uri(cloudAmqpUrl));
+        }
+        else
+        {
+            var rabbitMqHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
+            cfg.Host(rabbitMqHost, "/", h => {
+                h.Username(Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? "guest");
+                h.Password(Environment.GetEnvironmentVariable("RABBITMQ_PASS") ?? "guest");
+            });
+        }
 
         cfg.ReceiveEndpoint("user-created-queue", e =>
         {
