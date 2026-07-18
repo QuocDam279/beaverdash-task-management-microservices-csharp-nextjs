@@ -29,13 +29,13 @@ public class UploadChatFileCommandHandler : IRequestHandler<UploadChatFileComman
 {
     private readonly IPMDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IWebHostEnvironment _env;
+    private readonly IFileStorageService _storageService;
 
-    public UploadChatFileCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService, IWebHostEnvironment env)
+    public UploadChatFileCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService, IFileStorageService storageService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
-        _env = env;
+        _storageService = storageService;
     }
 
     public async Task<ChatFileDto> Handle(UploadChatFileCommand request, CancellationToken cancellationToken)
@@ -93,28 +93,12 @@ public class UploadChatFileCommandHandler : IRequestHandler<UploadChatFileComman
         if (request.File.Length > 25 * 1024 * 1024)
             throw new ArgumentException("Kích thước tệp vượt quá giới hạn cho phép (tối đa 25MB).");
 
-        // 2. Save physical file
-        string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string uploadsFolder = Path.Combine(webRootPath, "uploads", "chat-attachments");
-
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
-
-        string uniqueFileName = $"{Guid.CreateVersion7()}_{Path.GetFileName(request.File.FileName)}";
-        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
-        {
-            await request.File.CopyToAsync(fileStream, cancellationToken);
-        }
-
-        var relativeUrl = $"/uploads/chat-attachments/{uniqueFileName}";
+        // 2. Save file to Cloud Storage
+        string fileUrl = await _storageService.UploadFileAsync(request.File, "chat-attachments", cancellationToken);
 
         return new ChatFileDto
         {
-            FileUrl = relativeUrl,
+            FileUrl = fileUrl,
             FileName = request.File.FileName,
             FileType = request.File.ContentType,
             FileSize = request.File.Length

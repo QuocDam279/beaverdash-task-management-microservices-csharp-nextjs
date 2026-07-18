@@ -21,13 +21,13 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
 {
     private readonly IPMDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IWebHostEnvironment _env;
+    private readonly IFileStorageService _storageService;
 
-    public UploadProjectDocumentCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService, IWebHostEnvironment env)
+    public UploadProjectDocumentCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService, IFileStorageService storageService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
-        _env = env;
+        _storageService = storageService;
     }
 
     public async Task<Guid> Handle(UploadProjectDocumentCommand request, CancellationToken cancellationToken)
@@ -58,32 +58,16 @@ public class UploadProjectDocumentCommandHandler : IRequestHandler<UploadProject
         if (request.File.Length > 100 * 1024 * 1024)
             throw new ArgumentException("Kích thước tệp vượt quá giới hạn cho phép (tối đa 100MB).");
 
-        // 3. Xử lý lưu tệp vật lý
-        string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string uploadsFolder = Path.Combine(webRootPath, "uploads", "project-documents");
-
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
-
-        string uniqueFileName = $"{Guid.CreateVersion7()}_{Path.GetFileName(request.File.FileName)}";
-        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
-        {
-            await request.File.CopyToAsync(fileStream, cancellationToken);
-        }
+        // 3. Xử lý lưu tệp lên Cloud Storage
+        string fileUrl = await _storageService.UploadFileAsync(request.File, "project-documents", cancellationToken);
 
         // 4. Lưu metadata vào Database
-        var relativeUrl = $"/uploads/project-documents/{uniqueFileName}";
-
         var document = new ProjectDocument
         {
             Id = Guid.CreateVersion7(),
             ProjectId = request.ProjectId,
             FileName = request.File.FileName,
-            FileUrl = relativeUrl,
+            FileUrl = fileUrl,
             FileType = request.File.ContentType,
             FileSizeBytes = request.File.Length,
             UploadedByUserId = currentUserId,

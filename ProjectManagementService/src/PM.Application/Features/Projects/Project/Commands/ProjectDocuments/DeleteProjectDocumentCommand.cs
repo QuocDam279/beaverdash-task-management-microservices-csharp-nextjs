@@ -15,11 +15,13 @@ public class DeleteProjectDocumentCommandHandler : IRequestHandler<DeleteProject
 {
     private readonly IPMDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IFileStorageService _storageService;
 
-    public DeleteProjectDocumentCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService)
+    public DeleteProjectDocumentCommandHandler(IPMDbContext dbContext, ICurrentUserService currentUserService, IFileStorageService storageService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
+        _storageService = storageService;
     }
 
     public async Task<bool> Handle(DeleteProjectDocumentCommand request, CancellationToken cancellationToken)
@@ -53,21 +55,14 @@ public class DeleteProjectDocumentCommandHandler : IRequestHandler<DeleteProject
         if (!isAllowed)
             throw new UnauthorizedAccessException("Bạn không có quyền xóa tài liệu này.");
 
-        // 3. Xóa tệp vật lý trên đĩa
-        string webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string relativePath = doc.FileUrl.TrimStart('/');
-        string fullPath = Path.Combine(webRootPath, relativePath);
-
+        // 3. Xóa tệp trên Cloud Storage
         try
         {
-            if (File.Exists(fullPath))
-            {
-                File.Delete(fullPath);
-            }
+            await _storageService.DeleteFileAsync(doc.FileUrl, cancellationToken);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Warning: Failed to delete physical file at {fullPath}. {ex.Message}");
+            Console.WriteLine($"Warning: Failed to delete physical file at {doc.FileUrl} on Supabase. {ex.Message}");
         }
 
         // 4. Xóa record trong DB

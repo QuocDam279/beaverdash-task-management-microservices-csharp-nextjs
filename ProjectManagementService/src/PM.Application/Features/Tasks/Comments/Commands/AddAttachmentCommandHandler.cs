@@ -14,13 +14,13 @@ public class AddAttachmentCommandHandler : IRequestHandler<AddAttachmentCommand,
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IPMDbContext _dbContext;
-    private readonly IWebHostEnvironment _env;
+    private readonly IFileStorageService _storageService;
 
-    public AddAttachmentCommandHandler(IPMDbContext dbContext, IWebHostEnvironment env, ICurrentUserService currentUserService)
+    public AddAttachmentCommandHandler(IPMDbContext dbContext, IFileStorageService storageService, ICurrentUserService currentUserService)
     {
         _currentUserService = currentUserService;
         _dbContext = dbContext;
-        _env = env;
+        _storageService = storageService;
     }
 
     public async Task<Guid> Handle(AddAttachmentCommand request, CancellationToken cancellationToken)
@@ -39,35 +39,16 @@ public class AddAttachmentCommandHandler : IRequestHandler<AddAttachmentCommand,
         if (request.File == null || request.File.Length == 0)
             throw new ArgumentException("File đính kèm không hợp lệ hoặc bị trống.");
 
-        // 3. Xử lý lưu file vật lý
-        // Đảm bảo thư mục wwwroot/uploads/attachments/ tồn tại
-        string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string uploadsFolder = Path.Combine(webRootPath, "uploads", "attachments");
-        
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
-
-        // Tạo tên file unique để tránh trùng lặp
-        string uniqueFileName = $"{Guid.CreateVersion7()}_{Path.GetFileName(request.File.FileName)}";
-        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-        // Lưu file xuống ổ cứng
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
-        {
-            await request.File.CopyToAsync(fileStream, cancellationToken);
-        }
+        // 3. Xử lý lưu file lên Cloud Storage
+        string fileUrl = await _storageService.UploadFileAsync(request.File, "attachments", cancellationToken);
 
         // 4. Lưu thông tin metadata vào Database
-        var relativeUrl = $"/uploads/attachments/{uniqueFileName}";
-
         var attachment = new Attachment
         {
             Id = Guid.CreateVersion7(),
             CommentId = request.CommentId,
             FileName = request.File.FileName,
-            FileUrl = relativeUrl,
+            FileUrl = fileUrl,
             FileType = request.File.ContentType,
             FileSizeBytes = request.File.Length,
             CreatedAt = DateTime.UtcNow
