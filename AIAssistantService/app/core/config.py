@@ -42,10 +42,11 @@ class Settings(BaseSettings):
         elif url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
             
-        # asyncpg does not support sslmode parameter, replace with ssl=true
+        # asyncpg supports sslmode but only standard PostgreSQL values
+        # Replace any non-standard sslmode values with 'require' (standard for cloud DBs)
         if "sslmode=" in url:
             import re
-            url = re.sub(r'sslmode=[^&]+', 'ssl=true', url)
+            url = re.sub(r'sslmode=[^&]+', 'sslmode=require', url)
         return url
 
 settings = Settings()
