@@ -42,11 +42,29 @@ class Settings(BaseSettings):
         elif url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
             
-        # asyncpg supports sslmode but only standard PostgreSQL values
-        # Replace any non-standard sslmode values with 'require' (standard for cloud DBs)
+        # asyncpg does not support sslmode as a URL parameter
+        # Remove it from URL — SSL will be handled via connect_args in database.py
         if "sslmode=" in url:
             import re
-            url = re.sub(r'sslmode=[^&]+', 'sslmode=require', url)
+            # Remove sslmode param (handles both ?sslmode=x and &sslmode=x)
+            url = re.sub(r'[?&]sslmode=[^&]*', '', url)
+            # If we removed the first param and & remains, fix the URL
+            if '&' in url and '?' not in url:
+                url = url.replace('&', '?', 1)
         return url
 
+    @property
+    def requires_ssl(self) -> bool:
+        """Check if the original DB connection string requires SSL."""
+        raw = self.ASSISTANT_DB_CONNECTION
+        # Cloud databases (Render, Neon, Supabase) need SSL
+        if "sslmode=" in raw and "sslmode=disable" not in raw:
+            return True
+        # Heuristic: non-localhost hosts likely need SSL
+        for local in ["localhost", "127.0.0.1", "postgres:"]:
+            if local in raw:
+                return False
+        return "render.com" in raw or "neon.tech" in raw or ".com" in raw
+
 settings = Settings()
+

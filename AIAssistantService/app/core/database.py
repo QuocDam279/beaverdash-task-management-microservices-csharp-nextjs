@@ -4,12 +4,22 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
+# Build connect_args for SSL if needed (cloud DBs like Render)
+_connect_args = {}
+if settings.requires_ssl:
+    import ssl as ssl_module
+    ssl_ctx = ssl_module.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = ssl_module.CERT_NONE
+    _connect_args["ssl"] = ssl_ctx
+
 # Create async database engine
 engine = create_async_engine(
     settings.get_async_db_url(),
     echo=False,
     future=True,
-    pool_pre_ping=True
+    pool_pre_ping=True,
+    connect_args=_connect_args
 )
 
 # Create async session factory
