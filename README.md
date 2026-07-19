@@ -4,6 +4,16 @@
 
 ---
 
+## 🌐 Link Trực Tuyến & Tài Liệu Triển Khai (Live Demo & Production Links)
+
+Hệ thống hiện tại đã được triển khai hoàn chỉnh trên môi trường Cloud (Vercel & Render). Bạn có thể truy cập và trải nghiệm trực tiếp thông qua các đường liên kết dưới đây:
+
+*   🌐 **Giao diện Web (Frontend):** [https://beaverdash.xyz](https://beaverdash.xyz) (Đã deploy trên Vercel)
+*   🔌 **API Gateway (Backend):** [https://api.beaverdash.xyz](https://api.beaverdash.xyz) (Đã deploy trên Render)
+*   📑 **Tài liệu Hướng dẫn Triển khai Chi tiết:** [docs/deploy_render.md](file:///d:/beaverdash/docs/deploy_render.md)
+
+---
+
 ## 1. Mục Tiêu Đồ Án
 
 *   **Quản lý dự án trực quan (Kanban & Sprint):** Cung cấp bảng Kanban kéo thả mượt mà, phân chia dự án theo các Sprint (hoặc Product Backlog), phân tách công việc chi tiết thành Task chính và Sub-task (checklist), hỗ trợ làm việc nhóm và thảo luận trực tiếp.
@@ -15,26 +25,28 @@
 
 ## 2. Kiến Trúc Hệ Thống (System Architecture)
 
-Hệ thống bao gồm các dịch vụ độc lập kết nối với nhau qua môi trường API Gateway và RabbitMQ Event Bus:
+Dưới đây là sơ đồ kiến trúc hệ thống khi được triển khai thực tế trên môi trường Cloud (Vercel, Render và CloudAMQP):
 
 ```mermaid
 graph TD
     Client["Client (Vercel Frontend) <br> beaverdash.xyz"]
-    Gateway["API Gateway (YARP Reverse Proxy) <br> Port 5000 / api.beaverdash.xyz"]
+    Gateway["API Gateway (Render Web Service) <br> api.beaverdash.xyz"]
     
-    subgraph Services["Backend Microservices"]
-        Identity["Identity Service <br> (.NET 10) <br> Port 5001"]
-        PM["Project Management Service <br> (.NET 10) <br> Port 5002"]
-        AI["AI Assistant Service <br> (FastAPI) <br> Port 5003"]
+    subgraph Render["Render Cloud Environment"]
+        subgraph Services["Backend Microservices (Docker)"]
+            Identity["Identity Service <br> (.NET 10)"]
+            PM["Project Management Service <br> (.NET 10)"]
+            AI["AI Assistant Service <br> (FastAPI)"]
+        end
+        
+        subgraph Databases["PostgreSQL Databases (Render)"]
+            DB_Identity[("beaverdash_identity_db")]
+            DB_PM[("beaverdash_pm_db")]
+            DB_AI[("beaverdash_ai_assistant_db")]
+        end
     end
     
-    subgraph Databases["PostgreSQL Databases (Docker) <br> Port 5432"]
-        DB_Identity[("beaverdash_identity_db")]
-        DB_PM[("beaverdash_pm_db")]
-        DB_AI[("beaverdash_ai_assistant_db")]
-    end
-    
-    Broker["RabbitMQ Message Broker (Docker) <br> Ports 5672, 15672"]
+    Broker["RabbitMQ Message Broker <br> (CloudAMQP / Render Private)"]
     
     LLM["Google Gemini API <br> (Gemini SDK)"]
     SMTP["SMTP Mail Server <br> (Email Notification)"]
@@ -68,29 +80,32 @@ graph TD
 1.  **Frontend Web (Next.js):** Đã được triển khai trên nền tảng **Vercel** tại địa chỉ chính thức [beaverdash.xyz](https://beaverdash.xyz). Giao diện sử dụng Next.js (React 19, Tailwind CSS v4) và SignalR Client để tương tác thời gian thực.
 2.  **API Gateway ([ApiGateway](file:///d:/beaverdash/ApiGateway)):** Định tuyến duy nhất sử dụng **YARP Reverse Proxy** (.NET 10). Tiếp nhận các cuộc gọi từ client để phân phối đến các service tương ứng, đồng thời xử lý CORS và JWT offloading.
 3.  **Identity Service ([IdentityService](file:///d:/beaverdash/IdentityService)):** Sử dụng .NET 10 C#, quản lý tài khoản người dùng, xác thực đăng nhập Google Sign-In và cấp phát JWT.
-4.  **Project Management Service ([ProjectManagementService](file:///d:/beaverdash/ProjectManagementService)):** Nghiệp vụ cốt lõi quản lý Kanban board, sprints, tasks, sub-tasks, comments, attachments (lưu trữ file vật lý cục bộ), notifications, activity logs.
+4.  **Project Management Service ([ProjectManagementService](file:///d:/beaverdash/ProjectManagementService)):** Nghiệp vụ cốt lõi quản lý Kanban board, sprints, tasks, sub-tasks, comments, attachments (lưu trữ file vật lý), notifications, activity logs.
 5.  **AI Assistant Service ([AIAssistantService](file:///d:/beaverdash/AIAssistantService)):** Dịch vụ Python FastAPI tương tác với LLM thông qua Gemini SDK. Cung cấp API Chatbot hỗ trợ lên kế hoạch dự án bằng cơ chế gọi công cụ (**Function Calling**) tự động gửi REST API tạo/cập nhật Sprint và Task đến PM Service.
 6.  **Database & Broker:** 
-    *   PostgreSQL (Port 5432): Chia làm 3 database riêng biệt cho từng service.
-    *   RabbitMQ (Ports 5672, 15672): Message broker đồng bộ thông tin người dùng bất đồng bộ khi có sự kiện `UserCreatedEvent`.
+    *   **PostgreSQL:** Chia làm 3 database riêng biệt cho từng service.
+    *   **RabbitMQ:** Message broker đồng bộ thông tin người dùng bất đồng bộ khi có sự kiện `UserCreatedEvent`. Triển khai trên **CloudAMQP** (hoặc dưới dạng Private Service trên Render).
 
 ---
 
-## 3. Các Phần Mềm Cần Thiết (Prerequisites)
+## 3. Hướng Dẫn Triển Khai Lên Cloud (Cloud Deployment Guide)
 
-*   **Docker / Docker Desktop:** Để chạy PostgreSQL và RabbitMQ.
-*   **SDK .NET 10.0:** Dành cho các dịch vụ Backend (.NET).
-*   **Node.js (v18+):** Dành cho Frontend Next.js (nếu chạy local).
-*   **Python 3.11+:** Dành cho dịch vụ AI Assistant (nếu chạy local).
-*   **Cloudflared CLI:** Để chạy đường ống kết nối API Gateway với môi trường Production.
+Nếu bạn muốn triển khai lại hệ thống lên môi trường Render và Vercel:
+
+1.  **Cơ sở dữ liệu (PostgreSQL):** Tạo PostgreSQL instance trên Render, sau đó tạo 3 database riêng biệt: `beaverdash_identity_db`, `beaverdash_pm_db`, `beaverdash_ai_assistant_db`.
+2.  **Message Broker:** Tạo instance RabbitMQ miễn phí trên [CloudAMQP](https://www.cloudamqp.com/).
+3.  **Backend Services:** Triển khai các dịch vụ lên Render dưới dạng **Web Service (Docker)** bằng cách sử dụng Dockerfile tương ứng của từng dịch vụ.
+4.  **Frontend:** Triển khai project Next.js trong thư mục `web/` lên **Vercel** và cấu hình các biến môi trường thích hợp (`NEXT_PUBLIC_API_URL` trỏ về API Gateway trên Render).
+
+*Xem tài liệu chi tiết tại:* **[Tài liệu Hướng dẫn Triển khai trên Render](file:///d:/beaverdash/docs/deploy_render.md)**.
 
 ---
 
-## 4. Hướng Dẫn Chạy Chương Trình & Chạy Demo
+## 4. Hướng Dẫn Chạy & Phát Triển Cục Bộ (Local Development Setup)
 
-Hệ thống hỗ trợ chạy local và kết nối trực tiếp với Frontend đã deploy trên Vercel bằng Cloudflare Tunnel.
+Để chạy thử nghiệm hoặc phát triển hệ thống Beaverdash dưới máy cục bộ, bạn có thể thực hiện theo một trong hai cách dưới đây:
 
-### CÁCH 1: Chạy Demo Kết Hợp Với Frontend Vercel (Khuyên Dùng Để Báo Cáo)
+### CÁCH 1: Chạy Backend Local Kết Hợp Với Frontend Vercel (Dành cho việc Demo nhanh)
 
 Sử dụng trực tiếp Frontend đã deploy tại [beaverdash.xyz](https://beaverdash.xyz) kết nối về Backend chạy dưới máy local của bạn thông qua Cloudflare Tunnel:
 
@@ -105,7 +120,7 @@ Sử dụng trực tiếp Frontend đã deploy tại [beaverdash.xyz](https://be
 
 ---
 
-### CÁCH 2: Chạy Local Hoàn Toàn (Chạy Hybrid)
+### CÁCH 2: Chạy Cục Bộ Hoàn Toàn (Chạy Hybrid)
 
 #### 1. Khởi động hạ tầng Docker
 Chạy lệnh compose tại thư mục gốc để khởi động DB & RabbitMQ:
@@ -154,3 +169,13 @@ npm install
 npm run dev
 ```
 Truy cập [http://localhost:3000](http://localhost:3000) để chạy thử trên local.
+
+---
+
+## 5. Các Phần Mềm Cần Thiết (Prerequisites)
+
+*   **Docker / Docker Desktop:** Để chạy PostgreSQL và RabbitMQ.
+*   **SDK .NET 10.0:** Dành cho các dịch vụ Backend (.NET).
+*   **Node.js (v18+):** Dành cho Frontend Next.js (nếu chạy local).
+*   **Python 3.11+:** Dành cho dịch vụ AI Assistant (nếu chạy local).
+*   **Cloudflared CLI:** Để chạy đường ống kết nối API Gateway với môi trường Production khi chạy demo cục bộ.
